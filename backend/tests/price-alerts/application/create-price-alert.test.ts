@@ -173,8 +173,14 @@ describe("duplicates", () => {
   });
 
   it("SC-17: a new Price Alert can be created once the previous one is Triggered", async () => {
-    const previous = await world.storeActiveAlert("80.00");
-    previous.status = AlertStatus.Triggered;
+    const previous = new PriceAlert(
+      newAlertId(),
+      USER,
+      HEADPHONES,
+      TargetPrice.fromDecimalString("80.00", "EUR"),
+      AlertStatus.Triggered,
+    );
+    await world.alerts.add(previous);
     const result = await world.create("80.00");
     expect(result.created).toBe(true);
     expect(result.alert.id).not.toBe(previous.id);

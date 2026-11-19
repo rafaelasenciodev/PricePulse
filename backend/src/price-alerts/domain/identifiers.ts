@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 /**
  * Typed identifiers. TypeScript compares types by shape, so a plain string would let
  * a UserId be used where a ListingId is expected. The brand makes the compiler
@@ -15,4 +13,6 @@ export const AlertId = (value: string): AlertId => value as AlertId;
 export const UserId = (value: string): UserId => value as UserId;
 export const ListingId = (value: string): ListingId => value as ListingId;
 
-export const newAlertId = (): AlertId => AlertId(randomUUID());
+// `crypto` is the Web Crypto standard, available in Node and in browsers: the domain
+// imports nothing from any platform.
+export const newAlertId = (): AlertId => AlertId(crypto.randomUUID());

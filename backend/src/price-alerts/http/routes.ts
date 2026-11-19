@@ -18,6 +18,18 @@ export interface PriceAlertRoutesOptions {
 
 const BEARER = /^Bearer\s+(.+)$/i;
 
+/**
+ * The authenticated User of a request.
+ *
+ * The authentication hook guarantees it. This fails safe if it ever does not, for example
+ * if the route is moved to a place without the hook: the use case must never receive a
+ * request without an owner.
+ */
+export function ownerOf(request: { readonly owner: UserId | null }): UserId {
+  if (request.owner === null) throw new Unauthenticated();
+  return request.owner;
+}
+
 export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = async (
   app,
   { createPriceAlert, authenticator },
@@ -54,7 +66,7 @@ export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = asy
     },
     async (request, reply) => {
       const result = await createPriceAlert.execute({
-        owner: request.owner as UserId, // set by the hook above, which rejects the request otherwise
+        owner: ownerOf(request),
         listingId: ListingId(request.params.listingId),
         targetAmount: request.body.targetAmount,
       });

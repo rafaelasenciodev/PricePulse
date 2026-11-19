@@ -2,6 +2,7 @@ export {
   CurrencyMismatch,
   DomainError,
   InvalidAmount,
+  InvalidValue,
   NonPositiveTargetPrice,
   TargetAlreadyReached,
   TooManyDecimals,

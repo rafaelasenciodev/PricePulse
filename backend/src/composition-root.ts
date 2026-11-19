@@ -8,12 +8,9 @@
 
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "./app";
-import {
-  InMemoryAuthenticator,
-  InMemoryListingReader,
-  InMemoryPriceAlertRepository,
-} from "./price-alerts/adapters";
+import { InMemoryListingReader, InMemoryPriceAlertRepository } from "./price-alerts/adapters";
 import { CreatePriceAlert } from "./price-alerts/application";
+import { InMemoryAuthenticator } from "./price-alerts/http";
 
 export interface InMemoryApplication {
   readonly app: FastifyInstance;

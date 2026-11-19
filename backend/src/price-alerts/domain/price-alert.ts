@@ -21,7 +21,7 @@ export class PriceAlert {
     readonly owner: UserId,
     readonly listingId: ListingId,
     readonly targetPrice: TargetPrice,
-    public status: AlertStatus,
+    readonly status: AlertStatus,
   ) {}
 
   /**

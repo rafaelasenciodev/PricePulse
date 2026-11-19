@@ -1,12 +1,10 @@
 /** UC-01 Create Price Alert (see the use case contract). */
 
 import {
-  InvalidAmount,
-  NonPositiveTargetPrice,
+  InvalidValue,
   PriceAlert,
   TargetAlreadyReached as DomainTargetAlreadyReached,
   TargetPrice,
-  TooManyDecimals,
   newAlertId,
   type ListingId,
   type UserId,
@@ -52,11 +50,7 @@ export class CreatePriceAlert {
     try {
       target = TargetPrice.fromDecimalString(command.targetAmount, listing.currency);
     } catch (error) {
-      if (
-        error instanceof NonPositiveTargetPrice ||
-        error instanceof TooManyDecimals ||
-        error instanceof InvalidAmount
-      ) {
+      if (error instanceof InvalidValue) {
         throw new InvalidTargetPrice(error.message, { cause: error });
       }
       throw error; // e.g. an unsupported currency of the catalogue: an internal error

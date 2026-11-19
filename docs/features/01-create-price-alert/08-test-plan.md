@@ -10,14 +10,14 @@ Tests verify behaviour and business rules, not coverage figures. Code coverage i
 
 ## 2. Levels
 
-128 test cases, all passing. Run with `npm test` in `backend/`.
+136 test cases, all passing. Run with `npm test` in `backend/`.
 
 | Level | What it verifies | Location | Cases |
 |---|---|---|---|
-| Domain | Invariants of `Price`, `TargetPrice` and `PriceAlert` (BR-03, BR-04, BR-05, BR-06, BR-09, BR-11) | `tests/price-alerts/domain/` | 44 |
+| Domain | Invariants of `Price`, `TargetPrice` and `PriceAlert` (BR-03, BR-04, BR-05, BR-06, BR-09, BR-11) | `tests/price-alerts/domain/` | 50 |
 | Application | The use case: each scenario, the order of checks (decision 3), concurrency (decision 4) and failures that are not business errors | `tests/price-alerts/application/` | 33 |
 | Adapter contract | The in-memory adapters honour the contract of their ports, including the uniqueness guarantee | `tests/price-alerts/adapters/` | 11 |
-| API | Status codes, error codes and bodies, authentication (SC-14) and the mapping of every application error | `tests/price-alerts/http/` | 29 |
+| API | Status codes, error codes and bodies, authentication (SC-14) and the mapping of every application error | `tests/price-alerts/http/` | 31 |
 | Wiring | The Composition Root connects HTTP, use case and adapters | `tests/composition-root.test.ts` | 5 |
 | Traceability | The chain rule → scenario → test does not break (section 4) | `tests/traceability.test.ts` | 6 |
 
@@ -112,7 +112,7 @@ Run with `npm run coverage` in `backend/`.
 
 ## 7. Mutation checks
 
-During implementation, 26 deliberate errors were introduced in scratch copies of the code, such as an exclusive threshold, a missing retry, an `await` between the uniqueness check and the insertion, authentication after validation, or a removed scenario tag. **All 26 made at least one test fail.** This was done by hand and is not part of the test suite, so it is evidence of the quality of the tests at this point and not a guard for the future.
+During implementation, 26 deliberate errors were introduced in scratch copies of the code, such as an exclusive threshold, a missing retry, an `await` between the uniqueness check and the insertion, authentication after validation, or a removed scenario tag. **All 26 made at least one test fail.** The architecture review (Phase 9) added three more, also detected. One more, removing the production guard of `main.ts`, is not detected because `main.ts` has no test; it was verified by running the file. This was done by hand and is not part of the test suite, so it is evidence of the quality of the tests at this point and not a guard for the future.
 
 ## 8. Known limitations
 

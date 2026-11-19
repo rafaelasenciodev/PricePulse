@@ -3,6 +3,12 @@
 import { composeInMemoryApp } from "./composition-root";
 import { ListingId, Price, UserId } from "./price-alerts/domain";
 
+// The demo tokens below are public: this server must never run in production.
+if (process.env["NODE_ENV"] === "production") {
+  console.error("main.ts starts the development server with demo data and must not run in production.");
+  process.exit(1);
+}
+
 const requestedPort = Number(process.env["PORT"]);
 const port = Number.isInteger(requestedPort) && requestedPort > 0 ? requestedPort : 3000;
 
