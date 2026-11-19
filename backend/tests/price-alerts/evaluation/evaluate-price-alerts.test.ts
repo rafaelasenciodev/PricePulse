@@ -1,18 +1,20 @@
 /**
  * UC-01 Evaluate the Price Alerts of a Listing, tested through its use case and without HTTP.
  *
- * The repository of Price Alerts is the in-memory adapter. The two ports that this feature
- * adds are replaced by small doubles written here: their adapters belong to Phase 6.
+ * The three repositories and the source of prices are the in-memory adapters. The classes
+ * written here only add what a test needs on top of them: a way to make them fail, and a
+ * record of what was read.
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
+import {
+  InMemoryCurrentPriceSource,
+  InMemoryNotificationRepository,
+  InMemoryPriceAlertRepository,
+} from "../../../src/price-alerts/adapters";
 import {
   EvaluatePriceAlerts,
   NotificationAlreadyExists,
-  type CurrentPrice,
-  type CurrentPriceSource,
-  type NotificationRepository,
 } from "../../../src/price-alerts/application";
 import {
   AlertStatus,
@@ -32,27 +34,17 @@ const LISTING = ListingId("headphones-shop-a");
 const OTHER_LISTING = ListingId("keyboard-shop-b");
 const OBSERVED_AT = "2026-11-19T10:00:00Z";
 
-class FakeNotifications implements NotificationRepository {
-  protected readonly stored = new Map<string, Notification>();
+class FailableNotifications extends InMemoryNotificationRepository {
   failAdd = false;
 
-  async findByAlert(alertId: AlertId): Promise<Notification | null> {
-    return this.stored.get(alertId) ?? null;
-  }
-
-  async add(notification: Notification): Promise<void> {
+  override async add(notification: Notification): Promise<void> {
     if (this.failAdd) throw new Error("the store is down");
-    if (this.stored.has(notification.alertId)) throw new NotificationAlreadyExists();
-    this.stored.set(notification.alertId, notification);
-  }
-
-  all(): Notification[] {
-    return [...this.stored.values()];
+    return super.add(notification);
   }
 }
 
 /** Simulates a concurrent Evaluation: the first search finds nothing even though a Notification is stored. */
-class StaleFirstRead extends FakeNotifications {
+class StaleFirstRead extends FailableNotifications {
   private stale = true;
 
   override async findByAlert(alertId: AlertId): Promise<Notification | null> {
@@ -64,20 +56,22 @@ class StaleFirstRead extends FakeNotifications {
   }
 }
 
-class FakePrices implements CurrentPriceSource {
+class RecordingPrices extends InMemoryCurrentPriceSource {
   readonly reads: ListingId[] = [];
   failing = false;
-  private readonly prices = new Map<string, CurrentPrice>();
 
-  set(listingId: ListingId, amount: string | null, observedAt = OBSERVED_AT): void {
-    if (amount === null) this.prices.delete(listingId);
-    else this.prices.set(listingId, { price: Price.fromDecimalString(amount, "EUR"), observedAt: ObservedAt.fromIsoString(observedAt) });
+  /** Give the Listing a Current Price in EUR from its amount, or none (null). */
+  setPrice(listingId: ListingId, amount: string | null, observedAt = OBSERVED_AT): void {
+    this.set(
+      listingId,
+      amount === null ? null : { price: Price.fromDecimalString(amount, "EUR"), observedAt: ObservedAt.fromIsoString(observedAt) },
+    );
   }
 
-  async currentPriceOf(listingId: ListingId): Promise<CurrentPrice | null> {
+  override async currentPriceOf(listingId: ListingId) {
     this.reads.push(listingId);
     if (this.failing) throw new Error("the prices are not available");
-    return this.prices.get(listingId) ?? null;
+    return super.currentPriceOf(listingId);
   }
 }
 
@@ -91,8 +85,8 @@ class AlertsWithFailingSave extends InMemoryPriceAlertRepository {
 }
 
 let alerts: AlertsWithFailingSave;
-let notifications: FakeNotifications;
-let prices: FakePrices;
+let notifications: FailableNotifications;
+let prices: RecordingPrices;
 
 const build = () => new EvaluatePriceAlerts(alerts, notifications, prices);
 const evaluate = (listingId: ListingId = LISTING) => build().execute({ listingId });
@@ -115,14 +109,14 @@ const statusOf = (alert: PriceAlert) => stored(alert).status;
 
 beforeEach(() => {
   alerts = new AlertsWithFailingSave();
-  notifications = new FakeNotifications();
-  prices = new FakePrices();
+  notifications = new FailableNotifications();
+  prices = new RecordingPrices();
 });
 
 describe("a Price Alert that is reached", () => {
   it("SC-01 / BR-01 / BR-02 / BR-04 / BR-05: becomes Triggered and produces a Notification that states what was reached", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "79.90");
+    prices.setPrice(LISTING, "79.90");
 
     const result = await evaluate();
 
@@ -146,7 +140,7 @@ describe("a Price Alert that is reached", () => {
 
   it("SC-02 / BR-02: a Current Price equal to the Target Price reaches it", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "80.00");
+    prices.setPrice(LISTING, "80.00");
     await evaluate();
     expect(statusOf(alert)).toBe(AlertStatus.Triggered);
     expect(notifications.all()).toHaveLength(1);
@@ -154,7 +148,7 @@ describe("a Price Alert that is reached", () => {
 
   it("SC-04 / BR-02: a Current Price of zero reaches any Target Price", async () => {
     const alert = await givenAlert("10.00");
-    prices.set(LISTING, "0.00");
+    prices.setPrice(LISTING, "0.00");
     await evaluate();
     expect(statusOf(alert)).toBe(AlertStatus.Triggered);
   });
@@ -163,7 +157,7 @@ describe("a Price Alert that is reached", () => {
 describe("a Price Alert that is not reached", () => {
   it("SC-03 / BR-02: a Current Price above the Target Price leaves it Active, with no Notification", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "80.01");
+    prices.setPrice(LISTING, "80.01");
     const result = await evaluate();
     expect(statusOf(alert)).toBe(AlertStatus.Active);
     expect(notifications.all()).toEqual([]);
@@ -172,7 +166,7 @@ describe("a Price Alert that is not reached", () => {
 
   it("SC-05 / SC-06 / BR-03: a Listing with no Current Price triggers nothing", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, null);
+    prices.setPrice(LISTING, null);
     const result = await evaluate();
     expect(statusOf(alert)).toBe(AlertStatus.Active);
     expect(notifications.all()).toEqual([]);
@@ -181,9 +175,9 @@ describe("a Price Alert that is not reached", () => {
 
   it("SC-07 / BR-03: a Listing that has a Price again is evaluated against that Price", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, null);
+    prices.setPrice(LISTING, null);
     await evaluate();
-    prices.set(LISTING, "75.00", "2026-11-19T12:00:00Z");
+    prices.setPrice(LISTING, "75.00", "2026-11-19T12:00:00Z");
     const result = await evaluate();
     expect(statusOf(alert)).toBe(AlertStatus.Triggered);
     expect(result.triggered).toHaveLength(1);
@@ -195,7 +189,7 @@ describe("several Price Alerts", () => {
     const low = await givenAlert("70.00", OWNER);
     const middle = await givenAlert("80.00", OTHER_OWNER);
     const high = await givenAlert("90.00", UserId("user-3"));
-    prices.set(LISTING, "85.00");
+    prices.setPrice(LISTING, "85.00");
 
     const result = await evaluate();
 
@@ -209,7 +203,7 @@ describe("several Price Alerts", () => {
   it("SC-09 / BR-04 / BR-05: each alert that is reached has its own Notification", async () => {
     await givenAlert("80.00", OWNER);
     await givenAlert("80.00", OTHER_OWNER);
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     const result = await evaluate();
 
@@ -220,8 +214,8 @@ describe("several Price Alerts", () => {
   it("SC-10 / BR-01: the alerts of another Listing are not evaluated", async () => {
     const here = await givenAlert("80.00", OWNER, LISTING);
     const elsewhere = await givenAlert("80.00", OWNER, OTHER_LISTING);
-    prices.set(LISTING, "70.00");
-    prices.set(OTHER_LISTING, "70.00");
+    prices.setPrice(LISTING, "70.00");
+    prices.setPrice(OTHER_LISTING, "70.00");
 
     await evaluate(LISTING);
 
@@ -234,7 +228,7 @@ describe("several Price Alerts", () => {
     await givenAlert("70.00", OWNER);
     await givenAlert("80.00", OTHER_OWNER);
     await givenAlert("90.00", UserId("user-3"));
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     await evaluate();
     expect(prices.reads).toEqual([LISTING]);
   });
@@ -243,9 +237,9 @@ describe("several Price Alerts", () => {
 describe("once, and repeating", () => {
   it("SC-11 / BR-01: a Triggered Price Alert is not evaluated again", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     await evaluate();
-    prices.set(LISTING, "60.00", "2026-11-19T12:00:00Z");
+    prices.setPrice(LISTING, "60.00", "2026-11-19T12:00:00Z");
 
     const result = await evaluate();
 
@@ -256,7 +250,7 @@ describe("once, and repeating", () => {
 
   it("SC-12 / BR-07: repeating an Evaluation when nothing has changed changes nothing", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     await evaluate();
     const before = notifications.all();
 
@@ -271,7 +265,7 @@ describe("once, and repeating", () => {
 describe("concurrency (contract, decision 8)", () => {
   it("SC-13 / BR-05 / BR-07: two Evaluations at the same time produce a single Notification", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     const [first, second] = await Promise.all([evaluate(), evaluate()]);
 
@@ -286,7 +280,7 @@ describe("concurrency (contract, decision 8)", () => {
   it("an Evaluation that finds the Notification stored by another one goes on with it: produced is false", async () => {
     notifications = new StaleFirstRead();
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     await notifications.add(
       Notification.produce({ alert, currentPrice: Price.fromDecimalString("75.00", "EUR"), observedAt: ObservedAt.fromIsoString(OBSERVED_AT) }),
     );
@@ -300,14 +294,14 @@ describe("concurrency (contract, decision 8)", () => {
   });
 
   it("a Notification refused as existing that cannot be found is reported as a failure of that alert", async () => {
-    class Inconsistent extends FakeNotifications {
+    class Inconsistent extends FailableNotifications {
       override async add(): Promise<void> {
         throw new NotificationAlreadyExists();
       }
     }
     notifications = new Inconsistent();
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     const result = await evaluate();
 
@@ -320,7 +314,7 @@ describe("concurrency (contract, decision 8)", () => {
 describe("failures between the two changes (BR-06)", () => {
   it("SC-14: if the Notification cannot be produced the alert stays Active, and a later Evaluation completes it", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     notifications.failAdd = true;
 
     const failed = await evaluate();
@@ -339,7 +333,7 @@ describe("failures between the two changes (BR-06)", () => {
 
   it("BR-06: if the alert cannot be saved after the Notification, the next Evaluation makes it Triggered without a second Notification", async () => {
     const alert = await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     alerts.failSave = true;
 
     const interrupted = await evaluate();
@@ -359,7 +353,7 @@ describe("failures between the two changes (BR-06)", () => {
     await notifications.add(
       Notification.produce({ alert, currentPrice: Price.fromDecimalString("75.00", "EUR"), observedAt: ObservedAt.fromIsoString(OBSERVED_AT) }),
     );
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     const result = await evaluate();
 
@@ -375,7 +369,7 @@ describe("failures between the two changes (BR-06)", () => {
       await notifications.add(
         Notification.produce({ alert, currentPrice: Price.fromDecimalString("75.00", "EUR"), observedAt: ObservedAt.fromIsoString(OBSERVED_AT) }),
       );
-      prices.set(LISTING, price);
+      prices.setPrice(LISTING, price);
 
       const result = await evaluate();
 
@@ -390,7 +384,7 @@ describe("one alert that fails does not stop the others (contract, decision 5)",
   it("the others are processed, and the failure is returned and not raised", async () => {
     const broken = await givenAlert("80.00", OWNER);
     const fine = await givenAlert("80.00", OTHER_OWNER);
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     const add = notifications.add.bind(notifications);
     notifications.add = async (notification) => {
       if (notification.alertId === broken.id) throw new Error("this one fails");
@@ -409,7 +403,7 @@ describe("one alert that fails does not stop the others (contract, decision 5)",
     const inconsistent = new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString("80.00", "USD"), AlertStatus.Active);
     await alerts.add(inconsistent);
     const fine = await givenAlert("80.00", OTHER_OWNER);
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     const result = await evaluate();
 
@@ -429,7 +423,7 @@ describe("one alert that fails does not stop the others (contract, decision 5)",
 describe("boundaries", () => {
   it("SC-17 / BR-08: the Notification of the result has no channel and nothing is delivered", async () => {
     await givenAlert("80.00");
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
     const result = await evaluate();
     expect(Object.keys(result.triggered[0]?.notification ?? {}).sort()).toEqual(
       ["alertId", "currentPrice", "listingId", "observedAt", "owner", "targetPrice"],
@@ -439,7 +433,7 @@ describe("boundaries", () => {
   it("SC-18 / BR-09: only the state of the alert that is Triggered changes", async () => {
     const reached = await givenAlert("80.00", OWNER);
     const notReached = await givenAlert("70.00", OTHER_OWNER);
-    prices.set(LISTING, "75.00");
+    prices.setPrice(LISTING, "75.00");
 
     await evaluate();
 

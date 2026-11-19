@@ -3,4 +3,9 @@ export {
   type CurrencyOfListing,
   type CurrentPriceOfListing,
 } from "./composed-listing-reader";
-export { InMemoryListingReader, InMemoryPriceAlertRepository } from "./in-memory";
+export {
+  InMemoryCurrentPriceSource,
+  InMemoryListingReader,
+  InMemoryNotificationRepository,
+  InMemoryPriceAlertRepository,
+} from "./in-memory";

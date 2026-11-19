@@ -39,7 +39,8 @@ export interface PriceAlertRepository {
   findActiveByListing(listingId: ListingId): Promise<PriceAlert[]>;
 
   /**
-   * Replace the stored Price Alert that has the same identifier.
+   * Replace the stored Price Alert that has the same identifier. It fails if none is stored:
+   * saving an alert that was never added is a defect, not a way to add one.
    * The only change it is used for is Active to Triggered. When alerts can be cancelled or
    * modified, it will have to be conditional on the state that was read.
    */
