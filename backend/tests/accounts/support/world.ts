@@ -1,11 +1,16 @@
 import {
+  InMemoryAccountRepository,
+  InMemoryLoginAttemptStore,
+  InMemorySessionStore,
+} from "../../../src/accounts/adapters";
+import {
   Authenticate,
   ReadMyAccount,
   RegisterAccount,
   SignIn,
   SignOut,
 } from "../../../src/accounts/application";
-import { FakeAccounts, FakeAttempts, FakeHasher, FakeSessions, MutableClock, SequenceTokens } from "./fakes";
+import { FakeHasher, MutableClock, SequenceTokens } from "./fakes";
 
 export const START = Date.parse("2026-11-19T10:00:00Z");
 export const MINUTE = 60 * 1000;
@@ -13,10 +18,9 @@ export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
 
 /** All the use cases of Accounts wired to doubles, with a clock the test moves. */
-export function buildWorld() {
-  const accounts = new FakeAccounts();
-  const sessions = new FakeSessions();
-  const attempts = new FakeAttempts();
+export function buildWorld(accounts: InMemoryAccountRepository = new InMemoryAccountRepository()) {
+  const sessions = new InMemorySessionStore();
+  const attempts = new InMemoryLoginAttemptStore();
   const hasher = new FakeHasher();
   const tokens = new SequenceTokens();
   const clock = new MutableClock(START);

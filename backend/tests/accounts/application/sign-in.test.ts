@@ -13,7 +13,7 @@ describe("SignIn", () => {
     const result = await world.signIn.execute(ANA);
     expect(result.token).toBe("token-2"); // token-1 was spent on the fallback of the use case
     expect(result.account).toEqual({ id, email: "ana@example.com" });
-    expect(world.sessions.byHash.size).toBe(1);
+    expect(world.sessions.all().length).toBe(1);
   });
 
   it("SC-07 / BR-07: the Session expires 7 days from now and the answer says when", async () => {
@@ -27,8 +27,8 @@ describe("SignIn", () => {
     const world = buildWorld();
     await registered(world);
     const { token } = await world.signIn.execute(ANA);
-    expect(JSON.stringify([...world.sessions.byHash.values()])).not.toContain(`"${token}"`);
-    expect([...world.sessions.byHash.keys()]).toEqual([world.tokens.hash(token)]);
+    expect(JSON.stringify(world.sessions.all())).not.toContain(`"${token}"`);
+    expect(world.sessions.all().map((s) => s.tokenHash)).toEqual([world.tokens.hash(token)]);
   });
 
   it("SC-08 / BR-01: reads the email the same way as registering", async () => {
@@ -43,7 +43,7 @@ describe("SignIn", () => {
     const first = await world.signIn.execute(ANA);
     const second = await world.signIn.execute(ANA);
     expect(first.token).not.toBe(second.token);
-    expect(world.sessions.byHash.size).toBe(2);
+    expect(world.sessions.all().length).toBe(2);
     expect(await world.authenticate.execute(first.token)).toBe(first.account.id);
     expect(await world.authenticate.execute(second.token)).toBe(first.account.id);
   });
@@ -61,7 +61,7 @@ describe("SignIn", () => {
       const error = (await world.signIn.execute(credentials).catch((e: unknown) => e)) as Error;
       expect(error).toBeInstanceOf(InvalidCredentials);
       expect(error.message).toBe(new InvalidCredentials().message);
-      expect(world.sessions.byHash.size).toBe(0);
+      expect(world.sessions.all().length).toBe(0);
     });
 
     it.each(cases)("checks a hash with %s, so the time does not tell which it was", async (_what, credentials) => {
@@ -77,7 +77,7 @@ describe("SignIn", () => {
       await registered(world);
       await world.signIn.execute({ email: "ghost@example.com", password: "first-password-1" }).catch(() => {});
       const last = world.hasher.verifications.at(-1)!;
-      expect([...world.accounts.byEmail.values()].map((a) => a.passwordHash)).not.toContain(last.hash);
+      expect(world.accounts.all().map((a) => a.passwordHash)).not.toContain(last.hash);
       // A real hash, as slow to check as any other: an empty text would be checked at once.
       expect(world.hasher.produced.has(last.hash)).toBe(true);
     });

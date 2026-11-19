@@ -1,66 +1,9 @@
 /**
- * Doubles of the ports of Accounts for the tests of the use cases. The in-memory adapters, which
- * the contracts check, come with the adapters; these are the smallest thing that lets a use case run.
+ * Doubles for the tests of the use cases: the ports whose real adapter is slow or random. The stores
+ * are the in-memory adapters, which the contracts check.
  */
 
-import {
-  EmailAlreadyStored,
-  type AccountRepository,
-  type Clock,
-  type LoginAttemptStore,
-  type PasswordHasher,
-  type SessionStore,
-  type SessionTokens,
-} from "../../../src/accounts/application";
-import { FailedAttempts, type Account, type Email, type Session } from "../../../src/accounts/domain";
-import type { UserId } from "../../../src/shared/domain";
-
-export class FakeAccounts implements AccountRepository {
-  readonly byEmail = new Map<string, Account>();
-  /** Makes `findByEmail` answer null once, as if another registration were still to come. */
-  hideOnce = false;
-
-  async add(account: Account): Promise<void> {
-    if (this.byEmail.has(account.email.value)) throw new EmailAlreadyStored();
-    this.byEmail.set(account.email.value, account);
-  }
-  async findByEmail(email: Email): Promise<Account | null> {
-    if (this.hideOnce) {
-      this.hideOnce = false;
-      return null;
-    }
-    return this.byEmail.get(email.value) ?? null;
-  }
-  async find(id: UserId): Promise<Account | null> {
-    return [...this.byEmail.values()].find((a) => a.id === id) ?? null;
-  }
-}
-
-export class FakeSessions implements SessionStore {
-  readonly byHash = new Map<string, Session>();
-  async add(session: Session): Promise<void> {
-    this.byHash.set(session.tokenHash, session);
-  }
-  async findByTokenHash(tokenHash: string): Promise<Session | null> {
-    return this.byHash.get(tokenHash) ?? null;
-  }
-  async delete(tokenHash: string): Promise<void> {
-    this.byHash.delete(tokenHash);
-  }
-}
-
-export class FakeAttempts implements LoginAttemptStore {
-  readonly byEmail = new Map<string, FailedAttempts>();
-  async get(email: string): Promise<FailedAttempts> {
-    return this.byEmail.get(email) ?? FailedAttempts.none();
-  }
-  async save(email: string, attempts: FailedAttempts): Promise<void> {
-    this.byEmail.set(email, attempts);
-  }
-  async clear(email: string): Promise<void> {
-    this.byEmail.delete(email);
-  }
-}
+import type { Clock, PasswordHasher, SessionTokens } from "../../../src/accounts/application";
 
 /** A hash that is the password written backwards with a mark: fast, and not the password itself. */
 export class FakeHasher implements PasswordHasher {

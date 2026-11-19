@@ -20,7 +20,8 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   shared: { imports: [], packages: [] },
   domain: { imports: ["shared"], packages: [] },
   application: { imports: ["domain", "shared"], packages: [] },
-  adapters: { imports: ["application", "domain", "shared"], packages: [] },
+  // node:crypto: the hash of the passwords and the random tokens of the Accounts (ADR-0004), which add no dependency.
+  adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto"] },
   http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
   app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
   // The policy that joins two features: it knows both through their applications and nothing else.

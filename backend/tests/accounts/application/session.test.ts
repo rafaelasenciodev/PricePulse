@@ -52,7 +52,7 @@ describe("SignOut", () => {
     await world.signOut.execute({ token: first });
     expect(await world.authenticate.execute(first)).toBeNull();
     expect(await world.authenticate.execute(second)).toBe(account.id);
-    expect(world.sessions.byHash.size).toBe(1);
+    expect(world.sessions.all().length).toBe(1);
   });
 
   it("SC-20 / BR-09: a Session that was signed out cannot sign out again", async () => {
@@ -66,7 +66,7 @@ describe("SignOut", () => {
     const world = buildWorld();
     await withSession(world);
     await expect(world.signOut.execute({ token })).rejects.toThrow(Unauthenticated);
-    expect(world.sessions.byHash.size).toBe(1);
+    expect(world.sessions.all().length).toBe(1);
   });
 
   it("BR-08: an expired Session cannot sign out", async () => {
@@ -89,7 +89,7 @@ describe("ReadMyAccount", () => {
     const world = buildWorld();
     const { account } = await withSession(world);
     const view = await world.readMyAccount.execute({ owner: UserId(account.id) });
-    const stored = [...world.accounts.byEmail.values()][0]!;
+    const stored = world.accounts.all()[0]!;
     expect(JSON.stringify(view)).not.toContain(stored.passwordHash);
     expect(JSON.stringify(view)).not.toContain("first-password-1");
   });

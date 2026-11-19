@@ -1,8 +1,22 @@
 /** Application tests of UC-01 Register. Each test names the scenario or the rule it verifies. */
 
 import { describe, expect, it } from "vitest";
+import { InMemoryAccountRepository } from "../../../src/accounts/adapters";
+import type { Email } from "../../../src/accounts/domain";
 import { ApplicationError, EmailAlreadyRegistered, InvalidRegistration } from "../../../src/accounts/application";
 import { buildWorld, registered } from "../support/world";
+
+/** A repository whose lookup by email misses once, as it does when another registration is still to come. */
+class BlindOnce extends InMemoryAccountRepository {
+  blind = false;
+  override async findByEmail(email: Email) {
+    if (this.blind) {
+      this.blind = false;
+      return null;
+    }
+    return super.findByEmail(email);
+  }
+}
 
 describe("RegisterAccount", () => {
   it("SC-01 / BR-01: creates the Account and answers with its identifier and its email", async () => {
@@ -11,13 +25,13 @@ describe("RegisterAccount", () => {
     expect(view.email).toBe("ana@example.com");
     expect(view.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(Object.keys(view).sort()).toEqual(["email", "id"]);
-    expect(world.accounts.byEmail.size).toBe(1);
+    expect(world.accounts.all().length).toBe(1);
   });
 
   it("SC-01 / BR-04: stores the hash and never the password, and shows neither", async () => {
     const world = buildWorld();
     const view = await registered(world, "ana@example.com", "first-password-1");
-    const stored = [...world.accounts.byEmail.values()][0]!;
+    const stored = world.accounts.all()[0]!;
     expect(stored.passwordHash).not.toContain("first-password-1");
     expect(stored.passwordHash).toBe("fake$1-drowssap-tsrif");
     expect(JSON.stringify(view)).not.toContain("first-password-1");
@@ -27,7 +41,7 @@ describe("RegisterAccount", () => {
   it("SC-01 / Q9: does not sign the person in", async () => {
     const world = buildWorld();
     await registered(world);
-    expect(world.sessions.byHash.size).toBe(0);
+    expect(world.sessions.all().length).toBe(0);
   });
 
   it("BR-01: stores the email in its normal form", async () => {
@@ -44,7 +58,7 @@ describe("RegisterAccount", () => {
       await expect(world.register.execute({ email, password: "another-password-2" })).rejects.toThrow(
         EmailAlreadyRegistered,
       );
-      expect(world.accounts.byEmail.size).toBe(1);
+      expect(world.accounts.all().length).toBe(1);
     },
   );
 
@@ -57,9 +71,9 @@ describe("RegisterAccount", () => {
   });
 
   it("BR-02: if another registration wins between the check and the store, it is the same error", async () => {
-    const world = buildWorld();
+    const world = buildWorld(new BlindOnce());
     await registered(world);
-    world.accounts.hideOnce = true; // the check does not see the Account, the store does
+    (world.accounts as BlindOnce).blind = true; // the check does not see the Account, the store does
     await expect(world.register.execute({ email: "ana@example.com", password: "another-password-2" })).rejects.toThrow(
       EmailAlreadyRegistered,
     );
@@ -77,7 +91,7 @@ describe("RegisterAccount", () => {
     const error = await world.register.execute({ email, password }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InvalidRegistration);
     expect(error).toBeInstanceOf(ApplicationError);
-    expect(world.accounts.byEmail.size).toBe(0);
+    expect(world.accounts.all().length).toBe(0);
   });
 
   it.each([10, 128])("SC-04 / BR-03: accepts %i characters", async (length) => {
