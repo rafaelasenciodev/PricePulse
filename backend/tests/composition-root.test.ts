@@ -184,11 +184,18 @@ describe("composeInMemoryApp: the two features meet", () => {
     expect((await create("80.00")).statusCode).toBe(409);
   });
 
-  it("SC-21 / BR-11: recording a Price that reaches the target does not touch the Price Alert", async () => {
+  it("SC-21 / BR-11: the use case that records a Price does not touch the Price Alert", async () => {
     compose();
     await observe("10", "100.00");
     const created = await create("80.00");
-    await observe("11", "75.00");
+    // The use case itself, not the HTTP route: the route also starts the Evaluation of feature 03,
+    // which is wired by the Composition Root and is not part of recording.
+    await application.recordPriceObservation.execute({
+      provider: ProviderId("simulator"),
+      listingId: HEADPHONES,
+      observedAt: "2026-11-19T11:00:00Z",
+      price: { amount: "75.00", currency: "EUR" },
+    });
     // The same request still returns the same Price Alert, still Active, even though the
     // Current Price now reaches its target (BR-08 comes before BR-05).
     const repeated = await create("80.00");

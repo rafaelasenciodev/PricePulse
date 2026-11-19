@@ -14,7 +14,8 @@ declare module "fastify" {
 }
 
 export interface PriceObservationRoutesOptions {
-  readonly recordPriceObservation: RecordPriceObservation;
+  /** Only what the route uses, so that the Composition Root can wrap the use case. */
+  readonly recordPriceObservation: Pick<RecordPriceObservation, "execute">;
   readonly authenticator: ProviderAuthenticator;
 }
 

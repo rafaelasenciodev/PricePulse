@@ -14,7 +14,7 @@ if (process.env["NODE_ENV"] === "production") {
 const requestedPort = Number(process.env["PORT"]);
 const port = Number.isInteger(requestedPort) && requestedPort > 0 ? requestedPort : 3000;
 
-const { app, catalogue, authenticator, providerAuthenticator, recordPriceObservation } = composeInMemoryApp({
+const { app, catalogue, authenticator, providerAuthenticator, recordPriceObservation, createPriceAlert } = composeInMemoryApp({
   logger: true,
   apiDocs: {
     note: [
@@ -24,6 +24,7 @@ const { app, catalogue, authenticator, providerAuthenticator, recordPriceObserva
       "- Token of the price provider, for the price observations: `demo-provider-token` (the provider `simulator`). It is not valid for the price alerts, and the tokens of the Users are not valid for the price observations.",
       "- Listings: `headphones-shop-a` (100.00 EUR), `keyboard-shop-b` (50.00 USD) and `monitor-shop-a` (no Current Price).",
       "- The Current Price of a Listing is the price of its latest observation. Record a new one to change it.",
+      "- A Price Alert of `demo-user-1` for `headphones-shop-a` with a Target Price of 80.00 EUR. Record an observation of 80.00 or less for that Listing, as the price provider, and the log of the server shows the alert triggered.",
     ].join("\n"),
   },
 });
@@ -58,6 +59,14 @@ await recordPriceObservation.execute({
   listingId: ListingId("monitor-shop-a"),
   observedAt,
   price: null, // unavailable: no Current Price
+});
+
+// A demo Price Alert, so that the round trip can be seen: it is triggered when an observation of
+// the provider brings the price of the headphones to 80.00 or less, and the log says so.
+await createPriceAlert.execute({
+  owner: UserId("demo-user-1"),
+  listingId: ListingId("headphones-shop-a"),
+  targetAmount: "80.00",
 });
 
 // Listen on the local machine only: the demo tokens must not be reachable from outside.

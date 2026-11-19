@@ -68,7 +68,7 @@ export interface AppDependencies {
    * application serves only the routes of Price Alerts, and the documentation says so.
    */
   readonly priceObservations?: {
-    readonly recordPriceObservation: RecordPriceObservation;
+    readonly recordPriceObservation: Pick<RecordPriceObservation, "execute">;
     readonly authenticator: ProviderAuthenticator;
   };
   readonly logger?: boolean;
