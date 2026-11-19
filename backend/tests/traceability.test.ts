@@ -100,6 +100,20 @@ const FEATURES: readonly Feature[] = [
     exemptRules: {},
     exemptScenarios: {},
   },
+  {
+    name: "feature 05",
+    docs: "05-notifications-and-price-history/",
+    rulesFile: "01-discovery.md",
+    // It reads from two modules that have other features' tests: told apart by folder and by file name.
+    owns: (path) =>
+      path.startsWith("price-alerts/notifications/") ||
+      path.startsWith("price-observations/history/") ||
+      path === "composition-root-history.test.ts",
+    scenarios: 20,
+    rules: 9,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;
