@@ -24,6 +24,7 @@ import {
   CreatePriceAlert,
   EvaluatePriceAlerts,
   GetPriceAlert,
+  ListNotifications,
   ListPriceAlerts,
   ModifyTargetPrice,
   type CurrentPrice,
@@ -36,8 +37,8 @@ import {
   InMemoryPriceObservationRepository,
   SystemClock,
 } from "./price-observations/adapters";
-import { RecordPriceObservation, type Clock } from "./price-observations/application";
-import { InMemoryProviderAuthenticator } from "./price-observations/http";
+import { ReadPriceHistory, RecordPriceObservation, type Clock } from "./price-observations/application";
+import { InMemoryProviderAuthenticator, type UserAuthenticator } from "./price-observations/http";
 
 export interface InMemoryApplication {
   readonly app: FastifyInstance;
@@ -92,6 +93,8 @@ export function composeInMemoryApp(
   const createPriceAlert = new CreatePriceAlert(listings, alerts, clock);
 
   const notifications = new InMemoryNotificationRepository();
+  // The Price History is read by Users: the module of Price Observations asks only whether a token is a User's.
+  const usersOnly: UserAuthenticator = { isUser: async (token) => (await authenticator.authenticate(token)) !== null };
   const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, { currentPriceOf });
 
   const app: FastifyInstance = buildApp({
@@ -99,10 +102,12 @@ export function composeInMemoryApp(
     authenticator,
     priceAlertManagement: {
       listPriceAlerts: new ListPriceAlerts(alerts),
+      listNotifications: new ListNotifications(notifications),
       getPriceAlert: new GetPriceAlert(alerts),
       modifyTargetPrice: new ModifyTargetPrice(alerts, listings),
       cancelPriceAlert: new CancelPriceAlert(alerts),
     },
+    priceHistory: { readPriceHistory: new ReadPriceHistory(catalogue, observations), authenticator: usersOnly },
     priceObservations: {
       recordPriceObservation: withEvaluation(
         recordPriceObservation,

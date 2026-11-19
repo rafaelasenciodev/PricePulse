@@ -28,6 +28,29 @@ const priceAlert = {
   },
 };
 
+const money = (description: string) => ({
+  type: "object",
+  required: ["amount", "currency"],
+  description,
+  properties: {
+    amount: { type: "string", description: "The amount as text", examples: ["79.90"] },
+    currency: { type: "string", description: "The currency", examples: ["EUR"] },
+  },
+});
+
+const notification = {
+  type: "object",
+  required: ["alertId", "owner", "listingId", "targetPrice", "currentPrice", "observedAt"],
+  properties: {
+    alertId: { type: "string", description: "The Price Alert whose Target Price was reached" },
+    owner: { type: "string", description: "The User who owns the Price Alert: the one who asks" },
+    listingId: { type: "string", description: "The Listing the Price Alert watches" },
+    targetPrice: money("The Target Price of the Price Alert"),
+    currentPrice: money("The Current Price that reached it"),
+    observedAt: { type: "string", description: "When that price was observed, in UTC", examples: ["2026-11-19T10:00:00.000Z"] },
+  },
+};
+
 const error = (description: string, codes: readonly string[]) => ({
   description,
   type: "object",
@@ -188,6 +211,43 @@ export const patchPriceAlertSchema: FastifySchema = {
       ["ALERT_NOT_ACTIVE", "ALERT_CONFLICT", "TARGET_ALREADY_REACHED"],
     ),
     422: error("The amount is not a number, is not greater than zero, or has more decimals than the currency allows", ["INVALID_TARGET_PRICE"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const listNotificationsSchema: FastifySchema = {
+  tags: ["Notifications"],
+  summary: "List my Notifications",
+  description: [
+    "The Notifications of the User: one for each of their Price Alerts whose Target Price was reached, newest first by the moment its price was observed.",
+    "",
+    "- Only the Notifications of the User who makes the request are listed.",
+    "- A Notification is a stored record. It is not delivered, and it has no read state.",
+    `- A page holds \`limit\` Notifications (${DEFAULT_LIMIT} by default, ${MAX_LIMIT} at most) after skipping \`offset\`, and \`total\` says how many the User has in all.`,
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  querystring: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      limit: { type: "integer", minimum: 1, maximum: MAX_LIMIT, default: DEFAULT_LIMIT, description: "How many Notifications at most" },
+      offset: { type: "integer", minimum: 0, default: 0, description: "How many Notifications to skip, from the newest" },
+    },
+  },
+  response: {
+    200: {
+      description: "A page of Notifications",
+      type: "object",
+      required: ["items", "total", "limit", "offset"],
+      properties: {
+        items: { type: "array", items: notification },
+        total: { type: "integer", description: "How many Notifications the User has, in all pages" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+      },
+    },
+    400: error("A query parameter is not valid: an unknown one, or a limit or an offset that is not a whole number in range", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token of a User", ["UNAUTHENTICATED"]),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };

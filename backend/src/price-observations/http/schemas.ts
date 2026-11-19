@@ -31,6 +31,10 @@ const observation = {
   },
 };
 
+/** The most observations that one page of the history can hold, and how many it holds when nothing is said. */
+export const MAX_LIMIT = 100;
+export const DEFAULT_LIMIT = 20;
+
 const error = (description: string, codes: readonly string[]) => ({
   description,
   type: "object",
@@ -85,6 +89,53 @@ export const recordPriceObservationSchema: FastifySchema = {
       "The observation is not valid: `observedAt` is not a valid instant or is too far in the future, the amount is not a number, is negative or has more decimals than the currency allows, or the currency is not the one of the Listing",
       ["INVALID_OBSERVATION"],
     ),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const readPriceHistorySchema: FastifySchema = {
+  tags: ["Price history"],
+  summary: "Read the Price History of a Listing",
+  description: [
+    "The Price Observations of a Listing, newest Observed At first. Any signed-in User can read them.",
+    "",
+    "- The token is the one of a **User**. The token of a price provider is not valid here.",
+    "- Every stored observation is in the history, an older one too, and one without a price, which means that the Listing was unavailable. Each shows the Provider that reported it, so that simulated data can be told.",
+    "- `from` and `to` limit the history to a range of Observed At: `from` is included and `to` is excluded. Both are ISO 8601 with a time zone, such as `2026-11-19T10:00:00Z`, and `from` must be before `to`.",
+    `- A page holds \`limit\` observations (${DEFAULT_LIMIT} by default, ${MAX_LIMIT} at most) after skipping \`offset\`, and \`total\` says how many the range includes in all.`,
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  params: {
+    type: "object",
+    required: ["listingId"],
+    properties: { listingId: { type: "string", minLength: 1, description: "Identifier of the Listing" } },
+  },
+  querystring: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      from: { type: "string", description: "The start of the range, included. ISO 8601 with a time zone", examples: ["2026-11-19T10:00:00Z"] },
+      to: { type: "string", description: "The end of the range, excluded. ISO 8601 with a time zone", examples: ["2026-11-19T12:00:00Z"] },
+      limit: { type: "integer", minimum: 1, maximum: MAX_LIMIT, default: DEFAULT_LIMIT, description: "How many observations at most" },
+      offset: { type: "integer", minimum: 0, default: 0, description: "How many observations to skip, from the newest" },
+    },
+  },
+  response: {
+    200: {
+      description: "A page of the Price History",
+      type: "object",
+      required: ["items", "total", "limit", "offset"],
+      properties: {
+        items: { type: "array", items: observation },
+        total: { type: "integer", description: "How many observations the range includes, in all pages" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+      },
+    },
+    400: error("A query parameter is not valid: an unknown one, or a limit or an offset that is not a whole number in range", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token of a User. The token of a price provider is not valid", ["UNAUTHENTICATED"]),
+    404: error("The Listing does not exist", ["LISTING_NOT_FOUND"]),
+    422: error("The range is not valid: `from` or `to` is not an instant, or `from` is not before `to`", ["INVALID_RANGE"]),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };

@@ -7,11 +7,12 @@
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../../src/app";
-import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
+import { InMemoryListingReader, InMemoryNotificationRepository, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import {
   CancelPriceAlert,
   CreatePriceAlert,
   GetPriceAlert,
+  ListNotifications,
   ListPriceAlerts,
   ModifyTargetPrice,
 } from "../../../src/price-alerts/application";
@@ -39,6 +40,7 @@ function start(repository: InMemoryPriceAlertRepository = alerts) {
     authenticator,
     priceAlertManagement: {
       listPriceAlerts: new ListPriceAlerts(repository),
+      listNotifications: new ListNotifications(new InMemoryNotificationRepository()),
       getPriceAlert: new GetPriceAlert(repository),
       modifyTargetPrice: new ModifyTargetPrice(repository, listings),
       cancelPriceAlert: new CancelPriceAlert(repository),
