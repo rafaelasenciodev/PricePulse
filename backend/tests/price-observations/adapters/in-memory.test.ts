@@ -42,15 +42,15 @@ describe("InMemoryListingCatalogue (contract of ListingCatalogue)", () => {
     const catalogue = new InMemoryListingCatalogue();
     catalogue.addListing(HEADPHONES, "EUR");
     catalogue.addListing(KEYBOARD, "USD");
-    expect(await catalogue.find(HEADPHONES)).toEqual({ currency: "EUR" });
-    expect(await catalogue.find(KEYBOARD)).toEqual({ currency: "USD" });
+    expect((await catalogue.find(HEADPHONES))?.currency).toBe("EUR");
+    expect((await catalogue.find(KEYBOARD))?.currency).toBe("USD");
   });
 
   it("adding a Listing again replaces its currency", async () => {
     const catalogue = new InMemoryListingCatalogue();
     catalogue.addListing(HEADPHONES, "EUR");
     catalogue.addListing(HEADPHONES, "USD");
-    expect(await catalogue.find(HEADPHONES)).toEqual({ currency: "USD" });
+    expect((await catalogue.find(HEADPHONES))?.currency).toBe("USD");
   });
 });
 

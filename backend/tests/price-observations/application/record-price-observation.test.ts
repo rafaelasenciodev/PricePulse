@@ -44,7 +44,11 @@ class FakeCatalogue implements ListingCatalogue {
   }
   async find(listingId: ListingId) {
     const currency = this.listings.get(listingId);
-    return currency === undefined ? null : { currency };
+    return currency === undefined ? null : { id: listingId, title: "A Listing", retailer: "A Retailer", currency };
+  }
+  /** Recording a price never lists the Catalogue: it fails if it ever does. */
+  async list(): Promise<never> {
+    throw new Error("Recording a price must not list the Catalogue");
   }
 }
 
