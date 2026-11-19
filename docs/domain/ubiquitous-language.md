@@ -26,6 +26,7 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Notification** | A record that the owner of a Price Alert must be told that its Target Price was reached. It states the Price Alert, the Listing, the Target Price and the Current Price with its Observed At. It is produced and stored; delivering it is not part of the record. | Feature 03 |
 | **Cancelled** | The state of a Price Alert that its owner stopped before it was Triggered. A Cancelled Price Alert is no longer Active: it is not evaluated, and the User may create another Active one for the same Listing. | Feature 04 |
 | **Creation moment** | When a Price Alert was created. It never changes. | Feature 04 |
+| **Price History** | The Price Observations of a Listing, in the order of their Observed At. | Feature 05 |
 
 ## Vocabulary decisions
 
