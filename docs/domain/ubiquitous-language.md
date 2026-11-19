@@ -15,7 +15,7 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Target Price** | The Price at which a User wants to be notified. It is expressed in the Listing's currency. | Feature 01 |
 | **Price Alert** | A User's request to be notified when the Current Price of a Listing reaches a Target Price. | Feature 01 |
 | **Target reached** | The condition that a Current Price is less than or equal to a Target Price. A Price equal to the Target Price reaches it. | Feature 01 |
-| **Active** | The state of a Price Alert that has been created and has not ended. It is the only state that Feature 01 produces. | Feature 01 |
+| **Active** | The state of a Price Alert that has been created and is still waiting: it has not been Triggered or Cancelled. | Feature 01, refined in [Feature 04](../features/04-read-and-manage-alerts/01-discovery.md) |
 | **Triggered** | The state of a Price Alert whose Target Price was reached and for which a Notification was produced. A Triggered Price Alert is no longer Active. Feature 01 needs the state to tell such alerts apart from Active ones; [Feature 03](../features/03-alert-evaluation/00-discovery.md) is the one that makes a Price Alert Triggered. | Feature 01, refined in Feature 03 |
 | **Duplicate** | An attempt to create a Price Alert when the User already has an Active one for the same Listing. | Feature 01 |
 | **Price Observation** | A record of the Price of a Listing at a point in time, or of its absence: a Price Observation without a Price means that the Listing is unavailable at that moment. Unavailable does not mean out of stock, because stock quantities are not modelled. | Feature 02 |
@@ -24,6 +24,8 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Conflict** | An attempt to record a Price Observation with the same Provider, Listing and Observed At as a stored one, but with different content. | Feature 02 |
 | **Evaluation** | Comparing the Current Price of a Listing with the Target Price of each of its Active Price Alerts. | Feature 03 |
 | **Notification** | A record that the owner of a Price Alert must be told that its Target Price was reached. It states the Price Alert, the Listing, the Target Price and the Current Price with its Observed At. It is produced and stored; delivering it is not part of the record. | Feature 03 |
+| **Cancelled** | The state of a Price Alert that its owner stopped before it was Triggered. A Cancelled Price Alert is no longer Active: it is not evaluated, and the User may create another Active one for the same Listing. | Feature 04 |
+| **Creation moment** | When a Price Alert was created. It never changes. | Feature 04 |
 
 ## Vocabulary decisions
 
