@@ -93,17 +93,27 @@ Decision B of the domain model and Q8 of the discovery make the Current Price de
 
 | ID | Decision | Status |
 |---|---|---|
-| 1 | Authentication is handled outside the use case. The use case receives an identified Provider. A caller who is not authenticated, or a User who is not a Provider (BR-01, SC-16, SC-17), is rejected at the HTTP boundary | Accepted |
-| 2 | The output indicates whether the Price Observation was recorded or already existed | Accepted |
-| 3 | The order of checks is the one in the flow above | Accepted |
-| 4 | Concurrency is resolved with a persistence uniqueness guarantee and a repeated read, without a Unit of Work | Accepted |
-| 5 | The moment of recording comes from a `Clock` port, so that tests control it. The tolerance of BR-12 is a constant of the use case, with a value of 5 minutes | Accepted |
-| 6 | Three ports: `ListingCatalogue`, `PriceObservationRepository` (find, add, find latest) and `Clock` | Accepted |
-| 7 | No identifier is generated: the identity of a Price Observation is its Provider, Listing and Observed At | Accepted |
-| 8 | The input carries the currency of the Price. It is compared with the one of the Listing before the amount is read, so that an unsupported currency is reported as not the one of the Listing and not as an internal error | Accepted |
-| 9 | Three application errors: `ListingNotFound`, `InvalidObservation` and `ObservationConflict`. A future Observed At and a different currency are cases of `InvalidObservation` | Accepted |
-| 10 | The use case, the contract and the `ListingReader` port of feature 01 do not change. Only the adapter behind that port and the composition change | Accepted |
-| 11 | `Price` and `ListingId` move to a shared module, because two features use them. The module of feature 01 and the new one both depend on it | Accepted |
+| 1 | Authentication is handled outside the use case. The use case receives an identified Provider. A caller who is not authenticated, or a User who is not a Provider (BR-01, SC-16, SC-17), is rejected at the HTTP boundary | Verified |
+| 2 | The output indicates whether the Price Observation was recorded or already existed | Verified |
+| 3 | The order of checks is the one in the flow above | Verified |
+| 4 | Concurrency is resolved with a persistence uniqueness guarantee and a repeated read, without a Unit of Work | Verified |
+| 5 | The moment of recording comes from a `Clock` port, so that tests control it. The tolerance of BR-12 is a constant of the use case, with a value of 5 minutes | Verified |
+| 6 | Three ports: `ListingCatalogue`, `PriceObservationRepository` (find, add, find latest) and `Clock` | Implemented |
+| 7 | No identifier is generated: the identity of a Price Observation is its Provider, Listing and Observed At | Implemented |
+| 8 | The input carries the currency of the Price. It is compared with the one of the Listing before the amount is read, so that an unsupported currency is reported as not the one of the Listing and not as an internal error | Verified |
+| 9 | Three application errors: `ListingNotFound`, `InvalidObservation` and `ObservationConflict`. A future Observed At and a different currency are cases of `InvalidObservation` | Verified |
+| 10 | The use case, the contract and the `ListingReader` port of feature 01 do not change. Only the adapter behind that port and the composition change | Verified |
+| 11 | `Price` and `ListingId` move to a shared module, because two features use them. The module of feature 01 and the new one both depend on it | Verified |
+
+Statuses after the implementation. **Verified** means that tests, or in decision 10 the comparison with the code of feature 01, confirm the decision; **Implemented** means that it is realised in code and no test pins it down.
+
+- **1**: SC-16 and SC-17 are tested through the API, and the Composition Root tests show that the two credentials are not interchangeable.
+- **2, 3, 8, 9**: tested in the use case and the API: the `recorded` flag, the order of checks (including that a resend is validated again), the currency compared first and the three application errors with their HTTP answers.
+- **4**: tested with simultaneous requests and with a failing uniqueness guarantee, in memory only. Against a database it still has to be verified.
+- **5**: the tolerance is tested at its limit and one millisecond beyond it, and the clock given to the composition is used.
+- **6, 7**: the three ports and the absence of a generated identifier are realised, but they are structural choices that no test pins down.
+- **10**: the use case and the `ListingReader` port of feature 01 differ only in the paths of their imports, and the Composition Root tests show the new adapter in use.
+- **11**: the architecture test has a shared layer and forbids a feature from importing another.
 
 Alternatives considered:
 

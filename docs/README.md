@@ -56,3 +56,21 @@ Methodology: [features/README.md](features/README.md).
 | 8 Testing | [Test plan](features/01-create-price-alert/08-test-plan.md) | Approved |
 | 9 Architecture Review | [Architecture review](features/01-create-price-alert/09-architecture-review.md) | Approved |
 | 10 Documentation and Completion | [Completion](features/01-create-price-alert/10-completion.md), [ADR-0001](adr/0001-typescript-backend.md) and [ADR-0002](adr/0002-branching-model.md) | Approved |
+
+### 02 — Price Observation
+
+Phases 8 and 9 are recorded as sections of the completion document, not as separate documents.
+
+| Phase | Document | Status |
+|---|---|---|
+| 0 Feature Discovery | [Discovery](features/02-price-observation/00-discovery.md) | Approved |
+| 1 Domain Language and Business Rules | [Business rules](features/02-price-observation/01-business-rules.md) | Approved |
+| 2 Behavioural Scenarios | [Scenarios](features/02-price-observation/02-scenarios.feature) | Approved |
+| 3 Domain Modelling | [Domain model](features/02-price-observation/03-domain-model.md) | Approved |
+| 4 Application Use Case Contract | [Use case contract](features/02-price-observation/04-use-case-contract.md) | Approved |
+| 5 Use Case Implementation | [Application layer](../backend/src/price-observations/application/) | Implemented |
+| 6 In-memory Adapters | [Adapters](../backend/src/price-observations/adapters/) | Implemented |
+| 7 HTTP and Application Composition | [HTTP layer](../backend/src/price-observations/http/) and [Composition Root](../backend/src/composition-root.ts) | Implemented |
+| 8 Testing | [Verification](features/02-price-observation/10-completion.md#4-verification) | Approved |
+| 9 Architecture Review | [Architecture review](features/02-price-observation/10-completion.md#5-architecture-review) | Approved |
+| 10 Documentation and Completion | [Completion](features/02-price-observation/10-completion.md) | Approved |

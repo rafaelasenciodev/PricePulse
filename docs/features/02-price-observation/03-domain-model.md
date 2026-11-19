@@ -78,10 +78,17 @@ A Conflict (BR-10) is not a domain error. It appears when the application compar
 
 | ID | Decision | Status |
 |---|---|---|
-| A | `PriceObservation` is an immutable record whose identity is Provider, Listing and Observed At. Each one is its own aggregate. The history of a Listing is not an aggregate | Accepted |
-| B | The Current Price is obtained through a port that returns the latest observation of a Listing by Observed At. No domain function and no stored copy | Accepted |
-| C | `ObservedAt` is a Value Object, not a bare date | Accepted |
-| D | `ProviderId` is a typed identifier. The closed set of Providers lives in authentication, not in the domain | Accepted |
+| A | `PriceObservation` is an immutable record whose identity is Provider, Listing and Observed At. Each one is its own aggregate. The history of a Listing is not an aggregate | Verified |
+| B | The Current Price is obtained through a port that returns the latest observation of a Listing by Observed At. No domain function and no stored copy | Verified |
+| C | `ObservedAt` is a Value Object, not a bare date | Verified |
+| D | `ProviderId` is a typed identifier. The closed set of Providers lives in authentication, not in the domain | Implemented |
+
+Statuses after the implementation. **Verified** means that tests confirm the decision; **Implemented** means that it is realised in code and no test pins it down.
+
+- **A**: the identity is tested in the contract of the repository, in the use case and in the API (each part of the identity counts, resends and conflicts, simultaneous requests). The uniqueness guarantee has been verified only in memory.
+- **B**: the contract of the repository (`findLatest`) and the derivation of the Current Price are tested, and the Composition Root tests show that Price Alerts see what a Provider reported.
+- **C**: `ObservedAt` is tested for equality by value across time zones and for strict reading of the instant.
+- **D**: `ProviderId` is a branded type checked by the compiler, and that the closed set lives in authentication is realised in the in-memory authenticator. No test pins down the brand itself, so it stays Implemented.
 
 ### Decision A in detail
 
