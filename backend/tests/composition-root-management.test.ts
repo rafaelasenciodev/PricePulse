@@ -9,9 +9,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { composeInMemoryApp } from "../src/composition-root";
 import type { EvaluationReport } from "../src/evaluation-trigger";
-import { AlertStatus, UserId } from "../src/price-alerts/domain";
+import { AlertStatus } from "../src/price-alerts/domain";
 import { ProviderId } from "../src/price-observations/domain";
-import { ListingId } from "../src/shared/domain";
+import { ListingId, UserId } from "../src/shared/domain";
 
 const HEADPHONES = ListingId("headphones-shop-a");
 const TOKEN_1 = "token-1";

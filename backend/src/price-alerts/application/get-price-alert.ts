@@ -1,9 +1,10 @@
 /** UC-02 Read a Price Alert (see the design of feature 04). */
 
-import type { AlertId, UserId } from "../domain";
+import type { AlertId } from "../domain";
 import { AlertNotFound } from "./errors";
 import { toView, type PriceAlertView } from "./price-alert-view";
 import type { PriceAlertRepository } from "./ports";
+import type { UserId } from "../../shared/domain";
 
 export interface GetPriceAlertCommand {
   /** Comes from the authentication of the request, never from the client. */

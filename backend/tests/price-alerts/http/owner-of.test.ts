@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Unauthenticated } from "../../../src/price-alerts/http";
 import { ownerOf } from "../../../src/price-alerts/http/routes";
-import { UserId } from "../../../src/price-alerts/domain";
+import { UserId } from "../../../src/shared/domain";
 
 describe("ownerOf", () => {
   it("BR-01: returns the authenticated User of the request", () => {

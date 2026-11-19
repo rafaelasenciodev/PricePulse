@@ -1,9 +1,8 @@
 /** Starts the server with in-memory adapters and a little demo data. Development only. */
 
 import { composeInMemoryApp } from "./composition-root";
-import { UserId } from "./price-alerts/domain";
 import { ProviderId } from "./price-observations/domain";
-import { ListingId } from "./shared/domain";
+import { ListingId, UserId } from "./shared/domain";
 
 // The demo tokens below are public: this server must never run in production.
 if (process.env["NODE_ENV"] === "production") {

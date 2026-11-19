@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  AlertStatus,
-  Notification,
-  PriceAlert,
-  TargetNotReached,
-  TargetPrice,
-  UserId,
-  newAlertId,
-} from "../../../src/price-alerts/domain";
-import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { AlertStatus, Notification, PriceAlert, TargetNotReached, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, ObservedAt, Price, UserId } from "../../../src/shared/domain";
 import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");

@@ -16,7 +16,8 @@ import {
   type PriceAlertRepository,
 } from "../application";
 import type { ListingId, Price } from "../../shared/domain";
-import type { AlertId, AlertStatus, Notification, PriceAlert, UserId } from "../domain";
+import type { AlertId, AlertStatus, Notification, PriceAlert } from "../domain";
+import type { UserId } from "../../shared/domain";
 
 /** Implements ListingReader over a map that the caller fills. */
 export class InMemoryListingReader implements ListingReader {

@@ -1,8 +1,9 @@
 import type { ListingId, ObservedAt, Price } from "../../shared/domain";
 import { TargetNotReached } from "./errors";
-import type { AlertId, UserId } from "./identifiers";
+import type { AlertId } from "./identifiers";
 import type { PriceAlert } from "./price-alert";
 import type { TargetPrice } from "./target-price";
+import type { UserId } from "../../shared/domain";
 
 export interface ProduceNotification {
   readonly alert: PriceAlert;

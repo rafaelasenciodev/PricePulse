@@ -8,9 +8,8 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { composeInMemoryApp } from "../src/composition-root";
-import { UserId } from "../src/price-alerts/domain";
 import { ProviderId } from "../src/price-observations/domain";
-import { ListingId } from "../src/shared/domain";
+import { ListingId, UserId } from "../src/shared/domain";
 
 const HEADPHONES = ListingId("headphones-shop-a");
 const USER_TOKEN = "token-1";

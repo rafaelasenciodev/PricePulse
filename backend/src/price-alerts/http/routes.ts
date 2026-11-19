@@ -7,8 +7,8 @@ import type {
   ListPriceAlerts,
   ModifyTargetPrice,
 } from "../application";
-import { ListingId } from "../../shared/domain";
-import { AlertId, type AlertStatus, type UserId } from "../domain";
+import { ListingId, type UserId } from "../../shared/domain";
+import { AlertId, type AlertStatus } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
 import {

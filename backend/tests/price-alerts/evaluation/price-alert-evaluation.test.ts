@@ -5,10 +5,9 @@ import {
   CurrencyMismatch,
   PriceAlert,
   TargetPrice,
-  UserId,
   newAlertId,
 } from "../../../src/price-alerts/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");

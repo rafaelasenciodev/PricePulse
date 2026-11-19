@@ -10,8 +10,8 @@ import {
   ListPriceAlerts,
   type PriceAlertRepository,
 } from "../../../src/price-alerts/application";
-import { AlertId, AlertStatus, PriceAlert, UserId } from "../../../src/price-alerts/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { AlertId, AlertStatus, PriceAlert } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { anAlert } from "../../support/alerts";
 import { FIXED_CLOCK } from "../../support/created-at";
 

@@ -13,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../../src/app";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { CreatePriceAlert } from "../../../src/price-alerts/application";
-import { UserId } from "../../../src/price-alerts/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
 import { InMemoryListingCatalogue, InMemoryPriceObservationRepository } from "../../../src/price-observations/adapters";
 import {
@@ -24,7 +23,7 @@ import {
 } from "../../../src/price-observations/application";
 import { ProviderId } from "../../../src/price-observations/domain";
 import { InMemoryProviderAuthenticator } from "../../../src/price-observations/http";
-import { ListingId } from "../../../src/shared/domain";
+import { ListingId, UserId } from "../../../src/shared/domain";
 import { FIXED_CLOCK } from "../../support/created-at";
 
 const HEADPHONES = ListingId("headphones-shop-a");

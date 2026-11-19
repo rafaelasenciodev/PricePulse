@@ -16,10 +16,11 @@ import {
   ListPriceAlerts,
   ModifyTargetPrice,
 } from "../../../src/price-alerts/application";
-import { AlertId, UserId } from "../../../src/price-alerts/domain";
+import { AlertId } from "../../../src/price-alerts/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
 import { FIXED_CLOCK } from "../../support/created-at";
 import { aNotification, type NotificationSpec } from "../../support/notifications";
+import { UserId } from "../../../src/shared/domain";
 
 const TOKEN_1 = "token-1";
 const TOKEN_2 = "token-2";

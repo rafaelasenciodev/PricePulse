@@ -8,8 +8,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { AlertStateChanged, type PriceAlertRepository } from "../../../src/price-alerts/application";
-import { AlertStatus, PriceAlert, TargetPrice, UserId, newAlertId } from "../../../src/price-alerts/domain";
-import { ListingId } from "../../../src/shared/domain";
+import { AlertStatus, PriceAlert, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, UserId } from "../../../src/shared/domain";
 import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");

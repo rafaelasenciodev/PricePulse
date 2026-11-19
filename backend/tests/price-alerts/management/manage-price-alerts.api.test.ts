@@ -16,9 +16,9 @@ import {
   ListPriceAlerts,
   ModifyTargetPrice,
 } from "../../../src/price-alerts/application";
-import { AlertStatus, UserId, type PriceAlert } from "../../../src/price-alerts/domain";
+import { AlertStatus, type PriceAlert } from "../../../src/price-alerts/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { anAlert, type AlertSpec } from "../../support/alerts";
 import { FIXED_CLOCK } from "../../support/created-at";
 
