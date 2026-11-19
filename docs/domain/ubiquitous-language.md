@@ -9,7 +9,7 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **User** | A registered person who has signed in. A User creates and owns Price Alerts. | [Feature 01](../features/01-create-price-alert/00-discovery.md) |
 | **Product** | An article, independent of who sells it. | Feature 01 |
 | **Retailer** | A seller that offers Products. | Feature 01 |
-| **Listing** | A Retailer's offer of a Product. A Price Alert watches a Listing. | Feature 01 |
+| **Listing** | A Retailer's offer of a Product. A Price Alert watches a Listing. It has a title and the name of its Retailer, text for a person to read that take part in no rule. | Feature 01, extended in Feature 07 |
 | **Price** | An amount of money in a currency. | Feature 01 |
 | **Current Price** | The Price of the Price Observation of a Listing with the greatest Observed At. A Listing may have none: a Listing whose latest Price Observation has no Price has no Current Price, and neither does a Listing with no Price Observation. | Feature 01, refined in [Feature 02](../features/02-price-observation/00-discovery.md) |
 | **Target Price** | The Price at which a User wants to be notified. It is expressed in the Listing's currency. | Feature 01 |
@@ -29,6 +29,7 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Price History** | The Price Observations of a Listing, in the order of their Observed At. | Feature 05 |
 | **Account** | The registration of a User: an email that identifies it, and a password. | Feature 06 |
 | **Session** | The period during which a token identifies an Account. It starts when the person signs in, and ends when it expires or when they sign out. | Feature 06 |
+| **Catalogue** | The set of Listings that the system knows. Only a Listing in it can be observed, watched or read. | Feature 07 |
 
 ## Vocabulary decisions
 
