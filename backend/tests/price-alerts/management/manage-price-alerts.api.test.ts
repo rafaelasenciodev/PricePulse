@@ -343,7 +343,7 @@ describe("when the alert changes while the request is applied (SC-20, BR-08)", (
   it.each([
     ["cancelling", { status: "cancelled" }],
     ["modifying the Target Price", { targetAmount: "70.00" }],
-  ])("%s answers 409 ALERT_CONFLICT, and the alert stays Triggered", async (_name, payload) => {
+  ])("SC-20 / BR-08: %s answers 409 ALERT_CONFLICT, and the alert stays Triggered", async (_name, payload) => {
     await app.close();
     const racing = new TriggeredBeforeSave();
     start(racing);

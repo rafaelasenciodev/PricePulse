@@ -4,6 +4,7 @@ import {
   AlertConflict,
   AlertNotActive,
   AlertNotFound,
+  ApplicationError,
   CancelPriceAlert,
   CreatePriceAlert,
   ListPriceAlerts,
@@ -152,8 +153,26 @@ describe("when the alert changes while the User acts (BR-08)", () => {
   });
 });
 
+describe("a failure that is not about the state of the alert", () => {
+  it("a failure of the store is not hidden or turned into a business error", async () => {
+    class Down extends InMemoryPriceAlertRepository {
+      override async save(): Promise<void> {
+        throw new Error("the store is down");
+      }
+    }
+    const down = new Down();
+    const alert = anAlert({ owner: "user-1" });
+    await down.add(alert);
+
+    const outcome = await cancel(alert.id, USER, down).catch((error: unknown) => error);
+
+    expect((outcome as Error).message).toBe("the store is down");
+    expect(outcome).not.toBeInstanceOf(ApplicationError);
+  });
+});
+
 describe("what the use case does and does not do (BR-07)", () => {
-  it("only reads the alert and saves it once: it has no way to notify or evaluate", async () => {
+  it("SC-13 / BR-07: only reads the alert and saves it once: it has no way to notify or evaluate", async () => {
     const alert = anAlert({ owner: "user-1" });
     await alerts.add(alert);
     const calls: string[] = [];

@@ -25,6 +25,8 @@ interface Feature {
   readonly name: string;
   /** Folder of the feature under docs/features/ */
   readonly docs: string;
+  /** The document that holds its business rules. Features 01 to 03 have a document of their own for them. */
+  readonly rulesFile?: string;
   /** The test files that belong to the feature: paths relative to tests/ */
   readonly owns: (path: string) => boolean;
   readonly scenarios: number;
@@ -83,6 +85,18 @@ const FEATURES: readonly Feature[] = [
     exemptRules: {},
     exemptScenarios: {},
   },
+  {
+    name: "feature 04",
+    docs: "04-read-and-manage-alerts/",
+    rulesFile: "01-discovery.md", // the rules are in the discovery, as the method of five stages says
+    // Like the evaluation, it lives in the module of Price Alerts: its tests are told apart by folder
+    // and by file name.
+    owns: (path) => path.startsWith("price-alerts/management/") || path === "composition-root-management.test.ts",
+    scenarios: 22,
+    rules: 9,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;
@@ -101,7 +115,7 @@ function scenarioTags(feature: Feature): Map<string, string[]> {
 }
 
 function businessRules(feature: Feature): string[] {
-  const file = readFileSync(new URL(`${feature.docs}01-business-rules.md`, DOCS_DIR), "utf8");
+  const file = readFileSync(new URL(`${feature.docs}${feature.rulesFile ?? "01-business-rules.md"}`, DOCS_DIR), "utf8");
   return [...file.matchAll(/^\| (BR-\d+) \|/gm)].map((m) => pad(m[1] as string));
 }
 

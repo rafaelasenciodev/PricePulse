@@ -12,7 +12,7 @@ import {
   type PriceAlertRepository,
 } from "../../../src/price-alerts/application";
 import { AlertId, AlertStatus, CurrencyMismatch, PriceAlert, UserId } from "../../../src/price-alerts/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { ListingId, Price, UnsupportedCurrency } from "../../../src/shared/domain";
 import { anAlert } from "../../support/alerts";
 
 const USER = UserId("user-1");
@@ -202,7 +202,7 @@ describe("when the alert changes while the User acts (BR-08)", () => {
 });
 
 describe("what the use case does and does not do (BR-07)", () => {
-  it("only reads the alert and the Listing and saves the alert once: it has no way to notify or evaluate", async () => {
+  it("SC-13 / BR-07: only reads the alert and the Listing and saves the alert once: it has no way to notify or evaluate", async () => {
     const alert = await givenActiveAlert();
     const calls: string[] = [];
     const spyAlerts = Object.create(alerts, {
@@ -222,6 +222,30 @@ describe("inconsistent data is an internal error, not a mistake of the User", ()
     await alerts.add(alert);
     const outcome = await modify(alert.id, "70.00").catch((error: unknown) => error);
     expect(outcome).toBeInstanceOf(Error);
+    expect(outcome).not.toBeInstanceOf(ApplicationError);
+  });
+
+  it("a Listing priced in a currency the system does not support is not an invalid Target Price", async () => {
+    listings.addListing(LISTING, "XYZ");
+    const alert = await givenActiveAlert();
+    const outcome = await modify(alert.id, "70.00").catch((error: unknown) => error);
+    expect(outcome).toBeInstanceOf(UnsupportedCurrency);
+    expect(outcome).not.toBeInstanceOf(InvalidTargetPrice);
+  });
+
+  it("a failure of the store is not hidden or turned into a business error", async () => {
+    class Down extends InMemoryPriceAlertRepository {
+      override async save(): Promise<void> {
+        throw new Error("the store is down");
+      }
+    }
+    const down = new Down();
+    const alert = anAlert({ owner: "user-1", listing: LISTING, target: "80.00" });
+    await down.add(alert);
+
+    const outcome = await modify(alert.id, "70.00", USER, down).catch((error: unknown) => error);
+
+    expect((outcome as Error).message).toBe("the store is down");
     expect(outcome).not.toBeInstanceOf(ApplicationError);
   });
 

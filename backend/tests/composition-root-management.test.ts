@@ -142,6 +142,20 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
     expect(application.notifications.all()).toHaveLength(1);
   });
 
+  it("SC-13 / BR-07: cancelling or modifying starts no Evaluation and produces no Notification", async () => {
+    compose();
+    await observe("10", "100.00");
+    const created = (await create("80.00")).json();
+    const other = (await create("85.00", TOKEN_2)).json();
+    reports.length = 0;
+
+    await patch(created.id, { targetAmount: "70.00" });
+    await patch(other.id, { status: "cancelled" }, TOKEN_2);
+
+    expect(reports).toEqual([]);
+    expect(application.notifications.all()).toEqual([]);
+  });
+
   it("SC-07: every route needs a token", async () => {
     compose();
     for (const [method, url] of [["GET", "/price-alerts"], ["GET", "/price-alerts/x"], ["PATCH", "/price-alerts/x"]] as const) {
