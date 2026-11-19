@@ -1,6 +1,6 @@
 # language: en
 # Feature 02 - Price Observation. Phase 2: behavioural scenarios.
-# Status: Draft
+# Status: Approved
 #
 # Scenarios describe observable business behaviour in the project's ubiquitous language.
 # Each scenario has an identifier (@SC-nn) and the business rules it exercises (@BR-nn).
