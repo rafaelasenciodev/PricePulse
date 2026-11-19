@@ -7,7 +7,7 @@
  */
 
 import type { FastifyInstance } from "fastify";
-import { buildApp } from "./app";
+import { buildApp, type ApiDocsOptions } from "./app";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "./price-alerts/adapters";
 import { CreatePriceAlert } from "./price-alerts/application";
 import { InMemoryAuthenticator } from "./price-alerts/http";
@@ -20,13 +20,20 @@ export interface InMemoryApplication {
 }
 
 /** The application wired with in-memory adapters: no database, no external provider. */
-export function composeInMemoryApp(options: { logger?: boolean } = {}): InMemoryApplication {
+export function composeInMemoryApp(
+  options: { logger?: boolean; apiDocs?: ApiDocsOptions } = {},
+): InMemoryApplication {
   const listings = new InMemoryListingReader();
   const alerts = new InMemoryPriceAlertRepository();
   const authenticator = new InMemoryAuthenticator();
 
   const createPriceAlert = new CreatePriceAlert(listings, alerts);
-  const app = buildApp({ createPriceAlert, authenticator, logger: options.logger });
+  const app = buildApp({
+    createPriceAlert,
+    authenticator,
+    logger: options.logger,
+    apiDocs: options.apiDocs,
+  });
 
   return { app, listings, authenticator };
 }

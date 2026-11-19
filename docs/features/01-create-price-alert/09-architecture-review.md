@@ -12,6 +12,8 @@ Method: a script that reads the imports of every source file and builds the depe
 
 Not covered: performance, load and a security review beyond what the feature touches.
 
+The figures in this document are those at the time of the review. Later work, such as the interactive API documentation, changed some of them.
+
 ## 2. Result by criterion
 
 | Criterion | Result |
@@ -20,7 +22,7 @@ Not covered: performance, load and a security review beyond what the feature tou
 | Cycles | None between files |
 | Purity of the domain | The domain imports no package and no platform module (before: `node:crypto`) |
 | Separation of responsibilities | HTTP translates requests and errors; the use case orchestrates; the domain holds the rules; adapters hold the storage. No layer does another's job |
-| Coupling | A single runtime dependency (`fastify`), confined to `http`. The use case knows its collaborators only through two ports |
+| Coupling | A single runtime dependency at the time of the review (`fastify`), used by the HTTP layer and by the application builder (`app.ts`) only. The use case knows its collaborators only through two ports |
 | Cohesion | Small, focused files. The largest, the use case, has 116 lines and 15 decision points, and is readable thanks to its numbered steps |
 | Error handling | Business errors are classified by type, not by a list that must be remembered. Unexpected errors reach the caller unchanged and are reported as a generic 500 with no cause |
 | Transaction boundary | One atomic write. Reads of the Listing belong to another part of the system. Consistent with the contract |
@@ -71,7 +73,7 @@ The branch figure dropped by a tenth of a point because the new guard code added
 `tests/architecture.test.ts` reads the imports of every source file and fails if:
 
 - a layer imports a layer it may not (the domain imports nothing internal, the application only the domain, `adapters` and `http` only the application and the domain);
-- a layer uses a package it may not (only `http`, `app` and the Composition Root may use `fastify`; the domain, the application and the adapters use none);
+- a layer uses a package it may not (only `http`, `app` and the Composition Root may use `fastify`, and only `app` may use the two plugins of the API documentation added afterwards; the domain, the application and the adapters use none);
 - there is a cycle between files;
 - a source file imports from the tests, or does not belong to a known layer.
 

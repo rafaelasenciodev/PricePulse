@@ -10,14 +10,14 @@ Tests verify behaviour and business rules, not coverage figures. Code coverage i
 
 ## 2. Levels
 
-147 test cases, all passing. Run with `npm test` in `backend/`.
+162 test cases, all passing. Run with `npm test` in `backend/`.
 
 | Level | What it verifies | Location | Cases |
 |---|---|---|---|
 | Domain | Invariants of `Price`, `TargetPrice` and `PriceAlert` (BR-03, BR-04, BR-05, BR-06, BR-09, BR-11) | `tests/price-alerts/domain/` | 50 |
 | Application | The use case: each scenario, the order of checks (decision 3), concurrency (decision 4) and failures that are not business errors | `tests/price-alerts/application/` | 33 |
 | Adapter contract | The in-memory adapters honour the contract of their ports, including the uniqueness guarantee | `tests/price-alerts/adapters/` | 11 |
-| API | Status codes, error codes and bodies, authentication (SC-14) and the mapping of every application error | `tests/price-alerts/http/` | 31 |
+| API | Status codes, error codes and bodies, authentication (SC-14), the mapping of every application error, and the interactive documentation, which is checked not to drift from what the API answers | `tests/price-alerts/http/` | 46 |
 | Wiring | The Composition Root connects HTTP, use case and adapters | `tests/composition-root.test.ts` | 5 |
 | Traceability | The chain rule → scenario → test does not break (section 4) | `tests/traceability.test.ts` | 6 |
 | Architecture | Dependencies point inward: no layer imports what it may not, no package outside its layer, no cycles (see the [architecture review](09-architecture-review.md)) | `tests/architecture.test.ts` | 11 |
@@ -109,11 +109,15 @@ The diagnostic found one case that the manual review had missed: a failure of th
 | `errors.ts`, two defensive checks | They guard against values that Fastify never produces |
 | `in-memory.ts`, unknown Listing in a test helper | A helper for tests, not part of the port |
 
+After the interactive documentation was added the figures are 100 % of lines and 95.0 % of branches.
+
 Run with `npm run coverage` in `backend/`.
 
 ## 7. Mutation checks
 
 During implementation, 26 deliberate errors were introduced in scratch copies of the code, such as an exclusive threshold, a missing retry, an `await` between the uniqueness check and the insertion, authentication after validation, or a removed scenario tag. **All 26 made at least one test fail.** The architecture review (Phase 9) added three more, also detected. The architecture test was checked with 11 deliberate violations, all detected. One more error, removing the production guard of `main.ts`, is not detected because `main.ts` has no test; it was verified by running the file. This was done by hand and is not part of the test suite, so it is evidence of the quality of the tests at this point and not a guard for the future.
+
+The tests of the interactive documentation were checked with 8 more deliberate errors, such as a wrong status code in the documentation, a missing error code, a dropped security requirement and documentation served when it was not asked for. All were detected.
 
 ## 8. Known limitations
 
@@ -121,6 +125,7 @@ During implementation, 26 deliberate errors were introduced in scratch copies of
 - The contract tests of the adapters are written for the in-memory ones. They will be made reusable when a second adapter exists.
 - The real HTTP server was checked by hand (13 requests against `main.ts`), not by an automated test. `app.inject()` covers the same pipeline except the network layer.
 - `main.ts` (demo data and start-up) has no test.
+- The interactive documentation was checked through HTTP requests, its page and its files included, and through tests. It was not looked at in a browser.
 - No continuous integration runs the tests yet.
 - Concurrency is tested with the in-memory repository. A real database needs its own test of the uniqueness guarantee.
 

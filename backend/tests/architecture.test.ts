@@ -19,7 +19,7 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   application: { imports: ["domain"], packages: [] },
   adapters: { imports: ["application", "domain"], packages: [] },
   http: { imports: ["application", "domain"], packages: ["fastify"] },
-  app: { imports: ["application", "http"], packages: ["fastify"] },
+  app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
   "composition-root": { imports: ["adapters", "application", "http", "app"], packages: ["fastify"] },
   main: { imports: ["domain", "composition-root"], packages: [] },
 };

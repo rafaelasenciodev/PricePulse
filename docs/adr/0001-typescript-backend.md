@@ -20,7 +20,7 @@ The backend is written in TypeScript on Node, in strict mode.
 |---|---|
 | Language | TypeScript with `strict` and `noUncheckedIndexedAccess` |
 | Runtime | Node, minimum version 22 (the types are pinned to the same major) |
-| HTTP | Fastify, the only runtime dependency so far |
+| HTTP | Fastify, with two plugins that generate and serve the API documentation. They are the only runtime dependencies so far |
 | Tests | Vitest |
 | Packages | npm |
 

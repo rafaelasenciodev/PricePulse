@@ -21,11 +21,11 @@ The feature runs end to end over HTTP with in-memory storage. It does not evalua
 | 4 Contract | One use case, four application errors, two ports | [Use case contract](04-use-case-contract.md) |
 | 5 Use case | `CreatePriceAlert` and its ports | `backend/src/price-alerts/application/` |
 | 6 Adapters | In-memory catalogue and repository | `backend/src/price-alerts/adapters/` |
-| 7 HTTP and composition | `POST /listings/{listingId}/price-alerts`, Composition Root, development server | `backend/src/price-alerts/http/`, `backend/src/composition-root.ts` |
-| 8 Testing | 147 tests, traceability and coverage diagnostic | [Test plan](08-test-plan.md) |
+| 7 HTTP and composition | `POST /listings/{listingId}/price-alerts`, Composition Root, development server, interactive API documentation (OpenAPI and Swagger UI, development only) | `backend/src/price-alerts/http/`, `backend/src/composition-root.ts` |
+| 8 Testing | 162 tests, traceability and coverage diagnostic | [Test plan](08-test-plan.md) |
 | 9 Architecture review | 10 findings, 7 resolved, an architecture test | [Architecture review](09-architecture-review.md) |
 
-The code is about 780 lines in 20 files, and the tests about 1,200 lines in 11 files.
+The code is about 900 lines in 21 files, and the tests about 1,350 lines in 12 files.
 
 ## 3. Decisions that shaped the feature
 
@@ -42,11 +42,11 @@ The code is about 780 lines in 20 files, and the tests about 1,200 lines in 11 f
 
 ## 4. Verification
 
-- **Tests:** 147 test cases in 11 files, all passing. The levels are domain, use case, adapter contracts, API, wiring, traceability and architecture.
+- **Tests:** 162 test cases in 12 files, all passing. The levels are domain, use case, adapter contracts, API, wiring, traceability and architecture. The API tests include the interactive documentation, checked not to drift from what the API answers.
 - **Scenarios:** 17 of 18 have tests. SC-05 has none by design. SC-14 is tested through the API only, because the use case never sees authentication. See the [test plan](08-test-plan.md).
-- **Coverage, as a diagnostic:** 100 % of lines and 94.9 % of branches. No threshold was set, and no test was written only to raise it.
-- **Deliberate errors:** 40 errors were introduced in scratch copies of the code and the tests detected all of them. One more, in `main.ts`, cannot be detected because that file has no test, and it was checked by running it.
-- **By hand:** the server was started and sent real HTTP requests, and the instructions of the README were followed from a clean clone of the repository.
+- **Coverage, as a diagnostic:** 100 % of lines and 95.0 % of branches. No threshold was set, and no test was written only to raise it.
+- **Deliberate errors:** 48 errors were introduced in scratch copies of the code and the tests detected all of them. One more, in `main.ts`, cannot be detected because that file has no test, and it was checked by running it.
+- **By hand:** the server was started and sent real HTTP requests, the instructions of the README were followed from a clean clone of the repository, and the interactive documentation was fetched from the running server, its page and its files included.
 
 ## 5. What the process revealed
 
@@ -59,6 +59,7 @@ The code is about 780 lines in 20 files, and the tests about 1,200 lines in 11 f
 | Phase 8 | An assumption about HTTP content types was wrong | It was checked with a probe and the test corrected |
 | Phase 9 | Seven weaknesses: a platform import in the domain, a mutable status, a forced type, a manual list of errors, and others | All seven resolved and verified |
 | Phase 10 | After the language change the contract and the model had drifted from the code | Both were aligned and reopened for review |
+| Phase 10 | Adding the API documentation made the architecture test fail, because `app.ts` used two packages its rule did not allow | The rule was changed on purpose: only `app` may use the two documentation plugins |
 
 ## 6. Known limitations
 
@@ -70,6 +71,7 @@ The code is about 780 lines in 20 files, and the tests about 1,200 lines in 11 f
 - `Price` accepts negative amounts. A decision of the model, recorded in a test: only the Target Price must be positive.
 - The tests have run on one version of Node, 25.9, although the minimum declared is 22.
 - `main.ts` has no automated test.
+- The interactive documentation exists only in the development server. It was checked through HTTP requests and tests, not looked at in a browser.
 - No continuous integration runs the tests.
 - How the application is built for production is not decided.
 - The repository has no licence.
@@ -85,6 +87,7 @@ The code is about 780 lines in 20 files, and the tests about 1,200 lines in 11 f
 | Validation errors share a base class | No list of errors to remember | The classification must be kept, and a test pins it |
 | Two different 409 responses told apart by a code | Both are conflicts with the state of the system | A client must read the code |
 | Tests that read the documents and the imports | Traceability and architecture cannot rot silently | Those tests depend on the layout of the files |
+| API documentation generated from the validation schemas | The documentation cannot describe something other than what is enforced, and tests check it against the real answers | Two more runtime dependencies and 30 more packages in total (from 48 to 78 of runtime). It is off unless asked for |
 | A branch and a merge per feature | The history shows each feature as a block | Extra steps for a single author |
 
 ## 8. Follow-up

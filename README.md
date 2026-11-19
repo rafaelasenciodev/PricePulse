@@ -11,6 +11,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Capability | State |
 |---|---|
 | Create Price Alert | Implemented, with in-memory storage |
+| Interactive API documentation | Implemented, in the development server only |
 | Price observations and price history | Not started |
 | Alert evaluation and notifications | Not started |
 | User accounts and login | Not started (a development stand-in with fixed tokens is used) |
@@ -39,6 +40,8 @@ curl -i -X POST http://127.0.0.1:3000/listings/headphones-shop-a/price-alerts \
   -d '{"targetAmount":"80.00"}'
 ```
 
+Or try it in the browser: open **<http://127.0.0.1:3000/docs>**, press **Authorize**, paste `demo-token-1`, then open the endpoint and press **Try it out**.
+
 The server starts with demo data, defined in [`backend/src/main.ts`](backend/src/main.ts):
 
 | Demo data | Values |
@@ -66,6 +69,8 @@ The retailers are fictitious. Everything is held in memory and is lost when the 
 | 422 | `INVALID_TARGET_PRICE` | The amount is not a number, is not greater than zero, or has too many decimals |
 | 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
 
+The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served only by the development server.
+
 Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in [`01-business-rules.md`](docs/features/01-create-price-alert/01-business-rules.md) and the full contract in [`04-use-case-contract.md`](docs/features/01-create-price-alert/04-use-case-contract.md).
 
 ## Architecture
@@ -90,7 +95,7 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 ## Technology
 
-TypeScript in strict mode on Node, Fastify for HTTP, Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice.
+TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice.
 
 Not decided yet: the database, background jobs, the frontend, how the application is built for production, and where it is deployed.
 

@@ -3,6 +3,7 @@ import type { CreatePriceAlert } from "../application";
 import { ListingId, type UserId } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
+import { createPriceAlertSchema } from "./schemas";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -48,22 +49,7 @@ export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = asy
   // UC-01 Create Price Alert
   app.post<{ Params: { listingId: string }; Body: { targetAmount: string } }>(
     "/listings/:listingId/price-alerts",
-    {
-      schema: {
-        params: {
-          type: "object",
-          required: ["listingId"],
-          properties: { listingId: { type: "string", minLength: 1 } },
-        },
-        body: {
-          type: "object",
-          required: ["targetAmount"],
-          // The owner is never taken from the body: unknown fields are rejected.
-          additionalProperties: false,
-          properties: { targetAmount: { type: "string" } },
-        },
-      },
-    },
+    { schema: createPriceAlertSchema },
     async (request, reply) => {
       const result = await createPriceAlert.execute({
         owner: ownerOf(request),
