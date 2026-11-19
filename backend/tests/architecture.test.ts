@@ -23,7 +23,8 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   // node:crypto: the hash of the passwords and the random tokens of the Accounts (ADR-0004), which add no dependency.
   adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto"] },
   http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
-  app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
+  // `shared`: the error of a refused origin and the check of the origin of the settings (feature 08).
+  app: { imports: ["application", "http", "shared"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
   // The policy that joins two features: it knows both through their applications and nothing else.
   "evaluation-trigger": { imports: ["application"], packages: ["fastify"] },
   "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger"], packages: ["fastify"] },

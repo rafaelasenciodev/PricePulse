@@ -95,6 +95,10 @@ export const createPriceAlertSchema: FastifySchema = {
     200: { description: "The same request was repeated: the existing Price Alert is returned", ...priceAlert },
     400: error("The request is malformed: a missing or unknown field, an amount that is not text, or a body that is not JSON", ["BAD_REQUEST"]),
     401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     404: error("The Listing does not exist", ["LISTING_NOT_FOUND"]),
     409: error(
       "The request conflicts with the state of the system: the User already has an Active Price Alert for the Listing with another target, or the Current Price already reaches the target",
@@ -205,6 +209,10 @@ export const patchPriceAlertSchema: FastifySchema = {
     200: { description: "The Price Alert, changed or not", ...priceAlert },
     400: error("The body is not one of the two changes: a missing or unknown field, both fields, a state other than cancelled, a value of the wrong type, or a body that is not JSON", ["BAD_REQUEST"]),
     401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     404: error("The Price Alert does not exist, or it belongs to another User", ["ALERT_NOT_FOUND"]),
     409: error(
       "The request conflicts with the state of the Price Alert: it is not Active, it changed while the request was applied, or the Current Price already reaches the new Target Price",

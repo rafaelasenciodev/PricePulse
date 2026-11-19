@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { ListingId } from "../../shared/domain";
-import { bearerTokenOf } from "../../shared/http";
+import { bearerTokenOf, sessionCookieHook, type SessionCookieSettings } from "../../shared/http";
 import type { ListListings, ReadListing } from "../application";
 import { Unauthenticated } from "./errors";
 import { readPageNumbers } from "./page-numbers";
@@ -11,6 +11,8 @@ export interface CatalogueRoutesOptions {
   readonly listListings: ListListings;
   readonly readListing: ReadListing;
   readonly authenticator: UserAuthenticator;
+  /** The cookie of the Session (feature 08). Without it nothing is read from a cookie (BR-10). */
+  readonly sessionCookie?: SessionCookieSettings | undefined;
 }
 
 /**
@@ -22,8 +24,11 @@ export interface CatalogueRoutesOptions {
  */
 export const catalogueRoutes: FastifyPluginAsync<CatalogueRoutesOptions> = async (
   app,
-  { listListings, readListing, authenticator },
+  { listListings, readListing, authenticator, sessionCookie },
 ) => {
+  // With the cookie on, it is turned into the header before the hook that authenticates (decision 1 of feature 08).
+  if (sessionCookie) app.addHook("onRequest", sessionCookieHook(sessionCookie));
+
   // Authentication runs first, before the query is validated and before the Listing is looked for: a
   // request that is not authenticated learns nothing about what a valid one looks like, or about what
   // the Catalogue holds (BR-06, SC-19).

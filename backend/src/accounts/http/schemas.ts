@@ -53,6 +53,10 @@ export const registerAccountSchema: FastifySchema = {
   response: {
     201: { description: "The Account was created", ...account },
     400: error("The request is malformed: a missing or unknown field, a value that is not text, or a body that is not JSON", ["BAD_REQUEST"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     409: error("The email already has an Account", ["EMAIL_ALREADY_REGISTERED"]),
     422: error("The email is not valid, or the password is too short, too long or the email", ["INVALID_REGISTRATION"]),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
@@ -66,6 +70,7 @@ export const signInSchema: FastifySchema = {
     "Creates a Session for the Account and gives its token. The token is shown only now: keep it, and send it in `Authorization: Bearer <token>`.",
     "",
     "- A Session lasts 7 days from now. An Account can have several.",
+    "- When the application uses the session cookie, the answer also sets it, for the browser: `HttpOnly`, `SameSite=Strict`, for the life of the Session. The token is in the body all the same.",
     "- An email that has no Account and a wrong password get the same answer.",
     "- After 5 failed sign-ins in a row for an email, it is refused for 15 minutes, with the right password too. `Retry-After` says how many seconds to wait. A successful sign-in resets the count.",
   ].join("\n"),
@@ -83,6 +88,10 @@ export const signInSchema: FastifySchema = {
     },
     400: error("The request is malformed: a missing or unknown field, a value that is not text, or a body that is not JSON", ["BAD_REQUEST"]),
     401: error("The email or the password is not valid. It never says which", ["INVALID_CREDENTIALS"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     429: error("Too many failed attempts for this email. `Retry-After` says how many seconds to wait", ["TOO_MANY_ATTEMPTS"]),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
@@ -96,6 +105,10 @@ export const signOutSchema: FastifySchema = {
   response: {
     204: { description: "The Session ended", type: "null" },
     401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };

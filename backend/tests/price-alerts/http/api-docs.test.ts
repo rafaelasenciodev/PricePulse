@@ -96,7 +96,7 @@ describe("the OpenAPI document", () => {
   it("documents every status the endpoint answers", async () => {
     start();
     const responses = (await spec()).paths[PATH].post.responses;
-    expect(Object.keys(responses).sort()).toEqual(["200", "201", "400", "401", "404", "409", "422", "500"]);
+    expect(Object.keys(responses).sort()).toEqual(["200", "201", "400", "401", "403", "404", "409", "422", "500"]);
   });
 });
 

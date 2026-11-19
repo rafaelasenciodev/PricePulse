@@ -8,7 +8,7 @@ import type {
   ModifyTargetPrice,
 } from "../application";
 import { ListingId, type UserId } from "../../shared/domain";
-import { bearerTokenOf } from "../../shared/http";
+import { bearerTokenOf, sessionCookieHook, type SessionCookieSettings } from "../../shared/http";
 import { AlertId, type AlertStatus } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
@@ -41,6 +41,8 @@ export interface PriceAlertRoutesOptions {
   readonly createPriceAlert: CreatePriceAlert;
   readonly authenticator: Authenticator;
   readonly management?: PriceAlertManagement;
+  /** The cookie of the Session (feature 08). Without it nothing is read from a cookie (BR-10). */
+  readonly sessionCookie?: SessionCookieSettings | undefined;
 }
 
 /**
@@ -70,9 +72,12 @@ export function ownerOf(request: { readonly owner: UserId | null }): UserId {
 
 export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = async (
   app,
-  { createPriceAlert, authenticator, management },
+  { createPriceAlert, authenticator, management, sessionCookie },
 ) => {
   app.decorateRequest("owner", null);
+
+  // With the cookie on, it is turned into the header before the hook that authenticates (decision 1 of feature 08).
+  if (sessionCookie) app.addHook("onRequest", sessionCookieHook(sessionCookie));
 
   // Authentication runs first, before the body is validated: a request that is not
   // authenticated learns nothing about what a valid request looks like (BR-01, SC-14).

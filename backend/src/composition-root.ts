@@ -32,7 +32,7 @@ import {
   SignOut,
   type PasswordHasher,
 } from "./accounts/application";
-import { buildApp, type ApiDocsOptions } from "./app";
+import { buildApp, type ApiDocsOptions, type SessionCookieOptions } from "./app";
 import {
   ComposedListingReader,
   InMemoryNotificationRepository,
@@ -95,6 +95,11 @@ export function composeInMemoryApp(
     clock?: Clock;
     /** How passwords are hashed. By default `scrypt` with its production cost, which is slow on purpose: tests give a fast one. */
     passwordHasher?: PasswordHasher;
+    /**
+     * Turns on the cookie of the Session for the browser (feature 08). Without it only the header identifies a User,
+     * and nothing that exists changes. A origin that is not valid makes it throw when it is built.
+     */
+    sessionCookie?: SessionCookieOptions;
     /** Receives what each Evaluation came to. By default it writes to the log of the application. */
     onEvaluation?: (report: EvaluationReport) => void;
   } = {},
@@ -172,6 +177,7 @@ export function composeInMemoryApp(
     },
     logger: options.logger,
     apiDocs: options.apiDocs,
+    ...(options.sessionCookie ? { sessionCookie: options.sessionCookie } : {}),
   });
 
   return {

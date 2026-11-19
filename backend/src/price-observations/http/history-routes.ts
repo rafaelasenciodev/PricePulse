@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { ListingId } from "../../shared/domain";
-import { bearerTokenOf } from "../../shared/http";
+import { bearerTokenOf, sessionCookieHook, type SessionCookieSettings } from "../../shared/http";
 import type { ReadPriceHistory } from "../application";
 import { Unauthenticated } from "./errors";
 import { readPageNumbers } from "./page-numbers";
@@ -10,6 +10,8 @@ import type { UserAuthenticator } from "./user-authenticator";
 export interface PriceHistoryRoutesOptions {
   readonly readPriceHistory: ReadPriceHistory;
   readonly authenticator: UserAuthenticator;
+  /** The cookie of the Session (feature 08). Without it nothing is read from a cookie (BR-10). */
+  readonly sessionCookie?: SessionCookieSettings | undefined;
 }
 
 /**
@@ -19,8 +21,11 @@ export interface PriceHistoryRoutesOptions {
  */
 export const priceHistoryRoutes: FastifyPluginAsync<PriceHistoryRoutesOptions> = async (
   app,
-  { readPriceHistory, authenticator },
+  { readPriceHistory, authenticator, sessionCookie },
 ) => {
+  // With the cookie on, it is turned into the header before the hook that authenticates (decision 1 of feature 08).
+  if (sessionCookie) app.addHook("onRequest", sessionCookieHook(sessionCookie));
+
   // Authentication runs first, before the query is validated: a request that is not
   // authenticated learns nothing about what a valid request looks like (BR-04).
   app.addHook("onRequest", async (request) => {
