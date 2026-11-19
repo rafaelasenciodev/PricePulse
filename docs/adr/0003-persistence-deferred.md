@@ -1,6 +1,6 @@
 # ADR-0003: Persistence is deferred and the in-memory adapters stay
 
-- Document status: In Review
+- Document status: Approved
 - Decision status: Accepted
 - Date: 2026-11-19
 
