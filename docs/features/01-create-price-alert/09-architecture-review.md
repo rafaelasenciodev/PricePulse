@@ -62,10 +62,10 @@ The branch figure dropped by a tenth of a point because the new guard code added
 - The adapter contract tests must become reusable so that the database adapter is held to the same expectations.
 - F3: decide how stored Price Alerts are rebuilt.
 
-**For the documentation phase**
-- The contract names the input `target_amount`, `listing_id` and `owner`; the code uses `targetAmount`, `listingId` and `owner`, and the amount is text.
-- The domain model does not mention `InvalidAmount`, that amounts are held as integer minor units, or `InvalidValue`.
-- The index and status tables of `docs/` still describe the feature as being in Phase 3.
+**Documentation that had drifted from the code, resolved in Phase 10**
+- The contract named the input `target_amount` and `listing_id`, while the code uses `targetAmount` and `listingId`, and the amount is text. The contract now matches.
+- The domain model did not mention `InvalidAmount`, `InvalidValue` or that amounts are held as integer minor units. It now does.
+- The index and status tables of `docs/` described the feature as being in Phase 3. They now show every phase.
 
 **Automated**
 `tests/architecture.test.ts` reads the imports of every source file and fails if:

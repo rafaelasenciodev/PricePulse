@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Application Use Case Contract (Phase 4)
 
-Status: Approved
+Status: In Review
 
 The contract of the use case that realises this feature. It builds on the [business rules](01-business-rules.md), the [scenarios](02-scenarios.feature) and the [domain model](03-domain-model.md). It describes what the use case asks for, what it returns and what it needs from the outside. It does not describe HTTP or persistence technology.
 
@@ -15,14 +15,14 @@ A User asks to be notified when the Current Price of a Listing reaches a Target 
 | Data | Origin | Notes |
 |---|---|---|
 | `owner` | The authentication of the request, never a value supplied by the client | BR-01 |
-| `listing_id` | The request | |
-| `target_amount` | The request | Only the amount. The currency is not sent: it is the currency of the Listing (BR-04) |
+| `listingId` | The request | |
+| `targetAmount` | The request | Only the amount, as text such as `"80.00"`. The currency is not sent: it is the currency of the Listing (BR-04) |
 
 ### Output
 
 | Data | Notes |
 |---|---|
-| Price Alert | Identifier, Listing, Target Price with its currency, and status |
+| `alert` | The Price Alert: `id`, `listingId`, `targetAmount` (as text), `currency` and `status` |
 | `created` | `true` if a new Price Alert was stored, `false` if an existing Active one was returned (BR-08) |
 
 ### Expected application errors
@@ -30,7 +30,7 @@ A User asks to be notified when the Current Price of a Listing reaches a Target 
 | Error | Rules | When |
 |---|---|---|
 | `ListingNotFound` | BR-02 | The Listing does not exist |
-| `InvalidTargetPrice` | BR-03, BR-04 | The amount is not greater than zero, or has more decimals than the currency of the Listing allows |
+| `InvalidTargetPrice` | BR-03, BR-04 | The amount cannot be read as a number, is not greater than zero, or has more decimals than the currency of the Listing allows. Reading the amount is a matter of the format of the input and is not a business rule of its own |
 | `DuplicateAlert` | BR-07, BR-08 | The User already has an Active Price Alert for the Listing with a different Target Price |
 | `TargetAlreadyReached` | BR-05 | The Listing has a Current Price and it reaches the Target Price |
 
@@ -41,7 +41,7 @@ Technical failures and inconsistent data from the catalogue are not business err
 When several rules are broken by the same request, the first one in this order is reported (decision 3).
 
 1. Look up the Listing. If it does not exist: `ListingNotFound`.
-2. Build the Target Price from `target_amount` and the currency of the Listing. If it is invalid: `InvalidTargetPrice`.
+2. Build the Target Price from `targetAmount` and the currency of the Listing. If it is invalid: `InvalidTargetPrice`.
 3. Look for an Active Price Alert of the `owner` for that Listing.
    - Found, same Target Price: return it with `created = false`.
    - Found, different Target Price: `DuplicateAlert`.
@@ -52,7 +52,7 @@ Step 3 comes before step 4, so BR-08 takes precedence over BR-05.
 
 ## Ports
 
-The use case depends on two ports, defined by the application. It does not know what lies behind them.
+The use case depends on two ports, defined by the application. It does not know what lies behind them. All their operations are asynchronous, which is a consequence of the language (see [ADR-0001](../../adr/0001-typescript-backend.md)).
 
 | Port | Operation | Contract |
 |---|---|---|
@@ -110,3 +110,7 @@ Alternatives considered:
 ## Out of this contract
 
 The HTTP interface and the mapping of errors to responses (Phase 7), the persistence schema and the uniqueness mechanism (infrastructure), and the in-memory adapters (Phase 6).
+
+## Revisions
+
+- 2026-11-19: aligned with the TypeScript implementation. The input names are in camelCase and the amount is text. The output fields are named. The operations of the ports are asynchronous. Reading the amount as a number is stated under `InvalidTargetPrice`. No decision changed.

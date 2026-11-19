@@ -88,4 +88,4 @@ A decision is not described as Accepted until it has been explicitly approved.
 
 | # | Feature | Current phase |
 |---|---|---|
-| 01 | [Create Price Alert](01-create-price-alert/00-discovery.md) | Phase 3 — Domain Modelling (approved) |
+| 01 | [Create Price Alert](01-create-price-alert/00-discovery.md) | Phase 10 — Documentation and Completion (in progress) |
