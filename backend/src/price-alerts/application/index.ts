@@ -3,10 +3,14 @@ export {
   type CreatePriceAlertCommand,
   type CreatePriceAlertResult,
 } from "./create-price-alert";
+export { CancelPriceAlert, type CancelPriceAlertCommand, type CancelPriceAlertResult } from "./cancel-price-alert";
 export { GetPriceAlert, type GetPriceAlertCommand, type GetPriceAlertResult } from "./get-price-alert";
 export { ListPriceAlerts, type ListPriceAlertsCommand, type ListPriceAlertsResult } from "./list-price-alerts";
+export { ModifyTargetPrice, type ModifyTargetPriceCommand, type ModifyTargetPriceResult } from "./modify-target-price";
 export { type PriceAlertView } from "./price-alert-view";
 export {
+  AlertConflict,
+  AlertNotActive,
   AlertNotFound,
   ApplicationError,
   DuplicateAlert,

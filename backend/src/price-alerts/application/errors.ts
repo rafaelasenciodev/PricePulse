@@ -1,7 +1,7 @@
 /** Application errors expected by the use case contract. */
 
 import type { ListingId } from "../../shared/domain";
-import type { AlertId } from "../domain";
+import type { AlertId, AlertStatus } from "../domain";
 
 /** Base class of the errors the caller of a use case must expect. */
 export class ApplicationError extends Error {
@@ -25,6 +25,26 @@ export class ListingNotFound extends ApplicationError {
 export class AlertNotFound extends ApplicationError {
   constructor(readonly alertId: AlertId) {
     super(`The Price Alert ${JSON.stringify(alertId)} does not exist`);
+  }
+}
+
+/**
+ * BR-04, BR-05 of feature 04: the request needs the Price Alert to be Active, and it is not.
+ * It was Triggered, so it has ended, or it was Cancelled.
+ */
+export class AlertNotActive extends ApplicationError {
+  constructor(readonly status: AlertStatus) {
+    super(`The Price Alert is ${status}, and only an Active one can be changed`);
+  }
+}
+
+/**
+ * BR-08 of feature 04: the Price Alert changed state between being read and being saved, for
+ * example because an Evaluation Triggered it. Nothing was changed, and the request can be repeated.
+ */
+export class AlertConflict extends ApplicationError {
+  constructor() {
+    super("The Price Alert changed while the request was being applied");
   }
 }
 
