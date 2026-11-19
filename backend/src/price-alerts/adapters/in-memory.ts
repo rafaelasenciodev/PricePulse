@@ -10,6 +10,8 @@ import {
   type CurrentPriceSource,
   type ListingReader,
   type ListingView,
+  type NotificationPage,
+  type NotificationPageQuery,
   type NotificationRepository,
   type PriceAlertRepository,
 } from "../application";
@@ -98,6 +100,13 @@ export class InMemoryPriceAlertRepository implements PriceAlertRepository {
   }
 }
 
+/** Newest first by the Observed At of the price that reached the target, and by alert identifier when two share it. */
+function newestObservedFirst(a: Notification, b: Notification): number {
+  const byMoment = b.observedAt.epochMilliseconds - a.observedAt.epochMilliseconds;
+  if (byMoment !== 0) return byMoment;
+  return a.alertId < b.alertId ? -1 : a.alertId > b.alertId ? 1 : 0;
+}
+
 /** Newest first by creation moment, and by identifier when two share it. */
 function newestFirst(a: PriceAlert, b: PriceAlert): number {
   const byMoment = b.createdAt.epochMilliseconds - a.createdAt.epochMilliseconds;
@@ -123,6 +132,11 @@ export class InMemoryNotificationRepository implements NotificationRepository {
     // switch to another request at each `await`, which would break the guarantee.
     if (this.notifications.has(notification.alertId)) throw new NotificationAlreadyExists();
     this.notifications.set(notification.alertId, notification);
+  }
+
+  async findByOwner(owner: UserId, query: NotificationPageQuery): Promise<NotificationPage> {
+    const mine = [...this.notifications.values()].filter((n) => n.owner === owner).sort(newestObservedFirst);
+    return { items: mine.slice(query.offset, query.offset + query.limit), total: mine.length };
   }
 
   /** Every stored Notification. For tests and inspection, not part of the port. */
