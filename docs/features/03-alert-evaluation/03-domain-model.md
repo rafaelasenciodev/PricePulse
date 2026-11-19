@@ -75,10 +75,17 @@ None extends `InvalidValue`: no User or Provider supplies a value in this featur
 
 | ID | Decision | Status |
 |---|---|---|
-| A | The evaluation lives in the module `price-alerts`, which gains `Notification` and the behaviour of `PriceAlert`. No new module | Accepted |
-| B | `Notification` is its own immutable record, outside the `PriceAlert` aggregate, with the Price Alert as its identity | Accepted |
-| C | `ObservedAt` moves to the shared module, because two features use it | Accepted |
-| D | `PriceAlert` gets `isReachedBy` and `trigger` and stays immutable: `trigger` returns a new alert | Accepted |
+| A | The evaluation lives in the module `price-alerts`, which gains `Notification` and the behaviour of `PriceAlert`. No new module | Implemented |
+| B | `Notification` is its own immutable record, outside the `PriceAlert` aggregate, with the Price Alert as its identity | Verified |
+| C | `ObservedAt` moves to the shared module, because two features use it | Verified |
+| D | `PriceAlert` gets `isReachedBy` and `trigger` and stays immutable: `trigger` returns a new alert | Verified |
+
+Statuses after the implementation. **Verified** means that tests confirm the decision; **Implemented** means that it is realised in code and no test pins it down.
+
+- **A**: the evaluation lives in the module `price-alerts`, and the architecture test keeps its imports within the allowed layers. No test pins down the choice of module itself, so it stays Implemented.
+- **B**: the Notification is tested as a record: what it copies, that it is refused for an alert that is not reached, and that it has no channel. The contract of its repository tests that there is one per Price Alert, including two additions that start together. The uniqueness has been verified only in memory.
+- **C**: `ObservedAt` is tested in the shared module, and the architecture test keeps `shared` free of imports and the features apart, which is what two features sharing it relies on.
+- **D**: `isReachedBy` and `trigger` are tested in the domain, including that `trigger` does not change the alert it is called on, and the deliberate errors on them were all detected.
 
 ### Decision A in detail
 

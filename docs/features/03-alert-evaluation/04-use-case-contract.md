@@ -81,14 +81,25 @@ Two Evaluations of the same Listing can run at the same time and both find an al
 
 | ID | Decision | Status |
 |---|---|---|
-| 1 | One use case, `EvaluatePriceAlerts`, with a Listing as its only input. It does not know what starts it | Accepted |
-| 2 | The use case has no application errors. An unknown Listing, a price that does not reach the target and an absent Current Price are results | Accepted |
-| 3 | The Current Price is read once per run, before the alerts are looked at | Accepted |
-| 4 | For each alert the Notification is looked for first, and only then is the price compared (BR-06) | Accepted |
-| 5 | An alert that fails does not stop the others. The run returns the failures in `failed` and does not raise them | Accepted |
-| 6 | The output lists the alerts made Triggered, with their Notification and whether it was produced in this run, and the failures | Accepted |
-| 7 | Three ports: two new operations on `PriceAlertRepository`, a new `NotificationRepository` and a new `CurrentPriceSource`. No `Clock` | Accepted |
-| 8 | Concurrency is solved with a uniqueness guarantee on the Notification per alert and a repeatable order of writes, without a Unit of Work | Accepted |
+| 1 | One use case, `EvaluatePriceAlerts`, with a Listing as its only input. It does not know what starts it | Verified |
+| 2 | The use case has no application errors. An unknown Listing, a price that does not reach the target and an absent Current Price are results | Verified |
+| 3 | The Current Price is read once per run, before the alerts are looked at | Verified |
+| 4 | For each alert the Notification is looked for first, and only then is the price compared (BR-06) | Verified |
+| 5 | An alert that fails does not stop the others. The run returns the failures in `failed` and does not raise them | Verified |
+| 6 | The output lists the alerts made Triggered, with their Notification and whether it was produced in this run, and the failures | Verified |
+| 7 | Three ports: two new operations on `PriceAlertRepository`, a new `NotificationRepository` and a new `CurrentPriceSource`. No `Clock` | Implemented |
+| 8 | Concurrency is solved with a uniqueness guarantee on the Notification per alert and a repeatable order of writes, without a Unit of Work | Verified |
+
+Statuses after the implementation. **Verified** means that tests confirm the decision; **Implemented** means that it is realised in code and no test pins it down.
+
+- **1**: the use case is tested with only a Listing as input, and the wiring tests start it from outside, through the recording of a price.
+- **2**: an unknown Listing, a price that does not reach the target and an absent Current Price are tested as results, not as errors (SC-03, SC-05, SC-06, SC-19).
+- **3**: a test checks that the Current Price is read once for several alerts.
+- **4**: SC-15 and SC-16 test that an existing Notification decides, even if the price has risen or is absent.
+- **5**: tests check that an alert that fails, with a store error, a currency inconsistency or something that is not an `Error`, does not stop the others and is returned in `failed`.
+- **6**: the output is tested as a whole in SC-01, with the Notification, the `produced` flag and `failed`.
+- **7**: the three ports are realised, but the number of them is a structural choice that no test pins down. Each port has contract tests of its own.
+- **8**: tested with two Evaluations at the same time, with a stale read, and with a failure between the two writes. It has been verified only in memory. Against a database it still has to be verified.
 
 Alternatives considered:
 

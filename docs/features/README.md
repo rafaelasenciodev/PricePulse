@@ -90,3 +90,4 @@ A decision is not described as Accepted until it has been explicitly approved.
 |---|---|---|
 | 01 | [Create Price Alert](01-create-price-alert/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
 | 02 | [Price Observation](02-price-observation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
+| 03 | [Alert Evaluation](03-alert-evaluation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
