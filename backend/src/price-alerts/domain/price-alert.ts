@@ -1,12 +1,13 @@
 import type { ListingId, Price } from "../../shared/domain";
 import type { CreatedAt } from "./created-at";
-import { AlertNotActive, TargetAlreadyReached } from "./errors";
+import { AlertNotActive, CurrencyMismatch, TargetAlreadyReached } from "./errors";
 import type { AlertId, UserId } from "./identifiers";
 import type { TargetPrice } from "./target-price";
 
 export const AlertStatus = {
   Active: "active",
   Triggered: "triggered",
+  Cancelled: "cancelled",
 } as const;
 export type AlertStatus = (typeof AlertStatus)[keyof typeof AlertStatus];
 
@@ -67,6 +68,34 @@ export class PriceAlert {
   trigger(): PriceAlert {
     if (!this.isActive) throw new AlertNotActive(this.id);
     return new PriceAlert(this.id, this.owner, this.listingId, this.targetPrice, AlertStatus.Triggered, this.createdAt);
+  }
+
+  /**
+   * The same Price Alert, Cancelled by its owner (BR-03 of feature 04). It does not change this one.
+   * Only an Active alert can be cancelled: one that was Triggered has ended, and one already
+   * Cancelled needs nothing. The use case decides what each of those means for the caller.
+   */
+  cancel(): PriceAlert {
+    if (!this.isActive) throw new AlertNotActive(this.id);
+    return new PriceAlert(this.id, this.owner, this.listingId, this.targetPrice, AlertStatus.Cancelled, this.createdAt);
+  }
+
+  /**
+   * The same Price Alert with another Target Price (BR-05 and BR-06 of feature 04). It does not
+   * change this one. Only the Target Price changes: the identifier, owner, Listing, state and
+   * creation moment stay.
+   *
+   * Only an Active alert can be modified. The new Target Price is in the currency of the alert,
+   * and the Current Price must not already reach it, as when the alert is created (BR-05 of feature 01).
+   * Without a Current Price (null) that check does not apply.
+   */
+  changeTargetPrice(targetPrice: TargetPrice, currentPrice: Price | null): PriceAlert {
+    if (!this.isActive) throw new AlertNotActive(this.id);
+    if (targetPrice.currency !== this.targetPrice.currency) {
+      throw new CurrencyMismatch(targetPrice.currency, this.targetPrice.currency);
+    }
+    if (currentPrice !== null && targetPrice.isReachedBy(currentPrice)) throw new TargetAlreadyReached();
+    return new PriceAlert(this.id, this.owner, this.listingId, targetPrice, this.status, this.createdAt);
   }
 
   equals(other: PriceAlert): boolean {
