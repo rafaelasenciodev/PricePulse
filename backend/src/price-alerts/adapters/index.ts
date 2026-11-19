@@ -1,1 +1,5 @@
-export { InMemoryListingReader, InMemoryPriceAlertRepository } from "./in-memory";
+export {
+  InMemoryAuthenticator,
+  InMemoryListingReader,
+  InMemoryPriceAlertRepository,
+} from "./in-memory";
