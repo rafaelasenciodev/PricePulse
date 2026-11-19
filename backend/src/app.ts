@@ -3,6 +3,12 @@ import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { CreatePriceAlert } from "./price-alerts/application";
 import { priceAlertHttpError, priceAlertRoutes, type Authenticator, type HttpError } from "./price-alerts/http";
+import type { RecordPriceObservation } from "./price-observations/application";
+import {
+  priceObservationHttpError,
+  priceObservationRoutes,
+  type ProviderAuthenticator,
+} from "./price-observations/http";
 
 /** The version of the API shown in its documentation. Kept equal to `package.json` by a test. */
 export const API_VERSION = "0.1.0";
@@ -10,7 +16,7 @@ export const API_VERSION = "0.1.0";
 /** A feature's translation of its own errors to HTTP: null when the error is not one of its own. */
 type HttpErrorMapper = (error: unknown) => HttpError | null;
 
-const featureMappers: readonly HttpErrorMapper[] = [priceAlertHttpError];
+const featureMappers: readonly HttpErrorMapper[] = [priceAlertHttpError, priceObservationHttpError];
 
 /** Map an error to the HTTP response that reports it. Unexpected errors reveal nothing. */
 function toHttpError(error: unknown): HttpError {
@@ -46,6 +52,14 @@ export interface ApiDocsOptions {
 export interface AppDependencies {
   readonly createPriceAlert: CreatePriceAlert;
   readonly authenticator: Authenticator;
+  /**
+   * The routes of Price Observations, for the Providers. Optional: without them the
+   * application serves only the routes of Price Alerts, and the documentation says so.
+   */
+  readonly priceObservations?: {
+    readonly recordPriceObservation: RecordPriceObservation;
+    readonly authenticator: ProviderAuthenticator;
+  };
   readonly logger?: boolean;
   /** Serve the interactive API documentation at /docs. Off by default. */
   readonly apiDocs?: ApiDocsOptions;
@@ -81,11 +95,20 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
         info: {
           title: "PricePulse API",
           version: API_VERSION,
-          description: ["Create price alerts for the Listings of a catalogue.", dependencies.apiDocs.note]
+          description: [
+            "Create price alerts for the Listings of a catalogue.",
+            dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
+            dependencies.apiDocs.note,
+          ]
             .filter(Boolean)
             .join("\n\n"),
         },
-        tags: [{ name: "Price alerts", description: "Requests to be notified when a Listing reaches a price" }],
+        tags: [
+          { name: "Price alerts", description: "Requests to be notified when a Listing reaches a price" },
+          ...(dependencies.priceObservations
+            ? [{ name: "Price observations", description: "Reports of the price of a Listing, made by a price provider" }]
+            : []),
+        ],
         components: {
           securitySchemes: {
             bearerAuth: {
@@ -93,6 +116,15 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
               scheme: "bearer",
               description: "The token that identifies the User. Press Authorize and paste it",
             },
+            ...(dependencies.priceObservations
+              ? {
+                  providerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    description: "The token that identifies the price provider. It is not the token of a User",
+                  },
+                }
+              : {}),
           },
         },
       },
@@ -107,6 +139,13 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     createPriceAlert: dependencies.createPriceAlert,
     authenticator: dependencies.authenticator,
   });
+
+  if (dependencies.priceObservations) {
+    app.register(priceObservationRoutes, {
+      recordPriceObservation: dependencies.priceObservations.recordPriceObservation,
+      authenticator: dependencies.priceObservations.authenticator,
+    });
+  }
 
   return app;
 }
