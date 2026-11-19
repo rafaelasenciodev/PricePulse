@@ -116,4 +116,4 @@ The second feature of the [method of five stages](features/README.md). The code 
 | 2 Scenarios | [Scenarios](features/05-notifications-and-price-history/02-scenarios.feature) | Approved |
 | 3 Design | [Design](features/05-notifications-and-price-history/03-design.md) | Approved |
 | 4 Build | [Alerts application layer](../backend/src/price-alerts/application/), [observations application layer](../backend/src/price-observations/application/) and their [HTTP layers](../backend/src/price-observations/http/) | Implemented |
-| 5 Close | [Completion](features/05-notifications-and-price-history/04-completion.md) | In Review |
+| 5 Close | [Completion](features/05-notifications-and-price-history/04-completion.md) | Approved |

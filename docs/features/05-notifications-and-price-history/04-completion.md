@@ -1,6 +1,6 @@
 # 05 — Notifications and Price History: Completion (Stage 5)
 
-Status: In Review
+Status: Approved
 
 The close of the feature: what was built, the decisions and their status, how it was verified, what the review found, what it does not do and what comes next. It links to the documents of each stage and does not repeat them. It is the second feature developed with the [method of five stages](../README.md).
 
@@ -108,7 +108,7 @@ The documents of the first three stages have 470 lines (discovery and rules 146,
 
 - [x] Stages 1 to 4 completed
 - [x] Documentation of stage 5 written (this document)
-- [ ] This document is approved by the author
-- [ ] The README and the documentation indexes describe this feature
+- [x] This document is approved by the author
+- [x] The README and the documentation indexes describe this feature
 - [ ] The feature is merged into `develop` with `--no-ff`, and `develop` into `main` and tagged (done by the developer, [ADR-0002](../../adr/0002-branching-model.md))
 - [ ] A licence is chosen before the repository is published
