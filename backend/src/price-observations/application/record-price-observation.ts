@@ -47,6 +47,12 @@ export interface RecordPriceObservationResult {
   readonly recorded: boolean;
 }
 
+/**
+ * What the HTTP layer needs of the use case: only `execute`. A name for it lets the
+ * Composition Root hand over a use case that it has wrapped.
+ */
+export type PriceObservationRecorder = Pick<RecordPriceObservation, "execute">;
+
 export class RecordPriceObservation {
   constructor(
     private readonly catalogue: ListingCatalogue,

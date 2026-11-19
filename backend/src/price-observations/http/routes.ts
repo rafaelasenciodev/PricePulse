@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { ListingId } from "../../shared/domain";
-import type { RecordPriceObservation } from "../application";
+import type { PriceObservationRecorder } from "../application";
 import type { ProviderId } from "../domain";
 import type { ProviderAuthenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
@@ -14,8 +14,7 @@ declare module "fastify" {
 }
 
 export interface PriceObservationRoutesOptions {
-  /** Only what the route uses, so that the Composition Root can wrap the use case. */
-  readonly recordPriceObservation: Pick<RecordPriceObservation, "execute">;
+  readonly recordPriceObservation: PriceObservationRecorder;
   readonly authenticator: ProviderAuthenticator;
 }
 

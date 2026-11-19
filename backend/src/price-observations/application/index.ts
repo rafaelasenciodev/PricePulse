@@ -1,6 +1,7 @@
 export {
   CLOCK_TOLERANCE_MILLISECONDS,
   RecordPriceObservation,
+  type PriceObservationRecorder,
   type PriceObservationView,
   type RecordPriceObservationCommand,
   type RecordPriceObservationResult,

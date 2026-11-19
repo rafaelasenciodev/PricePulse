@@ -3,7 +3,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { CreatePriceAlert } from "./price-alerts/application";
 import { priceAlertHttpError, priceAlertRoutes, type Authenticator } from "./price-alerts/http";
-import type { RecordPriceObservation } from "./price-observations/application";
+import type { PriceObservationRecorder } from "./price-observations/application";
 import {
   priceObservationHttpError,
   priceObservationRoutes,
@@ -68,7 +68,7 @@ export interface AppDependencies {
    * application serves only the routes of Price Alerts, and the documentation says so.
    */
   readonly priceObservations?: {
-    readonly recordPriceObservation: Pick<RecordPriceObservation, "execute">;
+    readonly recordPriceObservation: PriceObservationRecorder;
     readonly authenticator: ProviderAuthenticator;
   };
   readonly logger?: boolean;

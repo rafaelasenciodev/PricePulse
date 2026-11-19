@@ -12,7 +12,7 @@
  * evaluated (feature 03). Recording itself knows nothing of it (BR-11 of feature 02).
  */
 
-import type { FastifyBaseLogger, FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { buildApp, type ApiDocsOptions } from "./app";
 import {
   ComposedListingReader,
@@ -22,9 +22,10 @@ import {
 import {
   CreatePriceAlert,
   EvaluatePriceAlerts,
+  type CurrentPrice,
   type CurrentPriceSource,
-  type EvaluatePriceAlertsResult,
 } from "./price-alerts/application";
+import { logEvaluation, withEvaluation, type EvaluationReport } from "./evaluation-trigger";
 import { InMemoryAuthenticator } from "./price-alerts/http";
 import {
   InMemoryListingCatalogue,
@@ -33,67 +34,6 @@ import {
 } from "./price-observations/adapters";
 import { RecordPriceObservation, type Clock } from "./price-observations/application";
 import { InMemoryProviderAuthenticator } from "./price-observations/http";
-
-/** What an Evaluation started by a recording came to: its result, or the error that stopped it. */
-export type EvaluationReport =
-  | { readonly listingId: string; readonly result: EvaluatePriceAlertsResult }
-  | { readonly listingId: string; readonly error: unknown };
-
-/**
- * Wraps the recording of a Price Observation so that the Price Alerts of its Listing are
- * evaluated after every recording that succeeds, a new one or a repeated one.
- *
- * The Evaluation is idempotent, so a repeat by the Provider also finishes what an earlier
- * failed Evaluation left half done. Whatever happens to the Evaluation, the response of the
- * recording is the one of the recording: the observation is stored, and the Evaluation is
- * another matter. Its outcome, or its failure, goes to `report`.
- */
-export function withEvaluation(
-  recorder: Pick<RecordPriceObservation, "execute">,
-  evaluator: Pick<EvaluatePriceAlerts, "execute">,
-  report: (report: EvaluationReport) => void,
-): Pick<RecordPriceObservation, "execute"> {
-  return {
-    async execute(command) {
-      const outcome = await recorder.execute(command);
-
-      const { listingId } = command;
-      let evaluation: EvaluationReport;
-      try {
-        evaluation = { listingId, result: await evaluator.execute({ listingId }) };
-      } catch (error) {
-        evaluation = { listingId, error };
-      }
-      try {
-        report(evaluation);
-      } catch {
-        // A failure of the report must not change the response of a recording that succeeded.
-      }
-      return outcome;
-    },
-  };
-}
-
-/** The default report: a line in the log for each Notification produced, and a warning for each failure. */
-export function logEvaluation(log: FastifyBaseLogger): (report: EvaluationReport) => void {
-  return (report) => {
-    if ("error" in report) {
-      log.error({ err: report.error, listingId: report.listingId }, "The Evaluation of the Price Alerts failed");
-      return;
-    }
-    for (const { notification, produced } of report.result.triggered) {
-      log.info(
-        { ...notification, produced },
-        produced
-          ? "Price Alert triggered: a Notification was produced"
-          : "Price Alert triggered: completed from the Notification that already existed",
-      );
-    }
-    for (const failure of report.result.failed) {
-      log.warn({ err: failure.error, alertId: failure.alertId, listingId: report.listingId }, "A Price Alert could not be evaluated");
-    }
-  };
-}
 
 export interface InMemoryApplication {
   readonly app: FastifyInstance;
@@ -132,26 +72,26 @@ export function composeInMemoryApp(
     options.clock ?? new SystemClock(),
   );
 
-  // Price Alerts. The currency of a Listing comes from the catalogue and its Current Price
-  // from the latest Price Observation: a Listing with none has no Current Price.
+  // The Current Price of a Listing, with the moment at which it was observed, comes from its latest
+  // Price Observation (BR-07 of feature 02). One whose latest observation has no Price has none.
+  // It is written once and every reader of the Current Price uses it.
+  const currentPriceOf = async (listingId: Parameters<CurrentPriceSource["currentPriceOf"]>[0]): Promise<CurrentPrice | null> => {
+    const latest = await observations.findLatest(listingId);
+    return latest === null || latest.price === null ? null : { price: latest.price, observedAt: latest.observedAt };
+  };
+
+  // Price Alerts. The currency of a Listing comes from the catalogue and its Current Price from
+  // the function above: a Listing with none has no Current Price.
   const listings = new ComposedListingReader(
     async (listingId) => (await catalogue.find(listingId))?.currency ?? null,
-    async (listingId) => (await observations.findLatest(listingId))?.price ?? null,
+    async (listingId) => (await currentPriceOf(listingId))?.price ?? null,
   );
   const alerts = new InMemoryPriceAlertRepository();
   const authenticator = new InMemoryAuthenticator();
   const createPriceAlert = new CreatePriceAlert(listings, alerts);
 
-  // The evaluation of the Price Alerts reads the Current Price with the moment at which it was
-  // observed, from the latest Price Observation. A Listing whose latest one has no Price has none.
   const notifications = new InMemoryNotificationRepository();
-  const prices: CurrentPriceSource = {
-    async currentPriceOf(listingId) {
-      const latest = await observations.findLatest(listingId);
-      return latest === null || latest.price === null ? null : { price: latest.price, observedAt: latest.observedAt };
-    },
-  };
-  const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, prices);
+  const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, { currentPriceOf });
 
   const app: FastifyInstance = buildApp({
     createPriceAlert,

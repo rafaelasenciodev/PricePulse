@@ -13,7 +13,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "composition-root" | "main";
+type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main";
 
 /** For each layer: the internal layers it may import, and the packages it may use. */
 const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: readonly string[] }>> = {
@@ -23,7 +23,9 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   adapters: { imports: ["application", "domain", "shared"], packages: [] },
   http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
   app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
-  "composition-root": { imports: ["adapters", "application", "http", "app"], packages: ["fastify"] },
+  // The policy that joins two features: it knows both through their applications and nothing else.
+  "evaluation-trigger": { imports: ["application"], packages: ["fastify"] },
+  "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger"], packages: ["fastify"] },
   main: { imports: ["domain", "shared", "composition-root"], packages: [] },
 };
 
@@ -46,6 +48,7 @@ function layerOf(path: string): Layer | null {
   const folder = /^[a-z-]+\/(domain|application|http|adapters)\//.exec(path)?.[1];
   if (folder && featureOf(path)) return folder as Layer;
   if (path === "app.ts") return "app";
+  if (path === "evaluation-trigger.ts") return "evaluation-trigger";
   if (path === "composition-root.ts") return "composition-root";
   if (path === "main.ts") return "main";
   return null;
