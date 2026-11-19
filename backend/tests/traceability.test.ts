@@ -57,7 +57,8 @@ const FEATURES: readonly Feature[] = [
       path !== "composition-root-evaluation.test.ts" &&
       path !== "composition-root-management.test.ts" &&
       path !== "composition-root-history.test.ts" &&
-      path !== "composition-root-accounts.test.ts",
+      path !== "composition-root-accounts.test.ts" &&
+      path !== "composition-root-catalogue.test.ts",
     scenarios: 18,
     rules: 11,
     exemptRules: {},
@@ -70,7 +71,10 @@ const FEATURES: readonly Feature[] = [
     name: "feature 02",
     docs: "02-price-observation/",
     owns: (path) =>
-      (path.startsWith("price-observations/") && !path.startsWith("price-observations/history/")) || path === "composition-root.test.ts",
+      (path.startsWith("price-observations/") &&
+        !path.startsWith("price-observations/history/") &&
+        !path.startsWith("price-observations/catalogue/")) ||
+      path === "composition-root.test.ts",
     scenarios: 21,
     rules: 13,
     exemptRules: {
@@ -124,6 +128,18 @@ const FEATURES: readonly Feature[] = [
     owns: (path) => path.startsWith("accounts/") || path === "composition-root-accounts.test.ts",
     scenarios: 25,
     rules: 12,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
+  {
+    name: "feature 07",
+    docs: "07-listings-catalogue/",
+    rulesFile: "01-discovery.md",
+    // The Catalogue is read in the module of Price Observations, which has other features' tests: told apart
+    // by folder, and the meeting with Accounts at the Composition Root is one file.
+    owns: (path) => path.startsWith("price-observations/catalogue/") || path === "composition-root-catalogue.test.ts",
+    scenarios: 21,
+    rules: 8,
     exemptRules: {},
     exemptScenarios: {},
   },
