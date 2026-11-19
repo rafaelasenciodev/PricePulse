@@ -144,6 +144,15 @@ describe("POST /sessions", () => {
     expect(response.headers["retry-after"]).toBe("900");
   });
 
+  it("SC-25: of 30 wrong sign-ins at the same time, 5 are answered 401 and 25 are answered 429", async () => {
+    const responses = await Promise.all(
+      Array.from({ length: 30 }, () => signIn({ email: "ana@example.com", password: "wrong-password-0" })),
+    );
+    expect(responses.filter((r) => r.statusCode === 401)).toHaveLength(5);
+    expect(responses.filter((r) => r.statusCode === 429)).toHaveLength(25);
+    expect((await signIn()).statusCode).toBe(429);
+  });
+
   it("SC-13: 15 minutes after the fifth failure it signs in again", async () => {
     for (let i = 0; i < 5; i++) await signIn({ email: "ana@example.com", password: "wrong-password-0" });
     clock.advance(15 * MINUTE);

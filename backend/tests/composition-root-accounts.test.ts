@@ -53,7 +53,7 @@ describe("SC-23 / BR-08: the Session of a User opens what a User can use", () =>
     ["reads their Notifications", "GET", "/notifications", undefined, 200],
     ["reads the Price History of a Listing", "GET", `/listings/${HEADPHONES}/price-observations`, undefined, 200],
     ["reads their Account", "GET", "/accounts/me", undefined, 200],
-  ] as const)("the User %s", async (_what, method, url, payload, status) => {
+  ] as const)("SC-23 / BR-08: the User %s", async (_what, method, url, payload, status) => {
     const { token } = await compose();
     expect((await call(method, url, token, payload)).statusCode).toBe(status);
   });
@@ -66,7 +66,7 @@ describe("SC-23 / BR-08: the Session of a User opens what a User can use", () =>
     expect((await call("GET", "/accounts/me", token)).json().id).toBe(userId);
   });
 
-  it("each User sees only their own, as before: two Accounts, two Users", async () => {
+  it("SC-23: each User sees only their own, as before: two Accounts, two Users", async () => {
     const { token: first } = await compose();
     const { token: second } = await signedInUser(application, "luis@example.com");
     await call("POST", `/listings/${HEADPHONES}/price-alerts`, first, { targetAmount: "80.00" });
@@ -76,7 +76,7 @@ describe("SC-23 / BR-08: the Session of a User opens what a User can use", () =>
 });
 
 describe("SC-22 / BR-11: the credentials of a User and of a Provider are not interchangeable", () => {
-  it("the token of a User cannot record a Price Observation", async () => {
+  it("SC-22 / BR-11: the token of a User cannot record a Price Observation", async () => {
     const { token } = await compose();
     const response = await call("POST", `/listings/${HEADPHONES}/price-observations`, token, OBSERVE);
     expect(response.statusCode).toBe(401);
@@ -89,17 +89,17 @@ describe("SC-22 / BR-11: the credentials of a User and of a Provider are not int
     ["read the Notifications", "GET", "/notifications"],
     ["read the Price Alerts", "GET", "/price-alerts"],
     ["sign out", "DELETE", "/sessions/current"],
-  ] as const)("the token of a Provider cannot %s", async (_what, method, url) => {
+  ] as const)("SC-22 / BR-11: the token of a Provider cannot %s", async (_what, method, url) => {
     await compose();
     expect((await call(method, url, PROVIDER_TOKEN)).statusCode).toBe(401);
   });
 
-  it("the token of a Provider cannot create a Price Alert", async () => {
+  it("SC-22 / BR-11: the token of a Provider cannot create a Price Alert", async () => {
     await compose();
     expect((await call("POST", `/listings/${HEADPHONES}/price-alerts`, PROVIDER_TOKEN, { targetAmount: "80.00" })).statusCode).toBe(401);
   });
 
-  it("the Provider still records with its own token", async () => {
+  it("SC-22 / BR-11: the Provider still records with its own token", async () => {
     await compose();
     expect((await call("POST", `/listings/${HEADPHONES}/price-observations`, PROVIDER_TOKEN, OBSERVE)).statusCode).toBe(201);
   });
@@ -119,7 +119,7 @@ describe("the hash of passwords is chosen at the Composition Root", () => {
 });
 
 describe("SC-24 / BR-12: nothing fixed in the code identifies a User", () => {
-  it.each(["demo-token-1", "demo-token-2", "token-1", "user-1", ""])("%j identifies nobody", async (token) => {
+  it.each(["demo-token-1", "demo-token-2", "token-1", "user-1", ""])("SC-24 / BR-12: %j identifies nobody", async (token) => {
     await compose();
     for (const [method, url] of [["GET", "/price-alerts"], ["GET", "/accounts/me"], ["GET", `/listings/${HEADPHONES}/price-observations`]] as const) {
       expect((await call(method, url, token === "" ? null : token)).statusCode).toBe(401);
@@ -128,7 +128,7 @@ describe("SC-24 / BR-12: nothing fixed in the code identifies a User", () => {
 });
 
 describe("the life of a Session across the application (BR-07, BR-08, BR-09)", () => {
-  it("after signing out, the token stops opening everything a User can use", async () => {
+  it("SC-19 / BR-09: after signing out, the token stops opening everything a User can use", async () => {
     const { token } = await compose();
     expect((await call("DELETE", "/sessions/current", token)).statusCode).toBe(204);
     for (const [method, url] of [["GET", "/price-alerts"], ["GET", "/notifications"], ["GET", `/listings/${HEADPHONES}/price-observations`], ["GET", "/accounts/me"]] as const) {

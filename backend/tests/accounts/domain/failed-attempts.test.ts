@@ -7,7 +7,7 @@ const T0 = Date.parse("2026-11-19T10:00:00Z");
 /** `n` failures in a row, one second apart, the last one at `T0 + (n - 1) * 1000`. */
 function failures(n: number): FailedAttempts {
   let attempts = FailedAttempts.none();
-  for (let i = 0; i < n; i++) attempts = attempts.afterFailureAt(T0 + i * 1000);
+  for (let i = 0; i < n; i++) attempts = attempts.afterAttemptAt(T0 + i * 1000);
   return attempts;
 }
 const FIFTH = T0 + 4 * 1000;
@@ -53,23 +53,23 @@ describe("FailedAttempts", () => {
 
   it("BR-06: a failure while locked changes nothing, so the lock is not extended", () => {
     const locked = failures(5);
-    expect(locked.afterFailureAt(FIFTH + 5 * MINUTE)).toBe(locked);
+    expect(locked.afterAttemptAt(FIFTH + 5 * MINUTE)).toBe(locked);
   });
 
   it("BR-06: a lock that has passed counts as no failures, so it takes 5 more to lock again", () => {
     const later = FIFTH + 15 * MINUTE;
     let attempts = failures(5);
     for (let i = 1; i <= 4; i++) {
-      attempts = attempts.afterFailureAt(later + i);
+      attempts = attempts.afterAttemptAt(later + i);
       expect(attempts.count).toBe(i);
       expect(attempts.isLockedAt(later + i)).toBe(false);
     }
-    expect(attempts.afterFailureAt(later + 5).isLockedAt(later + 5)).toBe(true);
+    expect(attempts.afterAttemptAt(later + 5).isLockedAt(later + 5)).toBe(true);
   });
 
   it("is immutable: a failure gives a new state and leaves the earlier one as it was", () => {
     const before = failures(2);
-    before.afterFailureAt(T0 + 5000);
+    before.afterAttemptAt(T0 + 5000);
     expect(before.count).toBe(2);
   });
 

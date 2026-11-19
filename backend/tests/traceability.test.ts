@@ -116,6 +116,17 @@ const FEATURES: readonly Feature[] = [
     exemptRules: {},
     exemptScenarios: {},
   },
+  {
+    name: "feature 06",
+    docs: "06-accounts-and-authentication/",
+    rulesFile: "01-discovery.md",
+    // The module of Accounts is its own, and the meeting with the other features is one file at the Composition Root.
+    owns: (path) => path.startsWith("accounts/") || path === "composition-root-accounts.test.ts",
+    scenarios: 25,
+    rules: 12,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;

@@ -14,7 +14,7 @@ A new module, `accounts`, with its own domain, application, adapters and HTTP la
 | `Password` (rule) | Text of 10 to 128 characters, counted as characters and not as bytes, and not equal to the email. It is checked when it is given and never kept | BR-03, BR-04 |
 | `Account` (entity) | Identifier (`UserId`), `Email` and the hash of the password. It has no operation that changes it: there is nothing to change in this feature | BR-01, BR-04 |
 | `Session` (entity) | The hash of its token, the Account, its creation and its expiry, 7 days after the creation. It is valid until the expiry, excluded | BR-07, BR-08 |
-| `FailedAttempts` (Value Object) | How many failed sign-ins in a row an email has, and until when it is locked. Failing the fifth locks it for 15 minutes from that failure. A lock that has passed counts as no failures | BR-06 |
+| `FailedAttempts` (Value Object) | How many sign-in attempts in a row an email has had, and until when it is locked. The fifth locks it for 15 minutes from that attempt, which is counted when it starts. A lock that has passed counts as no attempts | BR-06 |
 
 | Where each rule lives | |
 |---|---|
@@ -33,7 +33,7 @@ A new module, `accounts`, with its own domain, application, adapters and HTTP la
 | UC | Input | Output | Flow |
 |---|---|---|---|
 | **UC-01 Register** | `email`, `password` (text) | The Account: `id`, `email` | 1. The email and the password are valid, or `InvalidRegistration`, which tells which. 2. No Account has that email, or `EmailAlreadyRegistered`. 3. The password is hashed and the Account is stored. If the store refuses it because another registration came first, it is `EmailAlreadyRegistered` too |
-| **UC-02 Sign in** | `email`, `password` (text) | `token`, `expiresAt`, the Account | 1. If the email is locked: `TooManyAttempts`, with the time to wait, **without looking at the password**. 2. The Account is looked up and a hash is always checked, against a fixed one if there is no Account. 3. If it does not match: the failure is counted and the answer is `InvalidCredentials`. 4. If it matches: the count is cleared, a Session is created and its token is given |
+| **UC-02 Sign in** | `email`, `password` (text) | `token`, `expiresAt`, the Account | 1. The attempt is **counted at once**, before the password is checked, in one atomic step. If the email was locked: `TooManyAttempts`, with the time to wait, **without looking at the password**. 2. The Account is looked up and a hash is always checked, against a fixed one if there is no Account. 3. If it does not match, the answer is `InvalidCredentials`: the attempt was already counted. 4. If it matches: the count is cleared, a Session is created and its token is given |
 | **UC-03 Sign out** | `token` | Nothing | The Session of the token is ended. A token that is not valid is `Unauthenticated` |
 | **UC-04 Read my account** | `owner` | The Account: `id`, `email` | The Account of the owner |
 | **UC-05 Authenticate** (used by the other modules) | `token` | The `UserId`, or nothing | The Session with the hash of the token, if it exists and is valid at this moment |
@@ -54,7 +54,7 @@ The email of a sign-in is read as text without being required to be valid: an em
 |---|---|---|
 | `AccountRepository` | `add`, `findByEmail`, `find` | `add` fails with `EmailAlreadyRegistered` if the email is stored. It is atomic, so two registrations at the same time leave one |
 | `SessionStore` | `add`, `findByTokenHash`, `delete` | A Session is found only by the hash of its token |
-| `LoginAttemptStore` | `get(email)`, `save(email, attempts)`, `clear(email)` | Capped in size, so that someone who tries many emails cannot grow it for ever. The oldest are dropped |
+| `LoginAttemptStore` | `update(email, change)`, `clear(email)` | `update` is **atomic**: it applies a pure function to the current state and gives the state before and after, so attempts at the same time cannot all see the same count. Capped in size, so that someone who tries many emails cannot grow it for ever. The oldest are dropped |
 | `PasswordHasher` | `hash(password)`, `verify(password, hash)` | The hash carries its version and parameters. `verify` takes the same time whatever the hash is |
 | `SessionTokens` | `create()`, `hash(token)` | A token is random and unpredictable. Only its hash is kept |
 | `Clock` | `now()` | A port of this module, since the others cannot be imported |
@@ -62,7 +62,7 @@ The email of a sign-in is read as text without being required to be valid: an em
 ## 4. Concurrency and transaction boundary
 
 - Registering writes one Account, and its uniqueness is guaranteed by the store, as in the other modules. There is no Unit of Work.
-- Two failed sign-ins at the same time can be counted as one if the count is read and written apart. The in-memory store does it in one step, and a database will have to increment atomically. It is noted for persistence.
+- Attempts at the same time must all be counted (SC-25). Reading the count, checking the password and writing the count apart would let a burst of attempts see the same count, as it did in the first version of this design. So the attempt is counted before the password is checked, in one atomic `update`. The in-memory store does it with no `await` in between, and a database does it with one transaction or one `UPDATE … RETURNING`.
 - A Session is written once and deleted once. Signing out twice at the same time leaves it deleted.
 
 ## 5. The way in
@@ -89,12 +89,14 @@ The first two need no token, and the others carry it in `Authorization: Bearer`.
 | 7 | The reading of the `Bearer` token becomes one function of the shared module, used by every hook | Accepted |
 | 8 | The adapters of `accounts` may use `node:crypto`, and the shared layer holds what is not domain too, such as that function | Accepted |
 | 9 | The Composition Root takes the hasher as an option, and the tests give it a fast one | Accepted |
+| 10 | The attempt is counted before the password is checked, with an atomic `update` of the store, and a success clears the count. It replaces the `get` and `save` of the first design, which let attempts at the same time bypass the limit | Accepted |
 
 Alternatives that were weighed:
 
 - **Decision 1:** an `AccountId` of its own in `accounts`, converted at the Composition Root. It would leave `UserId` where it is, but every adapter would convert, and an Account and a User would be two things that have the same identifier.
 - **Decision 4:** answering at once when the email is unknown. It is faster, and it tells which emails have an Account by the time of the answer.
 - **Decision 7:** a fourth copy. It is one line, but it is the third time that the discovery of a feature notes that the copies are a smell, and this feature touches every hook anyway when it changes who answers.
+- **Decision 10:** a lock in memory around each email, which fixes the symptom with no change of the port. It does not hold with more than one instance, and the debt would come back with the database.
 - **Decision 9:** the default hasher in every test. A hash costs time on purpose, and the tests would spend most of theirs on it.
 
 ## 7. Where each scenario is handled
@@ -104,7 +106,7 @@ Alternatives that were weighed:
 | SC-01 to SC-06 | UC-01, `Email`, `Password` and the port that refuses a repeated email |
 | SC-07, SC-08, SC-10 | UC-02: the email is read as in registering, and each sign-in creates a Session |
 | SC-09, SC-15 | UC-02, step 2: the same answer, and the counting by email whether it exists or not |
-| SC-11 to SC-14 | `FailedAttempts` and UC-02, step 1 |
+| SC-11 to SC-14, SC-25 | `FailedAttempts` and UC-02, step 1 with the atomic `update` of the store |
 | SC-16 to SC-18, SC-20 | UC-05 and `Session`, with the expiry excluded |
 | SC-19 | UC-03: only the Session of the token is deleted |
 | SC-21 | UC-04 |
@@ -122,4 +124,4 @@ Alternatives that were weighed:
 
 ## 9. Carried to the build
 
-The parameters of `scrypt` and the format of the hash. The size of the cap of the attempts. The documented emails and passwords of the two demo Accounts. The contract tests of the three stores. The change of the architecture test. A test that the time of an unknown email is close to that of a wrong password.
+The parameters of `scrypt` and the format of the hash. The size of the cap of the attempts. The documented emails and passwords of the two demo Accounts. The contract tests of the three stores, with the atomicity of `update`. The change of the architecture test. A test that the time of an unknown email is close to that of a wrong password.

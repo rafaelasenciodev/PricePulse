@@ -41,9 +41,11 @@ export class SignIn {
     const now = this.clock.now().getTime();
     const key = Email.normalize(command.email);
 
-    // 1. A locked email is refused without looking at the password (BR-06)
-    const failed = await this.attempts.get(key);
-    if (failed.isLockedAt(now)) throw new TooManyAttempts(failed.secondsToWaitAt(now));
+    // 1. The attempt is counted at once, before the password is checked, in one atomic step: attempts
+    //    that arrive together cannot all see the same count (BR-06, SC-25). A locked email is
+    //    refused without looking at the password.
+    const { before } = await this.attempts.update(key, (current) => current.afterAttemptAt(now));
+    if (before.isLockedAt(now)) throw new TooManyAttempts(before.secondsToWaitAt(now));
 
     // 2. A hash is always checked, so the time is the same for an unknown email (BR-05).
     //    A text that cannot be an email is an unknown one.
@@ -51,11 +53,8 @@ export class SignIn {
     const hash = account?.passwordHash ?? (await this.fallbackHash);
     const matches = await this.hasher.verify(command.password, hash);
 
-    // 3. The failure is counted, and the answer does not say what failed (BR-05, BR-06)
-    if (account === null || !matches) {
-      await this.attempts.save(key, failed.afterFailureAt(now));
-      throw new InvalidCredentials();
-    }
+    // 3. The attempt was already counted, and the answer does not say what failed (BR-05, BR-06)
+    if (account === null || !matches) throw new InvalidCredentials();
 
     // 4. The count is cleared and a Session is created (BR-05, BR-06, BR-07)
     await this.attempts.clear(key);

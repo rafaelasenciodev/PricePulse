@@ -159,6 +159,14 @@ Feature: Accounts and Authentication
     When someone signs in with that email
     Then the sign-in is refused because there have been too many attempts
 
+  @SC-25 @BR-06
+  Scenario: Attempts that arrive at the same time are all counted
+    Given the Account "ana@example.com" with the password "first-password-1"
+    When 30 sign-ins with a wrong password for that email arrive at the same time
+    Then only 5 of them are checked against the password
+    And the other 25 are refused because there have been too many attempts
+    And signing in with the right password is refused too
+
   # ---------------------------------------------------------------------------
   # Being recognised
   # ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ export {
 export {
   EmailAlreadyStored,
   type AccountRepository,
+  type AttemptChange,
   type Clock,
   type LoginAttemptStore,
   type PasswordHasher,

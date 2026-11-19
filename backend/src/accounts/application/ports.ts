@@ -31,13 +31,26 @@ export interface SessionStore {
   delete(tokenHash: string): Promise<void>;
 }
 
+/** What an email had before an attempt was counted, and what it has now. */
+export interface AttemptChange {
+  readonly before: FailedAttempts;
+  readonly after: FailedAttempts;
+}
+
 /**
- * The failed sign-ins of each email, by its normal form (`Email.normalize`), valid or not.
+ * The sign-in attempts of each email, by its normal form (`Email.normalize`), valid or not.
  * Capped in size so that trying many emails cannot make it grow for ever: the oldest are dropped.
  */
 export interface LoginAttemptStore {
-  get(email: string): Promise<FailedAttempts>;
-  save(email: string, attempts: FailedAttempts): Promise<void>;
+  /**
+   * Replaces the state of the email by what `change` makes of the current one, and gives both.
+   *
+   * It is atomic: of attempts that arrive at the same time, each one sees the state that the
+   * previous one left, so none is lost. That is what makes the limit hold (BR-06, SC-25).
+   * `change` must be a pure function, since a database may need to run it more than once.
+   */
+  update(email: string, change: (current: FailedAttempts) => FailedAttempts): Promise<AttemptChange>;
+  /** Gives the email no attempts. Clearing one that has none is not an error. */
   clear(email: string): Promise<void>;
 }
 

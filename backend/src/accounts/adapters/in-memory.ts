@@ -3,6 +3,7 @@
 import {
   EmailAlreadyStored,
   type AccountRepository,
+  type AttemptChange,
   type LoginAttemptStore,
   type SessionStore,
 } from "../application";
@@ -75,17 +76,21 @@ export class InMemoryLoginAttemptStore implements LoginAttemptStore {
     if (!Number.isInteger(capacity) || capacity < 1) throw new RangeError("The capacity must be at least 1");
   }
 
-  async get(email: string): Promise<FailedAttempts> {
-    return this.byEmail.get(email) ?? FailedAttempts.none();
-  }
-
-  async save(email: string, attempts: FailedAttempts): Promise<void> {
+  async update(email: string, change: (current: FailedAttempts) => FailedAttempts): Promise<AttemptChange> {
+    // Read, change and write must not be separated by an `await`: JavaScript can switch to another
+    // request at each `await`, which would let attempts at the same time all see the same state.
+    const before = this.byEmail.get(email) ?? FailedAttempts.none();
+    const after = change(before);
     this.byEmail.delete(email);
-    this.byEmail.set(email, attempts);
-    if (this.byEmail.size > this.capacity) {
-      const oldest = this.byEmail.keys().next().value as string;
-      this.byEmail.delete(oldest);
+    // A state with no attempts is what an email that is not stored has, so it takes no room.
+    if (after.count > 0 || after.lockedUntil !== null) {
+      this.byEmail.set(email, after);
+      if (this.byEmail.size > this.capacity) {
+        const oldest = this.byEmail.keys().next().value as string;
+        this.byEmail.delete(oldest);
+      }
     }
+    return { before, after };
   }
 
   async clear(email: string): Promise<void> {

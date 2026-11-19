@@ -155,6 +155,31 @@ describe("SignIn", () => {
       );
     });
 
+    it("SC-25: attempts that arrive at the same time are all counted, so only 5 of 30 reach the password", async () => {
+      const world = buildWorld();
+      await registered(world);
+      const before = world.hasher.verifications.length;
+      const results = await Promise.allSettled(
+        Array.from({ length: 30 }, () => world.signIn.execute({ email: "ana@example.com", password: "wrong-password-0" })),
+      );
+      const reasons = results.map((r) => (r.status === "rejected" ? r.reason : null));
+      expect(reasons.filter((e) => e instanceof InvalidCredentials)).toHaveLength(5);
+      expect(reasons.filter((e) => e instanceof TooManyAttempts)).toHaveLength(25);
+      expect(world.hasher.verifications.length - before).toBe(5);
+      await expect(world.signIn.execute(ANA)).rejects.toThrow(TooManyAttempts);
+    });
+
+    it("SC-25: a right password among attempts at the same time signs in, and clears the count", async () => {
+      const world = buildWorld();
+      await registered(world);
+      const results = await Promise.allSettled([
+        world.signIn.execute(ANA),
+        ...Array.from({ length: 3 }, () => world.signIn.execute({ email: "ana@example.com", password: "wrong-password-0" })),
+      ]);
+      expect(results[0]?.status).toBe("fulfilled");
+      await expect(world.signIn.execute(ANA)).resolves.toBeDefined();
+    });
+
     it("SC-15: the count is by the normal form of the email, so changing the case does not escape it", async () => {
       const world = buildWorld();
       await registered(world);

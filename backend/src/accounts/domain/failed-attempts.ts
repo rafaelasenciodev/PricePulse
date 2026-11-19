@@ -1,13 +1,15 @@
-/** BR-06: after this many failed sign-ins in a row an email is locked. */
+/** BR-06: at this many sign-in attempts in a row an email is locked. */
 export const MAXIMUM_FAILED_ATTEMPTS = 5;
 export const LOCK_MILLISECONDS = 15 * 60 * 1000;
 
 /**
- * How many sign-ins in a row have failed for an email, and until when it is locked (BR-06).
+ * How many sign-in attempts in a row an email has had, and until when it is locked (BR-06).
  *
- * It is immutable: a failure gives the next state. The lock runs from the failure that
- * caused it and attempts refused during it do not extend it. A lock that has passed counts
- * as no failures. Clearing the count after a success is the job of the store.
+ * An attempt is counted when it starts, before the password is checked, and a success clears the
+ * count. So attempts that arrive at the same time are all counted, and an attempt that fails needs
+ * nothing more. It is immutable: an attempt gives the next state. The lock runs from the attempt
+ * that caused it and attempts refused during it do not extend it. A lock that has passed counts as
+ * no attempts. Clearing the count after a success is the job of the store.
  */
 export class FailedAttempts {
   private constructor(
@@ -33,8 +35,8 @@ export class FailedAttempts {
     return this.isLockedAt(now) ? Math.ceil((this.lockedUntil! - now) / 1000) : 0;
   }
 
-  /** The state after a sign-in fails at `now`. Failing while locked changes nothing. */
-  afterFailureAt(now: number): FailedAttempts {
+  /** The state after an attempt at `now`. An attempt while locked changes nothing. */
+  afterAttemptAt(now: number): FailedAttempts {
     if (this.isLockedAt(now)) return this;
     const previous = this.lockedUntil === null ? this.count : 0;
     const count = previous + 1;
