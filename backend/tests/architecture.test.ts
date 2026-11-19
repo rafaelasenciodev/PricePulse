@@ -45,7 +45,7 @@ function featureOf(path: string): string | null {
 }
 
 function layerOf(path: string): Layer | null {
-  if (path.startsWith("shared/domain/")) return "shared";
+  if (path.startsWith("shared/")) return "shared";
   const folder = /^[a-z-]+\/(domain|application|http|adapters)\//.exec(path)?.[1];
   if (folder && featureOf(path)) return folder as Layer;
   if (path === "app.ts") return "app";
