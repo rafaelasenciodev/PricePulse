@@ -132,6 +132,31 @@ describe("what a User chooses can be watched", () => {
   });
 });
 
+describe("the Current Price that the Catalogue shows is the one that the alerts use (BR-03)", () => {
+  // The rule is written twice: in the Composition Root, for the alerts, and in the use cases of the Catalogue
+  // (decision 9 of the design). These tests make the two agree, whichever is changed.
+  it("with a Current Price, an alert for a target that it reaches is refused, and one that it does not is accepted", async () => {
+    const { token } = await compose();
+    expect((await call("GET", `/listings/${HEADPHONES}`, token)).json().currentPrice.amount).toBe("100.00");
+    expect((await call("POST", `/listings/${HEADPHONES}/price-alerts`, token, { targetAmount: "100.00" })).statusCode).toBe(409);
+    expect((await call("POST", `/listings/${HEADPHONES}/price-alerts`, token, { targetAmount: "99.99" })).statusCode).toBe(201);
+  });
+
+  it("with no Current Price because the Listing was never observed, an alert for any target is accepted", async () => {
+    const { token } = await compose();
+    application.catalogue.addListing(ListingId("webcam-shop-b"), "USD", { title: "HD webcam", retailer: "Shop B" });
+    expect((await call("GET", "/listings/webcam-shop-b", token)).json().currentPrice).toBeNull();
+    expect((await call("POST", "/listings/webcam-shop-b/price-alerts", token, { targetAmount: "1000.00" })).statusCode).toBe(201);
+  });
+
+  it("with no Current Price because the latest observation has no Price, an alert is accepted for a target that the earlier price reached", async () => {
+    const { token } = await compose();
+    await record(HEADPHONES, "2026-11-19T10:00:00Z", null);
+    expect((await call("GET", `/listings/${HEADPHONES}`, token)).json().currentPrice).toBeNull();
+    expect((await call("POST", `/listings/${HEADPHONES}/price-alerts`, token, { targetAmount: "150.00" })).statusCode).toBe(201);
+  });
+});
+
 describe("who can read it (BR-06)", () => {
   it.each(["/listings", `/listings/${HEADPHONES}`])("SC-18: %s is not valid with the token of a Provider, with no token, or with a fixed one", async (url) => {
     await compose();
