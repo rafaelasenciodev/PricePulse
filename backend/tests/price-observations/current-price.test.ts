@@ -19,6 +19,7 @@ import { InMemoryListingCatalogue, InMemoryPriceObservationRepository } from "..
 import { RecordPriceObservation, type Clock } from "../../src/price-observations/application";
 import { ProviderId } from "../../src/price-observations/domain";
 import { ListingId } from "../../src/shared/domain";
+import { FIXED_CLOCK } from "../support/created-at";
 
 const SIMULATOR = ProviderId("simulator");
 const HEADPHONES = ListingId("headphones-shop-a");
@@ -57,7 +58,7 @@ class World {
   }
 
   createAlert(target: string) {
-    return new CreatePriceAlert(this.reader, this.alerts).execute({
+    return new CreatePriceAlert(this.reader, this.alerts, FIXED_CLOCK).execute({
       owner: USER,
       listingId: HEADPHONES,
       targetAmount: target,

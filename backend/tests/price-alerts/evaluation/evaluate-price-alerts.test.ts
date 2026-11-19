@@ -27,6 +27,7 @@ import {
   type AlertId,
 } from "../../../src/price-alerts/domain";
 import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const OTHER_OWNER = UserId("user-2");
@@ -99,6 +100,7 @@ async function givenAlert(target: string, owner: UserId = OWNER, listingId: List
     listingId,
     targetPrice: TargetPrice.fromDecimalString(target, "EUR"),
     currentPrice: null,
+    createdAt: CREATED_AT,
   });
   await alerts.add(alert);
   return alert;
@@ -400,7 +402,7 @@ describe("one alert that fails does not stop the others (contract, decision 5)",
   });
 
   it("an alert whose Target Price is in another currency than the Current Price is a failure of that alert only", async () => {
-    const inconsistent = new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString("80.00", "USD"), AlertStatus.Active);
+    const inconsistent = new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString("80.00", "USD"), AlertStatus.Active, CREATED_AT);
     await alerts.add(inconsistent);
     const fine = await givenAlert("80.00", OTHER_OWNER);
     prices.setPrice(LISTING, "75.00");

@@ -15,6 +15,7 @@ import { CreatePriceAlert, type ListingReader } from "../../../src/price-alerts/
 import { UserId } from "../../../src/price-alerts/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const TOKEN = "token-1";
 const OTHER_TOKEN = "token-2";
@@ -33,7 +34,7 @@ function start(options: { docs?: boolean; listings?: ListingReader } = {}) {
   authenticator.addUser(TOKEN, UserId("user-1"));
   authenticator.addUser(OTHER_TOKEN, UserId("user-2"));
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(options.listings ?? listings, new InMemoryPriceAlertRepository()),
+    createPriceAlert: new CreatePriceAlert(options.listings ?? listings, new InMemoryPriceAlertRepository(), FIXED_CLOCK),
     authenticator,
     apiDocs: options.docs === false ? undefined : { note: "Demo note for the tests" },
   });

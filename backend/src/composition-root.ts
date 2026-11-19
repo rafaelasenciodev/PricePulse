@@ -66,11 +66,8 @@ export function composeInMemoryApp(
   const catalogue = new InMemoryListingCatalogue();
   const observations = new InMemoryPriceObservationRepository();
   const providerAuthenticator = new InMemoryProviderAuthenticator();
-  const recordPriceObservation = new RecordPriceObservation(
-    catalogue,
-    observations,
-    options.clock ?? new SystemClock(),
-  );
+  const clock = options.clock ?? new SystemClock();
+  const recordPriceObservation = new RecordPriceObservation(catalogue, observations, clock);
 
   // The Current Price of a Listing, with the moment at which it was observed, comes from its latest
   // Price Observation (BR-07 of feature 02). One whose latest observation has no Price has none.
@@ -88,7 +85,7 @@ export function composeInMemoryApp(
   );
   const alerts = new InMemoryPriceAlertRepository();
   const authenticator = new InMemoryAuthenticator();
-  const createPriceAlert = new CreatePriceAlert(listings, alerts);
+  const createPriceAlert = new CreatePriceAlert(listings, alerts, clock);
 
   const notifications = new InMemoryNotificationRepository();
   const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, { currentPriceOf });

@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { PriceAlertRepository } from "../../../src/price-alerts/application";
 import { AlertStatus, PriceAlert, TargetPrice, UserId, newAlertId } from "../../../src/price-alerts/domain";
 import { ListingId } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const OTHER_OWNER = UserId("user-2");
@@ -17,7 +18,7 @@ const LISTING = ListingId("headphones-shop-a");
 const OTHER_LISTING = ListingId("keyboard-shop-b");
 
 const active = (owner: UserId = OWNER, listing: ListingId = LISTING) =>
-  new PriceAlert(newAlertId(), owner, listing, TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active);
+  new PriceAlert(newAlertId(), owner, listing, TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active, CREATED_AT);
 
 const ids = (alerts: readonly PriceAlert[]) => alerts.map((a) => a.id).sort();
 

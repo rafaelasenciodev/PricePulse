@@ -17,6 +17,7 @@ import { RecordPriceObservation, type ListingCatalogue } from "../../../src/pric
 import { ProviderId } from "../../../src/price-observations/domain";
 import { InMemoryProviderAuthenticator } from "../../../src/price-observations/http";
 import { ListingId } from "../../../src/shared/domain";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const TOKEN = "token-simulator";
 const HEADPHONES = ListingId("headphones-shop-a");
@@ -34,7 +35,7 @@ function start(options: { withObservations?: boolean; catalogue?: ListingCatalog
   const providers = new InMemoryProviderAuthenticator();
   providers.addProvider(TOKEN, ProviderId("simulator"));
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository()),
+    createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository(), FIXED_CLOCK),
     authenticator: new InMemoryAuthenticator(),
     priceObservations:
       options.withObservations === false

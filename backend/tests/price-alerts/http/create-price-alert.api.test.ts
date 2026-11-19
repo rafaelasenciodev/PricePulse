@@ -14,6 +14,7 @@ import { CreatePriceAlert, type ListingReader } from "../../../src/price-alerts/
 import { UserId } from "../../../src/price-alerts/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const USER_1 = UserId("user-1");
 const USER_2 = UserId("user-2");
@@ -32,7 +33,7 @@ function startApp(listingReader: ListingReader = listings) {
   authenticator.addUser(TOKEN_1, USER_1);
   authenticator.addUser(TOKEN_2, USER_2);
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(listingReader, alerts),
+    createPriceAlert: new CreatePriceAlert(listingReader, alerts, FIXED_CLOCK),
     authenticator,
   });
 }
@@ -70,6 +71,7 @@ describe("creating a Price Alert", () => {
       targetAmount: "80.00",
       currency: "EUR",
       status: "active",
+      createdAt: "2026-11-19T10:00:00.000Z",
     });
     expect((await alerts.findActive(USER_1, HEADPHONES))?.id).toBe(response.json().id);
   });

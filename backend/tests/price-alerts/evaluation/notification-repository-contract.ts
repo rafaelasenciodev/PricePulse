@@ -10,13 +10,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { NotificationAlreadyExists, type NotificationRepository } from "../../../src/price-alerts/application";
 import { AlertStatus, Notification, PriceAlert, TargetPrice, UserId, newAlertId } from "../../../src/price-alerts/domain";
 import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");
 
 /** An Active Price Alert that a Current Price of 75.00 EUR reaches. */
 export const reachedAlert = () =>
-  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active);
+  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active, CREATED_AT);
 
 export const notificationOf = (alert: PriceAlert, price = "75.00") =>
   Notification.produce({

@@ -8,6 +8,7 @@ import { AlertStatus, PriceAlert, TargetPrice, UserId, newAlertId } from "../../
 import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
 import { describeAlertRepositoryEvaluationContract } from "./alert-repository-contract";
 import { describeNotificationRepositoryContract, notificationOf, reachedAlert } from "./notification-repository-contract";
+import { CREATED_AT } from "../../support/created-at";
 
 describeNotificationRepositoryContract("InMemoryNotificationRepository", () => new InMemoryNotificationRepository());
 describeAlertRepositoryEvaluationContract("InMemoryPriceAlertRepository", () => new InMemoryPriceAlertRepository());
@@ -27,7 +28,7 @@ describe("InMemoryNotificationRepository: what is specific to this adapter", () 
 describe("InMemoryPriceAlertRepository: what is specific to this adapter", () => {
   it("save replaces the stored alert and keeps its data: only the state changes", async () => {
     const repository = new InMemoryPriceAlertRepository();
-    const alert = new PriceAlert(newAlertId(), UserId("user-1"), ListingId("headphones-shop-a"), TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active);
+    const alert = new PriceAlert(newAlertId(), UserId("user-1"), ListingId("headphones-shop-a"), TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active, CREATED_AT);
     await repository.add(alert);
     await repository.save(alert.trigger());
     const [kept] = repository.all();

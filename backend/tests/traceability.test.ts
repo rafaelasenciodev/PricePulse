@@ -48,6 +48,7 @@ const FEATURES: readonly Feature[] = [
     owns: (path) =>
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/evaluation/") &&
+      !path.startsWith("price-alerts/management/") &&
       path !== "composition-root.test.ts" &&
       path !== "composition-root-evaluation.test.ts",
     scenarios: 18,

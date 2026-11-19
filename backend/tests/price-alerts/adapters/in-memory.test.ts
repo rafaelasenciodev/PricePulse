@@ -16,6 +16,7 @@ import {
   newAlertId,
 } from "../../../src/price-alerts/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const USER = UserId("user-1");
 const OTHER_USER = UserId("user-2");
@@ -26,7 +27,7 @@ const alert = (
   owner: UserId = USER,
   listing: ListingId = LISTING,
   status: AlertStatus = AlertStatus.Active,
-) => new PriceAlert(newAlertId(), owner, listing, TargetPrice.fromDecimalString("80.00", "EUR"), status);
+) => new PriceAlert(newAlertId(), owner, listing, TargetPrice.fromDecimalString("80.00", "EUR"), status, CREATED_AT);
 
 describe("InMemoryListingReader", () => {
   it("returns nothing for an unknown Listing", async () => {

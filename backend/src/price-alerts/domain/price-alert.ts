@@ -1,4 +1,5 @@
 import type { ListingId, Price } from "../../shared/domain";
+import type { CreatedAt } from "./created-at";
 import { AlertNotActive, TargetAlreadyReached } from "./errors";
 import type { AlertId, UserId } from "./identifiers";
 import type { TargetPrice } from "./target-price";
@@ -22,6 +23,8 @@ export class PriceAlert {
     readonly listingId: ListingId,
     readonly targetPrice: TargetPrice,
     readonly status: AlertStatus,
+    /** When it was created. It never changes (BR-09 of feature 04). */
+    readonly createdAt: CreatedAt,
   ) {}
 
   /**
@@ -36,12 +39,13 @@ export class PriceAlert {
     listingId: ListingId;
     targetPrice: TargetPrice;
     currentPrice: Price | null;
+    createdAt: CreatedAt;
   }): PriceAlert {
-    const { id, owner, listingId, targetPrice, currentPrice } = params;
+    const { id, owner, listingId, targetPrice, currentPrice, createdAt } = params;
     if (currentPrice !== null && targetPrice.isReachedBy(currentPrice)) {
       throw new TargetAlreadyReached();
     }
-    return new PriceAlert(id, owner, listingId, targetPrice, AlertStatus.Active);
+    return new PriceAlert(id, owner, listingId, targetPrice, AlertStatus.Active, createdAt);
   }
 
   get isActive(): boolean {
@@ -62,7 +66,7 @@ export class PriceAlert {
   /** The same Price Alert, Triggered (BR-06). It does not change this one. Only an Active alert can be triggered. */
   trigger(): PriceAlert {
     if (!this.isActive) throw new AlertNotActive(this.id);
-    return new PriceAlert(this.id, this.owner, this.listingId, this.targetPrice, AlertStatus.Triggered);
+    return new PriceAlert(this.id, this.owner, this.listingId, this.targetPrice, AlertStatus.Triggered, this.createdAt);
   }
 
   equals(other: PriceAlert): boolean {

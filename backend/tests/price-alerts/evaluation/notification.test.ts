@@ -9,6 +9,7 @@ import {
   newAlertId,
 } from "../../../src/price-alerts/domain";
 import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");
@@ -17,7 +18,7 @@ const OBSERVED_AT = ObservedAt.fromIsoString("2026-11-19T10:00:00Z");
 const eur = (amount: string) => Price.fromDecimalString(amount, "EUR");
 
 const active = (target: string) =>
-  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString(target, "EUR"), AlertStatus.Active);
+  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString(target, "EUR"), AlertStatus.Active, CREATED_AT);
 
 describe("Notification.produce", () => {
   it("SC-01 / BR-04: states the Price Alert, its owner, the Listing, the Target Price and the Current Price with its Observed At", () => {

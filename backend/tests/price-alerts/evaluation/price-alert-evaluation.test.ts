@@ -9,6 +9,7 @@ import {
   newAlertId,
 } from "../../../src/price-alerts/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");
@@ -17,7 +18,7 @@ const eur = (amount: string) => Price.fromDecimalString(amount, "EUR");
 
 /** An Active Price Alert with the given Target Price. */
 const active = (target: string) =>
-  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString(target, "EUR"), AlertStatus.Active);
+  new PriceAlert(newAlertId(), OWNER, LISTING, TargetPrice.fromDecimalString(target, "EUR"), AlertStatus.Active, CREATED_AT);
 
 describe("PriceAlert.isReachedBy", () => {
   it("SC-01 / BR-02: a Current Price below the Target Price reaches it", () => {

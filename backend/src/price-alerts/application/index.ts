@@ -22,6 +22,7 @@ export {
 export {
   ActiveAlertAlreadyExists,
   NotificationAlreadyExists,
+  type Clock,
   type CurrentPrice,
   type CurrentPriceSource,
   type NotificationRepository,

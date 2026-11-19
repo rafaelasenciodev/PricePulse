@@ -9,7 +9,7 @@ import type { FastifySchema } from "fastify";
 
 const priceAlert = {
   type: "object",
-  required: ["id", "listingId", "targetAmount", "currency", "status"],
+  required: ["id", "listingId", "targetAmount", "currency", "status", "createdAt"],
   properties: {
     id: { type: "string", description: "Identifier of the Price Alert" },
     listingId: { type: "string", description: "The Listing the Price Alert watches" },
@@ -20,6 +20,7 @@ const priceAlert = {
     },
     currency: { type: "string", description: "The currency of the Listing", examples: ["EUR"] },
     status: { type: "string", enum: ["active", "triggered"], description: "A new Price Alert is active" },
+    createdAt: { type: "string", description: "When the Price Alert was created, in UTC", examples: ["2026-11-19T10:00:00.000Z"] },
   },
 };
 

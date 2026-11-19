@@ -2,6 +2,7 @@
 
 import { InvalidValue, type ListingId } from "../../shared/domain";
 import {
+  CreatedAt,
   PriceAlert,
   TargetAlreadyReached as DomainTargetAlreadyReached,
   TargetPrice,
@@ -9,7 +10,7 @@ import {
   type UserId,
 } from "../domain";
 import { DuplicateAlert, InvalidTargetPrice, ListingNotFound, TargetAlreadyReached } from "./errors";
-import { ActiveAlertAlreadyExists, type ListingReader, type PriceAlertRepository } from "./ports";
+import { ActiveAlertAlreadyExists, type Clock, type ListingReader, type PriceAlertRepository } from "./ports";
 
 export interface CreatePriceAlertCommand {
   /** Comes from the authentication of the request, never from the client. */
@@ -25,6 +26,8 @@ export interface PriceAlertView {
   readonly targetAmount: string;
   readonly currency: string;
   readonly status: string;
+  /** In UTC, such as "2026-11-19T10:00:00.000Z". */
+  readonly createdAt: string;
 }
 
 export interface CreatePriceAlertResult {
@@ -37,6 +40,7 @@ export class CreatePriceAlert {
   constructor(
     private readonly listings: ListingReader,
     private readonly alerts: PriceAlertRepository,
+    private readonly clock: Clock,
   ) {}
 
   async execute(command: CreatePriceAlertCommand): Promise<CreatePriceAlertResult> {
@@ -76,6 +80,7 @@ export class CreatePriceAlert {
           listingId: command.listingId,
           targetPrice: target,
           currentPrice: listing.currentPrice,
+          createdAt: CreatedAt.fromDate(this.clock.now()),
         });
       } catch (error) {
         if (error instanceof DomainTargetAlreadyReached) {
@@ -105,5 +110,6 @@ function toView(alert: PriceAlert): PriceAlertView {
     targetAmount: alert.targetPrice.toDecimalString(),
     currency: alert.targetPrice.currency,
     status: alert.status,
+    createdAt: alert.createdAt.toIsoString(),
   };
 }

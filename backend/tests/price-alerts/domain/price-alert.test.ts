@@ -9,6 +9,7 @@ import {
   newAlertId,
 } from "../../../src/price-alerts/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
+import { CREATED_AT } from "../../support/created-at";
 
 const OWNER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");
@@ -20,6 +21,7 @@ const create = (target: string, current: string | null) =>
     listingId: LISTING,
     targetPrice: TargetPrice.fromDecimalString(target, "EUR"),
     currentPrice: current === null ? null : Price.fromDecimalString(current, "EUR"),
+    createdAt: CREATED_AT,
   });
 
 describe("PriceAlert.create", () => {
@@ -56,15 +58,15 @@ describe("PriceAlert", () => {
   const target = TargetPrice.fromDecimalString("80.00", "EUR");
 
   it("BR-11: a Triggered Price Alert is not Active (supports SC-17)", () => {
-    const alert = new PriceAlert(newAlertId(), OWNER, LISTING, target, AlertStatus.Triggered);
+    const alert = new PriceAlert(newAlertId(), OWNER, LISTING, target, AlertStatus.Triggered, CREATED_AT);
     expect(alert.isActive).toBe(false);
   });
 
   it("is the same entity when it has the same id", () => {
     const id = AlertId("alert-1");
-    const first = new PriceAlert(id, OWNER, LISTING, target, AlertStatus.Active);
-    const second = new PriceAlert(id, OWNER, LISTING, target, AlertStatus.Triggered);
-    const other = new PriceAlert(AlertId("alert-2"), OWNER, LISTING, target, AlertStatus.Active);
+    const first = new PriceAlert(id, OWNER, LISTING, target, AlertStatus.Active, CREATED_AT);
+    const second = new PriceAlert(id, OWNER, LISTING, target, AlertStatus.Triggered, CREATED_AT);
+    const other = new PriceAlert(AlertId("alert-2"), OWNER, LISTING, target, AlertStatus.Active, CREATED_AT);
     expect(first.equals(second)).toBe(true);
     expect(first.equals(other)).toBe(false);
   });

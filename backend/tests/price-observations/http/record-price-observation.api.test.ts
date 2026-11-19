@@ -25,6 +25,7 @@ import {
 import { ProviderId } from "../../../src/price-observations/domain";
 import { InMemoryProviderAuthenticator } from "../../../src/price-observations/http";
 import { ListingId } from "../../../src/shared/domain";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const HEADPHONES = ListingId("headphones-shop-a");
 const PROVIDER_TOKEN = "token-simulator";
@@ -42,7 +43,7 @@ function startApp(listingCatalogue: ListingCatalogue = catalogue, withObservatio
   providers.addProvider(PROVIDER_TOKEN, ProviderId("simulator"));
   const clock: Clock = { now: () => NOW };
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository()),
+    createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository(), FIXED_CLOCK),
     authenticator: users,
     priceObservations: withObservations
       ? {
@@ -189,7 +190,7 @@ describe("authentication (BR-01, SC-16, SC-17)", () => {
     providers.addProvider("token-b", ProviderId("provider-b"));
     await app.close();
     app = buildApp({
-      createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository()),
+      createPriceAlert: new CreatePriceAlert(new InMemoryListingReader(), new InMemoryPriceAlertRepository(), FIXED_CLOCK),
       authenticator: new InMemoryAuthenticator(),
       priceObservations: {
         recordPriceObservation: new RecordPriceObservation(catalogue, observations, { now: () => NOW }),

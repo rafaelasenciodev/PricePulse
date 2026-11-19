@@ -23,6 +23,13 @@ export class CurrencyMismatch extends DomainError {
   }
 }
 
+/** The moment of creation is not a valid instant. A defect of the clock, not a mistake of a User. */
+export class InvalidCreatedAt extends DomainError {
+  constructor(value: string) {
+    super(`The moment of creation is not a valid instant: ${JSON.stringify(value)}`);
+  }
+}
+
 /** BR-06: only an Active Price Alert can become Triggered. A defect if it happens: the use case never asks. */
 export class AlertNotActive extends DomainError {
   constructor(alertId: string) {

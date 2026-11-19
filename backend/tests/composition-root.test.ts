@@ -61,6 +61,14 @@ describe("composeInMemoryApp: Price Alerts", () => {
     expect(response.json()).toMatchObject({ listingId: HEADPHONES, targetAmount: "80.00", status: "active" });
   });
 
+  it("BR-09 of feature 04: the creation moment of a Price Alert comes from the clock of the composition", async () => {
+    compose();
+    await observe("10", "100.00");
+    const response = await create("80.00");
+    expect(response.statusCode).toBe(201);
+    expect(response.json().createdAt).toBe("2026-11-19T12:00:00.000Z");
+  });
+
   it("shares one repository between requests: a repeated request returns the same Price Alert", async () => {
     compose();
     await observe("10", "100.00");

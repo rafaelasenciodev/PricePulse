@@ -3,6 +3,7 @@ import { InvalidValue } from "../../../src/shared/domain";
 import {
   AlertNotActive,
   CurrencyMismatch,
+  InvalidCreatedAt,
   NonPositiveTargetPrice,
   TargetAlreadyReached,
   TargetNotReached,
@@ -23,6 +24,7 @@ describe("classification of the domain errors of Price Alerts", () => {
     ["CurrencyMismatch", new CurrencyMismatch("EUR", "USD")],
     ["TargetAlreadyReached", new TargetAlreadyReached()],
     ["AlertNotActive", new AlertNotActive("alert-1")],
+    ["InvalidCreatedAt", new InvalidCreatedAt("NaN")],
     ["TargetNotReached", new TargetNotReached("alert-1")],
   ])("%s is not an InvalidValue", (_name, error) => {
     expect(error).not.toBeInstanceOf(InvalidValue);

@@ -28,6 +28,11 @@ export class ActiveAlertAlreadyExists extends Error {
   }
 }
 
+/** The current moment. It is a port so that tests control the time (BR-09 of feature 04). */
+export interface Clock {
+  now(): Date;
+}
+
 export interface PriceAlertRepository {
   /** The Active Price Alert of the owner for the Listing, if any. A Triggered one is never returned. */
   findActive(owner: UserId, listingId: ListingId): Promise<PriceAlert | null>;
