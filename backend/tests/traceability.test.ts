@@ -48,6 +48,7 @@ const FEATURES: readonly Feature[] = [
     // The evaluation of feature 03 lives in the same module, so its tests are told apart by folder
     // and by file name.
     owns: (path) =>
+      !path.startsWith("accounts/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
