@@ -8,6 +8,7 @@ import {
   type ProviderId,
 } from "../domain";
 import { InvalidObservation, ListingNotFound, ObservationConflict } from "./errors";
+import { toObservationView, type PriceObservationView } from "./price-observation-view";
 import {
   ObservationAlreadyExists,
   type CatalogueListing,
@@ -30,14 +31,6 @@ export interface RecordPriceObservationCommand {
   /** ISO 8601 with an explicit time zone, such as "2026-11-19T10:00:00Z". */
   readonly observedAt: string;
   /** The Price, or null when the Listing was unavailable (BR-03). The amount is text such as "79.90". */
-  readonly price: { readonly amount: string; readonly currency: string } | null;
-}
-
-export interface PriceObservationView {
-  readonly provider: string;
-  readonly listingId: string;
-  /** In UTC, such as "2026-11-19T10:00:00.000Z". */
-  readonly observedAt: string;
   readonly price: { readonly amount: string; readonly currency: string } | null;
 }
 
@@ -73,7 +66,7 @@ export class RecordPriceObservation {
       // 3. A Price Observation with the same identity may already be stored (BR-09, BR-10)
       const existing = await this.observations.find(command.provider, command.listingId, observation.observedAt);
       if (existing !== null) {
-        if (existing.hasSameContentAs(observation)) return { observation: toView(existing), recorded: false };
+        if (existing.hasSameContentAs(observation)) return { observation: toObservationView(existing), recorded: false };
         throw new ObservationConflict();
       }
 
@@ -84,7 +77,7 @@ export class RecordPriceObservation {
         if (error instanceof ObservationAlreadyExists) continue;
         throw error;
       }
-      return { observation: toView(observation), recorded: true };
+      return { observation: toObservationView(observation), recorded: true };
     }
 
     throw new Error("Could not record the Price Observation: repeated concurrent conflicts");
@@ -124,16 +117,4 @@ function isMistakeOfTheProvider(error: unknown): error is Error {
     error instanceof ObservationCurrencyMismatch ||
     error instanceof ObservedInTheFuture
   );
-}
-
-function toView(observation: PriceObservation): PriceObservationView {
-  return {
-    provider: observation.provider,
-    listingId: observation.listingId,
-    observedAt: observation.observedAt.toIsoString(),
-    price:
-      observation.price === null
-        ? null
-        : { amount: observation.price.toDecimalString(), currency: observation.price.currency },
-  };
 }

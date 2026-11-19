@@ -68,6 +68,10 @@ class FakeRepository implements PriceObservationRepository {
     throw new Error("The use case must not call findLatest");
   }
 
+  async findByListing(): Promise<never> {
+    throw new Error("The use case must not call findByListing");
+  }
+
   all(): PriceObservation[] {
     return [...this.stored];
   }
