@@ -105,3 +105,15 @@ The first feature of the [method of five stages](features/README.md). The code i
 | 3 Design | [Design](features/04-read-and-manage-alerts/03-design.md) | Approved |
 | 4 Build | [Application layer](../backend/src/price-alerts/application/), [adapters](../backend/src/price-alerts/adapters/) and [HTTP layer](../backend/src/price-alerts/http/) | Implemented |
 | 5 Close | [Completion](features/04-read-and-manage-alerts/04-completion.md) | Approved |
+
+### 05 — Notifications and Price History
+
+The second feature of the [method of five stages](features/README.md). The code is in the modules of Price Alerts and of Price Observations.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/05-notifications-and-price-history/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/05-notifications-and-price-history/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/05-notifications-and-price-history/03-design.md) | Approved |
+| 4 Build | [Alerts application layer](../backend/src/price-alerts/application/), [observations application layer](../backend/src/price-observations/application/) and their [HTTP layers](../backend/src/price-observations/http/) | Implemented |
+| 5 Close | [Completion](features/05-notifications-and-price-history/04-completion.md) | In Review |
