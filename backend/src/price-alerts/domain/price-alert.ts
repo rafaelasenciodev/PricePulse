@@ -1,8 +1,9 @@
 import type { ListingId, Price } from "../../shared/domain";
 import type { CreatedAt } from "./created-at";
 import { AlertNotActive, CurrencyMismatch, TargetAlreadyReached } from "./errors";
-import type { AlertId, UserId } from "./identifiers";
+import type { AlertId } from "./identifiers";
 import type { TargetPrice } from "./target-price";
+import type { UserId } from "../../shared/domain";
 
 export const AlertStatus = {
   Active: "active",

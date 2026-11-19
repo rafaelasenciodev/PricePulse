@@ -10,8 +10,8 @@ import {
   InMemoryPriceAlertRepository,
 } from "../../../src/price-alerts/adapters";
 import { AlertStateChanged, EvaluatePriceAlerts } from "../../../src/price-alerts/application";
-import { AlertStatus, PriceAlert, TargetPrice, UserId, newAlertId, type Notification } from "../../../src/price-alerts/domain";
-import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { AlertStatus, PriceAlert, TargetPrice, newAlertId, type Notification } from "../../../src/price-alerts/domain";
+import { ListingId, ObservedAt, Price, UserId } from "../../../src/shared/domain";
 import { CREATED_AT } from "../../support/created-at";
 
 const LISTING = ListingId("headphones-shop-a");

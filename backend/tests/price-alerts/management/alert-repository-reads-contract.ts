@@ -9,8 +9,9 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import type { PriceAlertRepository } from "../../../src/price-alerts/application";
-import { AlertId, AlertStatus, UserId, type PriceAlert } from "../../../src/price-alerts/domain";
+import { AlertId, AlertStatus, type PriceAlert } from "../../../src/price-alerts/domain";
 import { anAlert, type AlertSpec } from "../../support/alerts";
+import { UserId } from "../../../src/shared/domain";
 
 const OWNER = UserId("user-1");
 const OTHER_OWNER = UserId("user-2");

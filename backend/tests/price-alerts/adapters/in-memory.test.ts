@@ -8,14 +8,8 @@
 import { describe, expect, it } from "vitest";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { ActiveAlertAlreadyExists } from "../../../src/price-alerts/application";
-import {
-  AlertStatus,
-  PriceAlert,
-  TargetPrice,
-  UserId,
-  newAlertId,
-} from "../../../src/price-alerts/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { AlertStatus, PriceAlert, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { CREATED_AT } from "../../support/created-at";
 
 const USER = UserId("user-1");

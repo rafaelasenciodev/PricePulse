@@ -1,8 +1,8 @@
 /** UC-01 List my Notifications (see the design of feature 05). */
 
-import type { UserId } from "../domain";
 import { toNotificationView, type NotificationView } from "./notification-view";
 import type { NotificationRepository } from "./ports";
+import type { UserId } from "../../shared/domain";
 
 export interface ListNotificationsCommand {
   /** Comes from the authentication of the request, never from the client. */

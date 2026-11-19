@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { InMemoryNotificationRepository } from "../../../src/price-alerts/adapters";
-import { UserId, type Notification } from "../../../src/price-alerts/domain";
+import type { Notification } from "../../../src/price-alerts/domain";
 import { aNotification } from "../../support/notifications";
 import { describeNotificationRepositoryReadsContract } from "./notification-repository-reads-contract";
+import { UserId } from "../../../src/shared/domain";
 
 describeNotificationRepositoryReadsContract("InMemoryNotificationRepository", () => new InMemoryNotificationRepository());
 

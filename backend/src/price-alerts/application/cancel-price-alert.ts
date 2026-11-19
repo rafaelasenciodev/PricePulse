@@ -1,9 +1,10 @@
 /** UC-04 Cancel a Price Alert (see the design of feature 04). */
 
-import { AlertStatus, type AlertId, type UserId } from "../domain";
+import { AlertStatus, type AlertId } from "../domain";
 import { AlertConflict, AlertNotActive, AlertNotFound } from "./errors";
 import { AlertStateChanged, type PriceAlertRepository } from "./ports";
 import { toView, type PriceAlertView } from "./price-alert-view";
+import type { UserId } from "../../shared/domain";
 
 export interface CancelPriceAlertCommand {
   /** Comes from the authentication of the request, never from the client. */

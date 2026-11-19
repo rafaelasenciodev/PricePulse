@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
-import { UserId, type PriceAlert } from "../../../src/price-alerts/domain";
+import type { PriceAlert } from "../../../src/price-alerts/domain";
 import { anAlert } from "../../support/alerts";
 import { describeAlertRepositoryReadsContract } from "./alert-repository-reads-contract";
+import { UserId } from "../../../src/shared/domain";
 
 describeAlertRepositoryReadsContract("InMemoryPriceAlertRepository", () => new InMemoryPriceAlertRepository());
 

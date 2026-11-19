@@ -1,13 +1,12 @@
 /** UC-03 Modify the Target Price of a Price Alert (see the design of feature 04). */
 
-import { InvalidValue } from "../../shared/domain";
+import { InvalidValue, type UserId } from "../../shared/domain";
 import {
   AlertStatus,
   TargetAlreadyReached as DomainTargetAlreadyReached,
   TargetPrice,
   type AlertId,
   type PriceAlert,
-  type UserId,
 } from "../domain";
 import { AlertConflict, AlertNotActive, AlertNotFound, InvalidTargetPrice, TargetAlreadyReached } from "./errors";
 import { AlertStateChanged, type ListingReader, type PriceAlertRepository } from "./ports";

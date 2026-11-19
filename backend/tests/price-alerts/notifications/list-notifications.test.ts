@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryNotificationRepository, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { ListNotifications, type NotificationRepository } from "../../../src/price-alerts/application";
-import { AlertId, AlertStatus, UserId } from "../../../src/price-alerts/domain";
+import { AlertId, AlertStatus } from "../../../src/price-alerts/domain";
 import { anAlert } from "../../support/alerts";
 import { aNotification, type NotificationSpec } from "../../support/notifications";
+import { UserId } from "../../../src/shared/domain";
 
 const USER = UserId("user-1");
 

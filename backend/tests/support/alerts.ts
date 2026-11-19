@@ -1,7 +1,7 @@
 /** Price Alerts for the tests of reading and managing them: any owner, Listing, Target Price, state and moment. */
 
-import { AlertStatus, CreatedAt, PriceAlert, TargetPrice, UserId, newAlertId, type AlertId } from "../../src/price-alerts/domain";
-import { ListingId } from "../../src/shared/domain";
+import { AlertStatus, CreatedAt, PriceAlert, TargetPrice, newAlertId, type AlertId } from "../../src/price-alerts/domain";
+import { ListingId, UserId } from "../../src/shared/domain";
 
 export interface AlertSpec {
   readonly id?: AlertId;

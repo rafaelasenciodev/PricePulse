@@ -9,13 +9,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { composeInMemoryApp } from "../src/composition-root";
 import type { EvaluationReport } from "../src/evaluation-trigger";
-import { AlertStatus, UserId } from "../src/price-alerts/domain";
+import { AlertStatus } from "../src/price-alerts/domain";
 import { ProviderId } from "../src/price-observations/domain";
 import { ListingId } from "../src/shared/domain";
+import { FAST_HASHER, signedInUser } from "./support/accounts";
 
 const HEADPHONES = ListingId("headphones-shop-a");
-const TOKEN_1 = "token-1";
-const TOKEN_2 = "token-2";
+let TOKEN_1 = ""; // the token of a User who signed in, set by compose()
+let TOKEN_2 = ""; // the token of a User who signed in, set by compose()
 const PROVIDER_TOKEN = "provider-token";
 const NOW = new Date("2026-11-19T12:00:00Z");
 
@@ -26,11 +27,11 @@ afterEach(async () => {
   await application.app.close();
 });
 
-function compose() {
+async function compose() {
   reports = [];
-  application = composeInMemoryApp({ clock: { now: () => NOW }, onEvaluation: (report) => reports.push(report) });
-  application.authenticator.addUser(TOKEN_1, UserId("user-1"));
-  application.authenticator.addUser(TOKEN_2, UserId("user-2"));
+  application = composeInMemoryApp({ clock: { now: () => NOW }, passwordHasher: FAST_HASHER, onEvaluation: (report) => reports.push(report) });
+  TOKEN_1 = (await signedInUser(application, "user1@example.com")).token;
+  TOKEN_2 = (await signedInUser(application, "user2@example.com")).token;
   application.providerAuthenticator.addProvider(PROVIDER_TOKEN, ProviderId("simulator"));
   application.catalogue.addListing(HEADPHONES, "EUR");
   return application;
@@ -52,7 +53,7 @@ const patch = (id: string, payload: object, token = TOKEN_1) => inject("PATCH", 
 
 describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   it("an alert that was created is in the list and can be read, with the creation moment of the clock", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
 
@@ -65,7 +66,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-03 / BR-01: a User cannot see or change the alert of another User", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const mine = (await create("80.00", TOKEN_1)).json();
 
@@ -76,7 +77,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-14: modifying the Target Price is read back, and the Listing's Current Price is the one of its observations", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
 
@@ -87,7 +88,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-09 / BR-03: a Cancelled alert is not evaluated: a price that reaches its target triggers nothing", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
     expect((await patch(created.id, { status: "cancelled" })).json().status).toBe("cancelled");
@@ -102,7 +103,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-12 / BR-04: an alert that the Evaluation Triggered cannot be cancelled", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
     await observe("11", "75.00");
@@ -116,7 +117,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-10 / BR-03: after cancelling, the User can create another alert for the same Listing", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const first = (await create("80.00")).json();
     await patch(first.id, { status: "cancelled" });
@@ -129,7 +130,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("the Evaluation uses the Target Price that was modified, not the old one", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
     await patch(created.id, { targetAmount: "60.00" });
@@ -143,7 +144,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-13 / BR-07: cancelling or modifying starts no Evaluation and produces no Notification", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     const created = (await create("80.00")).json();
     const other = (await create("85.00", TOKEN_2)).json();
@@ -157,7 +158,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("SC-07: every route needs a token", async () => {
-    compose();
+    await compose();
     for (const [method, url] of [["GET", "/price-alerts"], ["GET", "/price-alerts/x"], ["PATCH", "/price-alerts/x"]] as const) {
       const response = await application.app.inject({ method, url });
       expect(response.statusCode, `${method} ${url}`).toBe(401);
@@ -165,7 +166,7 @@ describe("composeInMemoryApp: reading and managing Price Alerts", () => {
   });
 
   it("the token of a price provider does not open the routes of the Users", async () => {
-    compose();
+    await compose();
     expect((await list("", PROVIDER_TOKEN)).statusCode).toBe(401);
   });
 });

@@ -1,7 +1,8 @@
 /** Ports: what the use case needs from the outside (contract, section "Ports"). */
 
 import type { ListingId, ObservedAt, Price } from "../../shared/domain";
-import type { AlertId, AlertStatus, Notification, PriceAlert, UserId } from "../domain";
+import type { AlertId, AlertStatus, Notification, PriceAlert } from "../domain";
+import type { UserId } from "../../shared/domain";
 
 /** What the use case needs to know about a Listing, read at once. */
 export interface ListingView {

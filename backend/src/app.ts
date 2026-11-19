@@ -1,6 +1,8 @@
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
+import type { Authenticate, ReadMyAccount, RegisterAccount, SignIn, SignOut } from "./accounts/application";
+import { accountRoutes, accountsHttpError } from "./accounts/http";
 import type { CreatePriceAlert } from "./price-alerts/application";
 import {
   priceAlertHttpError,
@@ -26,6 +28,8 @@ interface HttpError {
   /** A stable identifier, so a client can tell apart errors that share a status. */
   readonly code: string;
   readonly message: string;
+  /** Headers that the answer carries, such as how long to wait. */
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -34,7 +38,7 @@ interface HttpError {
  */
 type HttpErrorMapper = (error: unknown) => HttpError | null;
 
-const featureMappers: readonly HttpErrorMapper[] = [priceAlertHttpError, priceObservationHttpError];
+const featureMappers: readonly HttpErrorMapper[] = [accountsHttpError, priceAlertHttpError, priceObservationHttpError];
 
 /** Map an error to the HTTP response that reports it. Unexpected errors reveal nothing. */
 function toHttpError(error: unknown): HttpError {
@@ -68,6 +72,17 @@ export interface ApiDocsOptions {
 }
 
 export interface AppDependencies {
+  /**
+   * The routes of accounts: registering, signing in and out, and reading one's own Account. Optional:
+   * without them the application serves no way to get a token, and the documentation does not mention them.
+   */
+  readonly accounts?: {
+    readonly registerAccount: RegisterAccount;
+    readonly signIn: SignIn;
+    readonly signOut: SignOut;
+    readonly readMyAccount: ReadMyAccount;
+    readonly authenticate: Authenticate;
+  };
   readonly createPriceAlert: CreatePriceAlert;
   readonly authenticator: Authenticator;
   /**
@@ -108,8 +123,9 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
   });
 
   app.setErrorHandler((error, request, reply) => {
-    const { status, code, message } = toHttpError(error);
+    const { status, code, message, headers } = toHttpError(error);
     if (status >= 500) request.log.error(error);
+    if (headers) reply.headers(headers);
     return reply.code(status).send({ code, message });
   });
 
@@ -130,6 +146,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
             dependencies.priceAlertManagement
               ? "Create price alerts for the Listings of a catalogue, read them and manage them. Read the Notifications that are produced when an alert is reached."
               : "Create price alerts for the Listings of a catalogue.",
+            dependencies.accounts && "Register an Account and sign in to get the token of a Session, which identifies the User in the other requests.",
             dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
             dependencies.apiDocs.note,
           ]
@@ -137,6 +154,12 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
             .join("\n\n"),
         },
         tags: [
+          ...(dependencies.accounts
+            ? [
+                { name: "Accounts", description: "Register an Account and read one's own" },
+                { name: "Sessions", description: "Sign in to get a token, and sign out to end it" },
+              ]
+            : []),
           { name: "Price alerts", description: "Requests to be notified when a Listing reaches a price" },
           ...(dependencies.priceAlertManagement
             ? [{ name: "Notifications", description: "The records of the Price Alerts that were reached" }]
@@ -153,7 +176,9 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
             bearerAuth: {
               type: "http",
               scheme: "bearer",
-              description: "The token that identifies the User. Press Authorize and paste it",
+              description: dependencies.accounts
+                ? "The token that `POST /sessions` gives when a User signs in. Press Authorize and paste it"
+                : "The token that identifies the User. Press Authorize and paste it",
             },
             ...(dependencies.priceObservations
               ? {
@@ -173,6 +198,8 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
       uiConfig: { docExpansion: "list", persistAuthorization: true },
     });
   }
+
+  if (dependencies.accounts) app.register(accountRoutes, dependencies.accounts);
 
   app.register(priceAlertRoutes, {
     createPriceAlert: dependencies.createPriceAlert,

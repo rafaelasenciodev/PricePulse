@@ -17,15 +17,8 @@ import {
   ListingNotFound,
   TargetAlreadyReached,
 } from "../../../src/price-alerts/application";
-import {
-  AlertStatus,
-  CurrencyMismatch,
-  PriceAlert,
-  TargetPrice,
-  UserId,
-  newAlertId,
-} from "../../../src/price-alerts/domain";
-import { ListingId, Price, UnsupportedCurrency } from "../../../src/shared/domain";
+import { AlertStatus, CurrencyMismatch, PriceAlert, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UnsupportedCurrency, UserId } from "../../../src/shared/domain";
 import { CREATED_AT, FIXED_CLOCK } from "../../support/created-at";
 
 const USER = UserId("user-1");

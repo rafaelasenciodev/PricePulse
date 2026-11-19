@@ -1,0 +1,44 @@
+/** UC-01 Register (see the design). */
+
+import { InvalidValue } from "../../shared/domain";
+import { Account, Email, assertValidPassword, newUserId } from "../domain";
+import { toView, type AccountView } from "./account-view";
+import { EmailAlreadyRegistered, InvalidRegistration } from "./errors";
+import { EmailAlreadyStored, type AccountRepository, type PasswordHasher } from "./ports";
+
+export interface RegisterAccountCommand {
+  readonly email: string;
+  readonly password: string;
+}
+
+export class RegisterAccount {
+  constructor(
+    private readonly accounts: AccountRepository,
+    private readonly hasher: PasswordHasher,
+  ) {}
+
+  async execute(command: RegisterAccountCommand): Promise<AccountView> {
+    // 1. The email and the password are valid (BR-01, BR-03)
+    let email: Email;
+    try {
+      email = Email.of(command.email);
+      assertValidPassword(command.password, email);
+    } catch (error) {
+      if (error instanceof InvalidValue) throw new InvalidRegistration(error.message, { cause: error });
+      throw error;
+    }
+
+    // 2. No Account has that email (BR-02). The hash is slow on purpose, so it comes after.
+    if ((await this.accounts.findByEmail(email)) !== null) throw new EmailAlreadyRegistered();
+
+    // 3. Only the hash is stored (BR-04). If another registration came first, the store refuses.
+    const account = new Account(newUserId(), email, await this.hasher.hash(command.password));
+    try {
+      await this.accounts.add(account);
+    } catch (error) {
+      if (error instanceof EmailAlreadyStored) throw new EmailAlreadyRegistered();
+      throw error;
+    }
+    return toView(account);
+  }
+}

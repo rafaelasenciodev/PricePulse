@@ -6,8 +6,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { CreatePriceAlert, type Clock } from "../../../src/price-alerts/application";
-import { UserId } from "../../../src/price-alerts/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 
 const USER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");

@@ -11,8 +11,8 @@ import {
   type ListingReader,
   type PriceAlertRepository,
 } from "../../../src/price-alerts/application";
-import { AlertId, AlertStatus, CurrencyMismatch, PriceAlert, UserId } from "../../../src/price-alerts/domain";
-import { ListingId, Price, UnsupportedCurrency } from "../../../src/shared/domain";
+import { AlertId, AlertStatus, CurrencyMismatch, PriceAlert } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UnsupportedCurrency, UserId } from "../../../src/shared/domain";
 import { anAlert } from "../../support/alerts";
 
 const USER = UserId("user-1");

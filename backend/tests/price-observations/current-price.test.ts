@@ -14,11 +14,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ComposedListingReader, InMemoryPriceAlertRepository } from "../../src/price-alerts/adapters";
 import { CreatePriceAlert, TargetAlreadyReached } from "../../src/price-alerts/application";
-import { UserId } from "../../src/price-alerts/domain";
 import { InMemoryListingCatalogue, InMemoryPriceObservationRepository } from "../../src/price-observations/adapters";
 import { RecordPriceObservation, type Clock } from "../../src/price-observations/application";
 import { ProviderId } from "../../src/price-observations/domain";
-import { ListingId } from "../../src/shared/domain";
+import { ListingId, UserId } from "../../src/shared/domain";
 import { FIXED_CLOCK } from "../support/created-at";
 
 const SIMULATOR = ProviderId("simulator");

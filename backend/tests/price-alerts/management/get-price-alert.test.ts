@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { AlertNotFound, GetPriceAlert } from "../../../src/price-alerts/application";
-import { AlertId, AlertStatus, UserId } from "../../../src/price-alerts/domain";
+import { AlertId, AlertStatus } from "../../../src/price-alerts/domain";
 import { anAlert } from "../../support/alerts";
+import { UserId } from "../../../src/shared/domain";
 
 const USER = UserId("user-1");
 

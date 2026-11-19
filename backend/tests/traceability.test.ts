@@ -48,6 +48,7 @@ const FEATURES: readonly Feature[] = [
     // The evaluation of feature 03 lives in the same module, so its tests are told apart by folder
     // and by file name.
     owns: (path) =>
+      !path.startsWith("accounts/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
@@ -55,7 +56,8 @@ const FEATURES: readonly Feature[] = [
       path !== "composition-root.test.ts" &&
       path !== "composition-root-evaluation.test.ts" &&
       path !== "composition-root-management.test.ts" &&
-      path !== "composition-root-history.test.ts",
+      path !== "composition-root-history.test.ts" &&
+      path !== "composition-root-accounts.test.ts",
     scenarios: 18,
     rules: 11,
     exemptRules: {},
@@ -111,6 +113,17 @@ const FEATURES: readonly Feature[] = [
       path === "composition-root-history.test.ts",
     scenarios: 20,
     rules: 9,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
+  {
+    name: "feature 06",
+    docs: "06-accounts-and-authentication/",
+    rulesFile: "01-discovery.md",
+    // The module of Accounts is its own, and the meeting with the other features is one file at the Composition Root.
+    owns: (path) => path.startsWith("accounts/") || path === "composition-root-accounts.test.ts",
+    scenarios: 25,
+    rules: 12,
     exemptRules: {},
     exemptScenarios: {},
   },

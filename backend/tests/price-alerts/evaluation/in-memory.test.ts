@@ -4,8 +4,8 @@ import {
   InMemoryNotificationRepository,
   InMemoryPriceAlertRepository,
 } from "../../../src/price-alerts/adapters";
-import { AlertStatus, PriceAlert, TargetPrice, UserId, newAlertId } from "../../../src/price-alerts/domain";
-import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
+import { AlertStatus, PriceAlert, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, ObservedAt, Price, UserId } from "../../../src/shared/domain";
 import { describeAlertRepositoryEvaluationContract } from "./alert-repository-contract";
 import { describeNotificationRepositoryContract, notificationOf, reachedAlert } from "./notification-repository-contract";
 import { CREATED_AT } from "../../support/created-at";

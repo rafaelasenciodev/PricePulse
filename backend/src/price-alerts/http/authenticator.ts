@@ -1,4 +1,4 @@
-import type { UserId } from "../domain";
+import type { UserId } from "../../shared/domain";
 
 /**
  * Identifies the User who makes a request from the credential it carries.

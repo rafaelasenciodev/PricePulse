@@ -27,6 +27,8 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Cancelled** | The state of a Price Alert that its owner stopped before it was Triggered. A Cancelled Price Alert is no longer Active: it is not evaluated, and the User may create another Active one for the same Listing. | Feature 04 |
 | **Creation moment** | When a Price Alert was created. It never changes. | Feature 04 |
 | **Price History** | The Price Observations of a Listing, in the order of their Observed At. | Feature 05 |
+| **Account** | The registration of a User: an email that identifies it, and a password. | Feature 06 |
+| **Session** | The period during which a token identifies an Account. It starts when the person signs in, and ends when it expires or when they sign out. | Feature 06 |
 
 ## Vocabulary decisions
 

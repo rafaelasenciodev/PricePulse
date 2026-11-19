@@ -8,8 +8,9 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import type { NotificationRepository } from "../../../src/price-alerts/application";
-import { AlertId, UserId, type Notification } from "../../../src/price-alerts/domain";
+import { AlertId, type Notification } from "../../../src/price-alerts/domain";
 import { aNotification, type NotificationSpec } from "../../support/notifications";
+import { UserId } from "../../../src/shared/domain";
 
 const OWNER = UserId("user-1");
 

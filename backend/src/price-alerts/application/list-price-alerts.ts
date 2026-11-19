@@ -1,8 +1,9 @@
 /** UC-01 List my Price Alerts (see the design of feature 04). */
 
-import type { AlertStatus, UserId } from "../domain";
+import type { AlertStatus } from "../domain";
 import { toView, type PriceAlertView } from "./price-alert-view";
 import type { PriceAlertRepository } from "./ports";
+import type { UserId } from "../../shared/domain";
 
 export interface ListPriceAlertsCommand {
   /** Comes from the authentication of the request, never from the client. */

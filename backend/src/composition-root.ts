@@ -10,9 +10,28 @@
  * (BR-07 of feature 02). The two meet here, through two functions handed to the reader.
  * They meet a second time when a price is recorded: the Price Alerts of that Listing are
  * evaluated (feature 03). Recording itself knows nothing of it (BR-11 of feature 02).
+ *
+ * The same happens with who a User is. Accounts know the Sessions, and the other two features ask
+ * only who a token belongs to, each through a port of its own. The use case of Accounts that answers
+ * it is adapted to both here (feature 06), so no route of the other features knows about Accounts.
  */
 
 import type { FastifyInstance } from "fastify";
+import {
+  CryptoSessionTokens,
+  InMemoryAccountRepository,
+  InMemoryLoginAttemptStore,
+  InMemorySessionStore,
+  ScryptPasswordHasher,
+} from "./accounts/adapters";
+import {
+  Authenticate,
+  ReadMyAccount,
+  RegisterAccount,
+  SignIn,
+  SignOut,
+  type PasswordHasher,
+} from "./accounts/application";
 import { buildApp, type ApiDocsOptions } from "./app";
 import {
   ComposedListingReader,
@@ -31,7 +50,7 @@ import {
   type CurrentPriceSource,
 } from "./price-alerts/application";
 import { logEvaluation, withEvaluation, type EvaluationReport } from "./evaluation-trigger";
-import { InMemoryAuthenticator } from "./price-alerts/http";
+import type { Authenticator } from "./price-alerts/http";
 import {
   InMemoryListingCatalogue,
   InMemoryPriceObservationRepository,
@@ -44,7 +63,12 @@ export interface InMemoryApplication {
   readonly app: FastifyInstance;
   /** The adapters, so that the caller can fill them with data (development and tests). */
   readonly catalogue: InMemoryListingCatalogue;
-  readonly authenticator: InMemoryAuthenticator;
+  /**
+   * The use cases that register an Account and sign in, so that the caller can make a User the
+   * way a person would (the demo and the tests), and not by writing into the adapters.
+   */
+  readonly registerAccount: RegisterAccount;
+  readonly signIn: SignIn;
   readonly providerAuthenticator: InMemoryProviderAuthenticator;
   /**
    * The use case that records prices, so that the caller can give a Listing its first price
@@ -63,6 +87,8 @@ export function composeInMemoryApp(
     logger?: boolean;
     apiDocs?: ApiDocsOptions;
     clock?: Clock;
+    /** How passwords are hashed. By default `scrypt` with its production cost, which is slow on purpose: tests give a fast one. */
+    passwordHasher?: PasswordHasher;
     /** Receives what each Evaluation came to. By default it writes to the log of the application. */
     onEvaluation?: (report: EvaluationReport) => void;
   } = {},
@@ -89,15 +115,31 @@ export function composeInMemoryApp(
     async (listingId) => (await currentPriceOf(listingId))?.price ?? null,
   );
   const alerts = new InMemoryPriceAlertRepository();
-  const authenticator = new InMemoryAuthenticator();
+
+  // Accounts. One clock for everything, so a test that moves it moves the Sessions too.
+  const accounts = new InMemoryAccountRepository();
+  const sessions = new InMemorySessionStore();
+  const hasher = options.passwordHasher ?? new ScryptPasswordHasher();
+  const tokens = new CryptoSessionTokens();
+  const registerAccount = new RegisterAccount(accounts, hasher);
+  const signIn = new SignIn(accounts, sessions, new InMemoryLoginAttemptStore(), hasher, tokens, clock);
+  const authenticate = new Authenticate(sessions, tokens, clock);
+  const authenticator: Authenticator = { authenticate: (token) => authenticate.execute(token) };
   const createPriceAlert = new CreatePriceAlert(listings, alerts, clock);
 
   const notifications = new InMemoryNotificationRepository();
   // The Price History is read by Users: the module of Price Observations asks only whether a token is a User's.
-  const usersOnly: UserAuthenticator = { isUser: async (token) => (await authenticator.authenticate(token)) !== null };
+  const usersOnly: UserAuthenticator = { isUser: async (token) => (await authenticate.execute(token)) !== null };
   const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, { currentPriceOf });
 
   const app: FastifyInstance = buildApp({
+    accounts: {
+      registerAccount,
+      signIn,
+      signOut: new SignOut(sessions, tokens, clock),
+      readMyAccount: new ReadMyAccount(accounts),
+      authenticate,
+    },
     createPriceAlert,
     authenticator,
     priceAlertManagement: {
@@ -123,7 +165,8 @@ export function composeInMemoryApp(
   return {
     app,
     catalogue,
-    authenticator,
+    registerAccount,
+    signIn,
     providerAuthenticator,
     recordPriceObservation,
     createPriceAlert,
