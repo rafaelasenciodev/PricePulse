@@ -9,6 +9,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import {
+  ActiveAlertAlreadyExists,
+  ApplicationError,
   CreatePriceAlert,
   DuplicateAlert,
   InvalidTargetPrice,
@@ -17,10 +19,12 @@ import {
 } from "../../../src/price-alerts/application";
 import {
   AlertStatus,
+  CurrencyMismatch,
   ListingId,
   Price,
   PriceAlert,
   TargetPrice,
+  UnsupportedCurrency,
   UserId,
   newAlertId,
 } from "../../../src/price-alerts/domain";
@@ -255,5 +259,56 @@ describe("concurrency (contract, decision 4)", () => {
     const outcomes = await Promise.allSettled([world.create("80.00"), world.create("70.00")]);
     expect(outcomes.map((o) => o.status).sort()).toEqual(["fulfilled", "rejected"]);
     expect(world.alerts.all()).toHaveLength(1);
+  });
+});
+
+describe("failures that are not business errors (contract: internal errors)", () => {
+  // They must reach the caller unchanged, so that the HTTP layer reports a 500 and
+  // nobody mistakes a broken catalogue or a broken store for a mistake of the User.
+
+  it("an unsupported currency of the catalogue is an internal error, not an invalid target", async () => {
+    world.listings.addListing(KEYBOARD, "XYZ", null);
+    const outcome = world.create("80.00", USER, KEYBOARD);
+    await expect(outcome).rejects.toThrow(UnsupportedCurrency);
+    await expect(outcome).rejects.not.toBeInstanceOf(ApplicationError);
+  });
+
+  it("a Current Price in another currency than its Listing is an internal error", async () => {
+    world.listings.addListing(KEYBOARD, "EUR", Price.fromDecimalString("50.00", "USD"));
+    const outcome = world.create("40.00", USER, KEYBOARD);
+    await expect(outcome).rejects.toThrow(CurrencyMismatch);
+    await expect(outcome).rejects.not.toBeInstanceOf(ApplicationError);
+    expect(world.alerts.all()).toEqual([]);
+  });
+
+  it("a failure of the repository is not hidden or turned into a business error", async () => {
+    class BrokenStore extends InMemoryPriceAlertRepository {
+      override async add(): Promise<void> {
+        throw new Error("the store is unavailable");
+      }
+    }
+    const broken = new World(new BrokenStore());
+    const outcome = broken.create("80.00");
+    await expect(outcome).rejects.toThrow("the store is unavailable");
+    await expect(outcome).rejects.not.toBeInstanceOf(ApplicationError);
+  });
+
+  it("gives up with an internal error if the uniqueness guarantee keeps failing", async () => {
+    /** Claims there is no Active Price Alert yet refuses every insertion: it should never happen. */
+    class AlwaysConflicting extends InMemoryPriceAlertRepository {
+      attempts = 0;
+      override async findActive() {
+        return null;
+      }
+      override async add(): Promise<void> {
+        this.attempts += 1;
+        throw new ActiveAlertAlreadyExists();
+      }
+    }
+    const conflicting = new AlwaysConflicting();
+    const outcome = new World(conflicting).create("80.00");
+    await expect(outcome).rejects.toThrow("repeated concurrent conflicts");
+    await expect(outcome).rejects.not.toBeInstanceOf(ApplicationError);
+    expect(conflicting.attempts).toBe(2); // one retry, as the contract says, and no more
   });
 });

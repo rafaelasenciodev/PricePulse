@@ -105,6 +105,11 @@ describe("authentication (BR-01, SC-14)", () => {
     expect(alerts.all()).toEqual([]);
   });
 
+  it("accepts the Bearer scheme in any letter case", async () => {
+    const response = await post({ authorization: `bearer ${TOKEN_1}` });
+    expect(response.statusCode).toBe(201);
+  });
+
   it("is checked before the body: an unauthenticated invalid request is 401, not 400", async () => {
     const response = await post({ token: null, payload: { nonsense: true } });
     expect(response.statusCode).toBe(401);
@@ -140,6 +145,18 @@ describe("malformed requests", () => {
     });
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("BAD_REQUEST");
+  });
+
+  it("answers 415 CLIENT_ERROR when the body is in a format the API does not read", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: `/listings/${HEADPHONES}/price-alerts`,
+      headers: { authorization: `Bearer ${TOKEN_1}`, "content-type": "application/xml" },
+      payload: "<targetAmount>80.00</targetAmount>",
+    });
+    expect(response.statusCode).toBe(415);
+    expect(response.json().code).toBe("CLIENT_ERROR");
+    expect(alerts.all()).toEqual([]);
   });
 });
 
@@ -199,6 +216,14 @@ describe("other responses", () => {
     const response = await app.inject({ method: "GET", url: "/nothing-here" });
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({ code: "NOT_FOUND", message: "Route not found" });
+  });
+
+  it("answers 500, not a validation error, when the catalogue holds a currency the system does not support", async () => {
+    listings.addListing(ListingId("odd-listing"), "XYZ", null);
+    const response = await post({ listing: "odd-listing" });
+    expect(response.statusCode).toBe(500);
+    expect(response.json().code).toBe("INTERNAL_ERROR");
+    expect(alerts.all()).toEqual([]);
   });
 
   it("answers 500 without revealing the cause of an unexpected failure", async () => {
