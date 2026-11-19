@@ -1,6 +1,6 @@
 # ADR-0002: A simplified Git Flow organises the branches
 
-- Document status: In Review
+- Document status: Approved
 - Decision status: Accepted
 - Date: 2026-11-19
 

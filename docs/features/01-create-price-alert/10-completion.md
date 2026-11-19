@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Completion (Phase 10)
 
-Status: In Review
+Status: Approved
 
 The close of the feature: what was built, the decisions that shaped it, how it was verified, what it does not do and what comes next. It links to the documents of each phase and does not repeat them.
 
@@ -102,6 +102,6 @@ The code is about 900 lines in 21 files, and the tests about 1,350 lines in 12 f
 
 - [x] Phases 0 to 9 completed
 - [x] Documentation of Phase 10 written
-- [ ] The documents in review are approved by the author: domain model, contract, test plan, architecture review, both ADRs and this document
+- [x] The documents that were in review are approved by the author: domain model, contract, test plan, architecture review, both ADRs and this document
 - [ ] The feature is merged into `develop` and `develop` into `main`, and the version is tagged (done by the developer, [ADR-0002](../../adr/0002-branching-model.md))
 - [ ] A licence is chosen before the repository is published

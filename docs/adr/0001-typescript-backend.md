@@ -1,6 +1,6 @@
 # ADR-0001: The backend is written in TypeScript
 
-- Document status: In Review
+- Document status: Approved
 - Decision status: Implemented
 - Date: 2026-11-19
 

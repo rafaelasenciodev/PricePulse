@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Application Use Case Contract (Phase 4)
 
-Status: In Review
+Status: Approved
 
 The contract of the use case that realises this feature. It builds on the [business rules](01-business-rules.md), the [scenarios](02-scenarios.feature) and the [domain model](03-domain-model.md). It describes what the use case asks for, what it returns and what it needs from the outside. It does not describe HTTP or persistence technology.
 
@@ -114,3 +114,4 @@ The HTTP interface and the mapping of errors to responses (Phase 7), the persist
 ## Revisions
 
 - 2026-11-19: aligned with the TypeScript implementation. The input names are in camelCase and the amount is text. The output fields are named. The operations of the ports are asynchronous. Reading the amount as a number is stated under `InvalidTargetPrice`. No decision changed.
+- 2026-11-19: approved by the author after the review.

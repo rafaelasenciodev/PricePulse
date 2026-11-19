@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Test Plan and Verification (Phase 8)
 
-Status: In Review
+Status: Approved
 
 How the feature is verified, and what that verification does and does not show. The tests are executable and live in `backend/tests/`. The inputs are the [business rules](01-business-rules.md), the [scenarios](02-scenarios.feature), the [domain model](03-domain-model.md) and the [use case contract](04-use-case-contract.md).
 

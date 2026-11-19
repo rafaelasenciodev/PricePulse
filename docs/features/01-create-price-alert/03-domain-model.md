@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Domain Model (Phase 3)
 
-Status: In Review
+Status: Approved
 
 The domain model of the feature. It is derived from the [business rules](01-business-rules.md) and validated against the [scenarios](02-scenarios.feature). Only what those justify is modelled.
 
@@ -115,3 +115,4 @@ Every scenario must be expressible with this model. If one is not, the work retu
 ## Revisions
 
 - 2026-11-19: aligned with the TypeScript implementation. `Price` is held as integer minor units and its amount must be a valid number. The domain errors are named and grouped. The status of a Price Alert is read-only. No decision changed.
+- 2026-11-19: approved by the author after the review.

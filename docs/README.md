@@ -26,8 +26,8 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | Document | Status |
 |---|---|
 | Architecture overview | ⬜ |
-| [ADR-0001: The backend is written in TypeScript](adr/0001-typescript-backend.md) | In Review |
-| [ADR-0002: A simplified Git Flow organises the branches](adr/0002-branching-model.md) | In Review |
+| [ADR-0001: The backend is written in TypeScript](adr/0001-typescript-backend.md) | Approved |
+| [ADR-0002: A simplified Git Flow organises the branches](adr/0002-branching-model.md) | Approved |
 
 ## Quality
 
@@ -48,11 +48,11 @@ Methodology: [features/README.md](features/README.md).
 | 0 Feature Discovery | [Discovery](features/01-create-price-alert/00-discovery.md) | Approved |
 | 1 Domain Language and Business Rules | [Business rules](features/01-create-price-alert/01-business-rules.md) | Approved |
 | 2 Behavioural Scenarios | [Scenarios](features/01-create-price-alert/02-scenarios.feature) | Approved |
-| 3 Domain Modelling | [Domain model](features/01-create-price-alert/03-domain-model.md) | In Review |
-| 4 Application Use Case Contract | [Use case contract](features/01-create-price-alert/04-use-case-contract.md) | In Review |
+| 3 Domain Modelling | [Domain model](features/01-create-price-alert/03-domain-model.md) | Approved |
+| 4 Application Use Case Contract | [Use case contract](features/01-create-price-alert/04-use-case-contract.md) | Approved |
 | 5 Use Case Implementation | [Application layer](../backend/src/price-alerts/application/) | Implemented |
 | 6 In-memory Adapters | [Adapters](../backend/src/price-alerts/adapters/) | Implemented |
 | 7 HTTP and Application Composition | [HTTP layer](../backend/src/price-alerts/http/) and [Composition Root](../backend/src/composition-root.ts) | Implemented |
-| 8 Testing | [Test plan](features/01-create-price-alert/08-test-plan.md) | In Review |
-| 9 Architecture Review | [Architecture review](features/01-create-price-alert/09-architecture-review.md) | In Review |
-| 10 Documentation and Completion | [Completion](features/01-create-price-alert/10-completion.md), [ADR-0001](adr/0001-typescript-backend.md) and [ADR-0002](adr/0002-branching-model.md) | In Review |
+| 8 Testing | [Test plan](features/01-create-price-alert/08-test-plan.md) | Approved |
+| 9 Architecture Review | [Architecture review](features/01-create-price-alert/09-architecture-review.md) | Approved |
+| 10 Documentation and Completion | [Completion](features/01-create-price-alert/10-completion.md), [ADR-0001](adr/0001-typescript-backend.md) and [ADR-0002](adr/0002-branching-model.md) | Approved |

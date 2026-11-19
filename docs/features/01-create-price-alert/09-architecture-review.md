@@ -1,6 +1,6 @@
 # 01 — Create Price Alert: Architecture Review (Phase 9)
 
-Status: In Review
+Status: Approved
 
 A review of the implementation of the feature against the design that was approved. It is based on measurements of the code and on reading it, and every change it led to was verified by the tests. It covers the [domain model](03-domain-model.md), the [use case contract](04-use-case-contract.md) and the code in `backend/src/`.
 
