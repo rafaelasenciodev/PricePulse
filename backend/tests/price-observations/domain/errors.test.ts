@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  InvalidObservedRange,
   NegativePrice,
   ObservationCurrencyMismatch,
   ObservedInTheFuture,
@@ -15,6 +16,7 @@ import { InvalidValue } from "../../../src/shared/domain";
 describe("classification of the domain errors of Price Observations", () => {
   it.each([
     ["NegativePrice", new NegativePrice("-5.00")],
+    ["InvalidObservedRange", new InvalidObservedRange("2026-11-19T12:00:00.000Z", "2026-11-19T10:00:00.000Z")],
   ])("%s is a value that cannot be accepted", (_name, error) => {
     expect(error).toBeInstanceOf(InvalidValue);
   });

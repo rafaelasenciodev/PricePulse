@@ -49,6 +49,7 @@ const FEATURES: readonly Feature[] = [
     // and by file name.
     owns: (path) =>
       !path.startsWith("price-observations/") &&
+      !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
       !path.startsWith("price-alerts/management/") &&
       path !== "composition-root.test.ts" &&
@@ -65,7 +66,8 @@ const FEATURES: readonly Feature[] = [
   {
     name: "feature 02",
     docs: "02-price-observation/",
-    owns: (path) => path.startsWith("price-observations/") || path === "composition-root.test.ts",
+    owns: (path) =>
+      (path.startsWith("price-observations/") && !path.startsWith("price-observations/history/")) || path === "composition-root.test.ts",
     scenarios: 21,
     rules: 13,
     exemptRules: {
