@@ -8,6 +8,8 @@ The project aims to demonstrate solid backend and software engineering skills th
 
 The initial implementation will use simulated price data. Real retailer integrations are not part of the initial scope.
 
+The backend is written in TypeScript (see docs/adr/0001-typescript-backend.md).
+
 2. Documentation is the source of truth
 
 Before working on a feature:
@@ -17,6 +19,7 @@ Before working on a feature:
 * Read docs/features/README.md for the feature development methodology.
 * Read the relevant feature discovery document.
 * Check docs/domain/open-questions.md for unresolved questions.
+* Read the relevant Architecture Decision Records in docs/adr/.
 
 Do not assume that a proposed concept or architectural approach has been accepted.
 
@@ -87,11 +90,24 @@ Never execute:
 * git reset
 * git rebase
 * git checkout
+* git switch
+* git restore
+* git merge
+* git tag
 * git clean
 
 Do not perform operations that rewrite Git history or discard user work.
 
+The developer may explicitly authorize a specific operation for a single request. The authorization covers only what was asked and does not carry over to later requests.
+
 You may inspect Git status, diffs and history.
+
+Branching follows docs/adr/0002-branching-model.md:
+
+* main holds tagged stable versions, develop integrates finished features, and each feature is developed on feature/NN-name, named after its folder in docs/features/.
+* Never work directly on main or develop. Before starting, check the current branch (git branch --show-current). If it is not the feature branch of the work in progress, tell the developer instead of continuing.
+* Merging a feature into develop, merging develop into main and tagging a version are done by the developer.
+* Commit messages follow the form "type: summary" (feat, fix, docs, test, refactor, chore).
 
 The developer reviews changes and performs commits manually.
 
