@@ -150,6 +150,9 @@ describe("the documentation does not drift from the behaviour", () => {
         find: async () => {
           throw new Error("secret detail");
         },
+        list: async () => {
+          throw new Error("secret detail");
+        },
       },
     });
     const response = await post(TOKEN, VALID);

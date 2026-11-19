@@ -3,14 +3,43 @@
 import type { ListingId, ObservedAt } from "../../shared/domain";
 import type { ObservedAtRange, PriceObservation, ProviderId } from "../domain";
 
-/** What this use case needs to know about a Listing: only its currency. */
+/**
+ * A Listing as the Catalogue holds it. Recording a price and reading the history need only its
+ * currency. The title and the name of the Retailer are text for a person to read (BR-02 of
+ * feature 07), and no rule uses them.
+ */
 export interface CatalogueListing {
+  readonly id: ListingId;
+  readonly title: string;
+  readonly retailer: string;
   readonly currency: string;
+}
+
+/** Which page of the Catalogue to read (BR-07 of feature 07). */
+export interface CataloguePageQuery {
+  /** How many Listings at most. At least 1. */
+  readonly limit: number;
+  /** How many Listings to skip. At least 0. */
+  readonly offset: number;
+}
+
+/** A page of the Catalogue, and how many Listings it holds in all. */
+export interface CataloguePage {
+  readonly items: readonly CatalogueListing[];
+  readonly total: number;
 }
 
 export interface ListingCatalogue {
   /** The Listing, or null if it does not exist. */
   find(listingId: ListingId): Promise<CatalogueListing | null>;
+
+  /**
+   * A page of the Catalogue in the order of BR-01 of feature 07: the title in lower case, compared by
+   * the codes of its characters, and then the identifier, compared the same way. The order never
+   * depends on how the Listings were stored or on the machine, so that a database can answer the same.
+   * `total` counts every Listing, not the page.
+   */
+  list(query: CataloguePageQuery): Promise<CataloguePage>;
 }
 
 /**

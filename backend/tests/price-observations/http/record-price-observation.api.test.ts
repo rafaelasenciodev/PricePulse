@@ -327,6 +327,9 @@ describe("other responses", () => {
       find: async () => {
         throw new Error("connection to db-prod-01 refused, password=hunter2");
       },
+      list: async () => {
+        throw new Error("connection to db-prod-01 refused, password=hunter2");
+      },
     });
     const response = await post();
     expect(response.statusCode).toBe(500);

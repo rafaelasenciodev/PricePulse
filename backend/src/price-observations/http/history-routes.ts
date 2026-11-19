@@ -3,25 +3,13 @@ import { ListingId } from "../../shared/domain";
 import { bearerTokenOf } from "../../shared/http";
 import type { ReadPriceHistory } from "../application";
 import { Unauthenticated } from "./errors";
+import { readPageNumbers } from "./page-numbers";
 import { DEFAULT_LIMIT, readPriceHistorySchema } from "./schemas";
 import type { UserAuthenticator } from "./user-authenticator";
 
 export interface PriceHistoryRoutesOptions {
   readonly readPriceHistory: ReadPriceHistory;
   readonly authenticator: UserAuthenticator;
-}
-
-/**
- * The numbers of a URL arrive as text, and the validation of the application is strict on purpose.
- * Only for the two numbers of a page, whole numbers written in digits are read as numbers. Anything
- * else stays as it is and the validation rejects it.
- */
-async function readPageNumbers(request: { readonly query: unknown }): Promise<void> {
-  const query = request.query as Record<string, unknown>;
-  for (const key of ["limit", "offset"]) {
-    const value = query[key];
-    if (typeof value === "string" && /^\d+$/.test(value)) query[key] = Number(value);
-  }
 }
 
 /**

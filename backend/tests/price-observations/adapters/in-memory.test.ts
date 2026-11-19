@@ -6,6 +6,7 @@ import {
 } from "../../../src/price-observations/adapters";
 import { ProviderId } from "../../../src/price-observations/domain";
 import { ListingId } from "../../../src/shared/domain";
+import { describeListingCatalogueContract } from "../catalogue/listing-catalogue-contract";
 import { describeRepositoryContract, observation } from "./repository-contract";
 
 describeRepositoryContract("InMemoryPriceObservationRepository", () => new InMemoryPriceObservationRepository());
@@ -30,27 +31,45 @@ describe("InMemoryPriceObservationRepository: what is specific to this adapter",
   });
 });
 
-describe("InMemoryListingCatalogue (contract of ListingCatalogue)", () => {
+describeListingCatalogueContract("InMemoryListingCatalogue", () => {
+  const catalogue = new InMemoryListingCatalogue();
+  return { catalogue, add: (l) => catalogue.addListing(ListingId(l.id), l.currency, { title: l.title, retailer: l.retailer }) };
+});
+
+describe("InMemoryListingCatalogue: what is specific to this adapter", () => {
   const HEADPHONES = ListingId("headphones-shop-a");
   const KEYBOARD = ListingId("keyboard-shop-b");
 
-  it("BR-02: returns nothing for a Listing that does not exist", async () => {
-    expect(await new InMemoryListingCatalogue().find(HEADPHONES)).toBeNull();
+  it("adding a Listing again replaces it, and it is listed once", async () => {
+    const catalogue = new InMemoryListingCatalogue();
+    catalogue.addListing(HEADPHONES, "EUR", { title: "Old title", retailer: "Old shop" });
+    catalogue.addListing(HEADPHONES, "USD", { title: "New title", retailer: "New shop" });
+    expect(await catalogue.find(HEADPHONES)).toEqual({ id: HEADPHONES, title: "New title", retailer: "New shop", currency: "USD" });
+    expect((await catalogue.list({ limit: 10, offset: 0 })).total).toBe(1);
   });
 
-  it("returns the currency of a Listing that exists", async () => {
+  it("without a text, the title is the identifier and the Retailer is \"Unknown retailer\", so a test that needs a currency stays short", async () => {
     const catalogue = new InMemoryListingCatalogue();
-    catalogue.addListing(HEADPHONES, "EUR");
     catalogue.addListing(KEYBOARD, "USD");
-    expect(await catalogue.find(HEADPHONES)).toEqual({ currency: "EUR" });
-    expect(await catalogue.find(KEYBOARD)).toEqual({ currency: "USD" });
+    expect(await catalogue.find(KEYBOARD)).toEqual({ id: KEYBOARD, title: "keyboard-shop-b", retailer: "Unknown retailer", currency: "USD" });
   });
 
-  it("adding a Listing again replaces its currency", async () => {
+  it.each([
+    ["an empty title", { title: "", retailer: "Shop" }],
+    ["a title of spaces", { title: "   ", retailer: "Shop" }],
+    ["an empty Retailer", { title: "Title", retailer: "" }],
+    ["a Retailer of spaces", { title: "Title", retailer: "  \t " }],
+  ])("refuses %s, and stores nothing", async (_what, text) => {
     const catalogue = new InMemoryListingCatalogue();
-    catalogue.addListing(HEADPHONES, "EUR");
-    catalogue.addListing(HEADPHONES, "USD");
-    expect(await catalogue.find(HEADPHONES)).toEqual({ currency: "USD" });
+    expect(() => catalogue.addListing(HEADPHONES, "EUR", text)).toThrow(RangeError);
+    expect(await catalogue.find(HEADPHONES)).toBeNull();
+  });
+
+  it("a refused text does not replace a Listing that was there", async () => {
+    const catalogue = new InMemoryListingCatalogue();
+    catalogue.addListing(HEADPHONES, "EUR", { title: "Title", retailer: "Shop" });
+    expect(() => catalogue.addListing(HEADPHONES, "USD", { title: "", retailer: "Shop" })).toThrow(RangeError);
+    expect((await catalogue.find(HEADPHONES))?.currency).toBe("EUR");
   });
 });
 

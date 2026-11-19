@@ -30,6 +30,7 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | [ADR-0002: A simplified Git Flow organises the branches](adr/0002-branching-model.md) | Approved |
 | [ADR-0003: Persistence is deferred and the in-memory adapters stay](adr/0003-persistence-deferred.md) | Approved |
 | [ADR-0004: Users authenticate with server-side sessions, scrypt and a bearer token](adr/0004-authentication.md) | Approved |
+| [ADR-0005: The web interface is a single-page application served by the backend, with the session in a cookie](adr/0005-web-interface.md) | Approved |
 
 ## Quality
 
@@ -130,3 +131,15 @@ The third feature of the [method of five stages](features/README.md), and the fi
 | 3 Design | [Design](features/06-accounts-and-authentication/03-design.md) | Approved |
 | 4 Build | [Domain](../backend/src/accounts/domain/), [application layer](../backend/src/accounts/application/), [adapters](../backend/src/accounts/adapters/) and [HTTP layer](../backend/src/accounts/http/) | Implemented |
 | 5 Close | [Completion](features/06-accounts-and-authentication/04-completion.md) | Approved |
+
+### 07 — Listings Catalogue
+
+The fourth feature of the [method of five stages](features/README.md). The code is in the module of Price Observations, which holds the Catalogue, and in the Composition Root.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/07-listings-catalogue/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/07-listings-catalogue/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/07-listings-catalogue/03-design.md) | Approved |
+| 4 Build | [Application layer](../backend/src/price-observations/application/), [adapters](../backend/src/price-observations/adapters/) and [HTTP layer](../backend/src/price-observations/http/) | Implemented |
+| 5 Close | [Completion](features/07-listings-catalogue/04-completion.md) | Approved |

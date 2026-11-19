@@ -56,7 +56,13 @@ import {
   InMemoryPriceObservationRepository,
   SystemClock,
 } from "./price-observations/adapters";
-import { ReadPriceHistory, RecordPriceObservation, type Clock } from "./price-observations/application";
+import {
+  ListListings,
+  ReadListing,
+  ReadPriceHistory,
+  RecordPriceObservation,
+  type Clock,
+} from "./price-observations/application";
 import { InMemoryProviderAuthenticator, type UserAuthenticator } from "./price-observations/http";
 
 export interface InMemoryApplication {
@@ -150,6 +156,12 @@ export function composeInMemoryApp(
       cancelPriceAlert: new CancelPriceAlert(alerts),
     },
     priceHistory: { readPriceHistory: new ReadPriceHistory(catalogue, observations), authenticator: usersOnly },
+    // The Catalogue is read by Users, as the history is, and the Current Price of each Listing comes from its latest observation.
+    catalogue: {
+      listListings: new ListListings(catalogue, observations),
+      readListing: new ReadListing(catalogue, observations),
+      authenticator: usersOnly,
+    },
     priceObservations: {
       recordPriceObservation: withEvaluation(
         recordPriceObservation,

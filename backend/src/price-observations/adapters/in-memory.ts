@@ -4,6 +4,8 @@ import type { ListingId, ObservedAt } from "../../shared/domain";
 import {
   ObservationAlreadyExists,
   type CatalogueListing,
+  type CataloguePage,
+  type CataloguePageQuery,
   type ListingCatalogue,
   type PriceHistoryPage,
   type PriceHistoryQuery,
@@ -11,17 +13,50 @@ import {
 } from "../application";
 import type { PriceObservation, ProviderId } from "../domain";
 
+/** The text of a Listing for people to read. */
+export interface ListingText {
+  readonly title: string;
+  readonly retailer: string;
+}
+
 /** Implements ListingCatalogue over a map that the caller fills. */
 export class InMemoryListingCatalogue implements ListingCatalogue {
   private readonly listings = new Map<ListingId, CatalogueListing>();
 
-  addListing(listingId: ListingId, currency: string): void {
-    this.listings.set(listingId, { currency });
+  /**
+   * Adds a Listing, or replaces the one with that identifier.
+   *
+   * The text is optional only so that the tests that need a currency and nothing else stay short: without
+   * it the title is the identifier and the Retailer is "Unknown retailer". The Catalogue is filled by the
+   * system, so a text that is empty is a mistake of whoever fills it, and it is refused.
+   */
+  addListing(listingId: ListingId, currency: string, text?: ListingText): void {
+    const { title, retailer } = text ?? { title: listingId as string, retailer: "Unknown retailer" };
+    if (title.trim() === "" || retailer.trim() === "") {
+      throw new RangeError(`The title and the Retailer of the Listing ${JSON.stringify(listingId)} must not be empty`);
+    }
+    this.listings.set(listingId, { id: listingId, title, retailer, currency });
   }
 
   async find(listingId: ListingId): Promise<CatalogueListing | null> {
     return this.listings.get(listingId) ?? null;
   }
+
+  async list(query: CataloguePageQuery): Promise<CataloguePage> {
+    const ordered = [...this.listings.values()].sort(byTitleThenIdentifier);
+    return { items: ordered.slice(query.offset, query.offset + query.limit), total: ordered.length };
+  }
+}
+
+/**
+ * The order of the Catalogue (BR-01 of feature 07). Strings are compared by the codes of their characters,
+ * which is the same on every machine, and the title in lower case so that a capital does not decide.
+ */
+function byTitleThenIdentifier(a: CatalogueListing, b: CatalogueListing): number {
+  const titleA = a.title.toLowerCase();
+  const titleB = b.title.toLowerCase();
+  if (titleA !== titleB) return titleA < titleB ? -1 : 1;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 /**
