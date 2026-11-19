@@ -93,3 +93,15 @@ Phases 8 and 9 are recorded as sections of the completion document, not as separ
 | 8 Testing | [Verification](features/03-alert-evaluation/10-completion.md#4-verification) | Approved |
 | 9 Architecture Review | [Architecture review](features/03-alert-evaluation/10-completion.md#5-architecture-review) | Approved |
 | 10 Documentation and Completion | [Completion](features/03-alert-evaluation/10-completion.md) | Approved |
+
+### 04 — Read and Manage Price Alerts
+
+The first feature of the [method of five stages](features/README.md). The code is in the same folders as feature 01, because the module of Price Alerts holds it.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/04-read-and-manage-alerts/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/04-read-and-manage-alerts/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/04-read-and-manage-alerts/03-design.md) | Approved |
+| 4 Build | [Application layer](../backend/src/price-alerts/application/), [adapters](../backend/src/price-alerts/adapters/) and [HTTP layer](../backend/src/price-alerts/http/) | Implemented |
+| 5 Close | [Completion](features/04-read-and-manage-alerts/04-completion.md) | Approved |

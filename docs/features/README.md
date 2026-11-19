@@ -116,3 +116,4 @@ Features 01 to 03 followed eleven phases. Their documents keep their names and a
 | 01 | [Create Price Alert](01-create-price-alert/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
 | 02 | [Price Observation](02-price-observation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
 | 03 | [Alert Evaluation](03-alert-evaluation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
+| 04 | [Read and Manage Price Alerts](04-read-and-manage-alerts/01-discovery.md) | Stage 5 — Close (done, pending merge) |
