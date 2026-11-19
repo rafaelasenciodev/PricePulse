@@ -42,7 +42,9 @@ const FEATURES: readonly Feature[] = [
   {
     name: "feature 01",
     docs: "01-create-price-alert/",
-    owns: (path) => !path.startsWith("price-observations/") && path !== "composition-root.test.ts",
+    // The evaluation of feature 03 lives in the same module, so its tests are told apart by folder.
+    owns: (path) =>
+      !path.startsWith("price-observations/") && !path.startsWith("price-alerts/evaluation/") && path !== "composition-root.test.ts",
     scenarios: 18,
     rules: 11,
     exemptRules: {},

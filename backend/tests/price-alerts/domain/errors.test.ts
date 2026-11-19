@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { InvalidValue } from "../../../src/shared/domain";
 import {
+  AlertNotActive,
   CurrencyMismatch,
   NonPositiveTargetPrice,
   TargetAlreadyReached,
+  TargetNotReached,
 } from "../../../src/price-alerts/domain";
 
 /**
@@ -20,6 +22,8 @@ describe("classification of the domain errors of Price Alerts", () => {
   it.each([
     ["CurrencyMismatch", new CurrencyMismatch("EUR", "USD")],
     ["TargetAlreadyReached", new TargetAlreadyReached()],
+    ["AlertNotActive", new AlertNotActive("alert-1")],
+    ["TargetNotReached", new TargetNotReached("alert-1")],
   ])("%s is not an InvalidValue", (_name, error) => {
     expect(error).not.toBeInstanceOf(InvalidValue);
   });

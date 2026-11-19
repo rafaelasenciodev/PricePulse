@@ -23,6 +23,20 @@ export class CurrencyMismatch extends DomainError {
   }
 }
 
+/** BR-06: only an Active Price Alert can become Triggered. A defect if it happens: the use case never asks. */
+export class AlertNotActive extends DomainError {
+  constructor(alertId: string) {
+    super(`The Price Alert ${JSON.stringify(alertId)} is not Active`);
+  }
+}
+
+/** BR-04: a Notification is only produced for a Price Alert that the Current Price reaches. */
+export class TargetNotReached extends DomainError {
+  constructor(alertId: string) {
+    super(`The Current Price does not reach the Target Price of the Price Alert ${JSON.stringify(alertId)}`);
+  }
+}
+
 /** BR-05: the Current Price already reaches the Target Price. */
 export class TargetAlreadyReached extends DomainError {
   constructor() {

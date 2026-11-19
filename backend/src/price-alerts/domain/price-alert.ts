@@ -1,5 +1,5 @@
 import type { ListingId, Price } from "../../shared/domain";
-import { TargetAlreadyReached } from "./errors";
+import { AlertNotActive, TargetAlreadyReached } from "./errors";
 import type { AlertId, UserId } from "./identifiers";
 import type { TargetPrice } from "./target-price";
 
@@ -46,6 +46,23 @@ export class PriceAlert {
 
   get isActive(): boolean {
     return this.status === AlertStatus.Active;
+  }
+
+  /**
+   * Whether the Current Price reaches the Target Price of this alert (BR-02).
+   *
+   * Only an Active alert can be reached: a Triggered one never is (BR-01). Without a
+   * Current Price (null) nothing is reached, and nothing is remembered from earlier prices (BR-03).
+   */
+  isReachedBy(currentPrice: Price | null): boolean {
+    if (!this.isActive || currentPrice === null) return false;
+    return this.targetPrice.isReachedBy(currentPrice);
+  }
+
+  /** The same Price Alert, Triggered (BR-06). It does not change this one. Only an Active alert can be triggered. */
+  trigger(): PriceAlert {
+    if (!this.isActive) throw new AlertNotActive(this.id);
+    return new PriceAlert(this.id, this.owner, this.listingId, this.targetPrice, AlertStatus.Triggered);
   }
 
   equals(other: PriceAlert): boolean {
