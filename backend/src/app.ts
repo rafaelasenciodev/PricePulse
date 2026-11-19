@@ -2,7 +2,12 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { CreatePriceAlert } from "./price-alerts/application";
-import { priceAlertHttpError, priceAlertRoutes, type Authenticator } from "./price-alerts/http";
+import {
+  priceAlertHttpError,
+  priceAlertRoutes,
+  type Authenticator,
+  type PriceAlertManagement,
+} from "./price-alerts/http";
 import type { PriceObservationRecorder } from "./price-observations/application";
 import {
   priceObservationHttpError,
@@ -64,6 +69,11 @@ export interface AppDependencies {
   readonly createPriceAlert: CreatePriceAlert;
   readonly authenticator: Authenticator;
   /**
+   * The routes to read and manage Price Alerts. Optional: without them the application serves
+   * only the creation of a Price Alert, and the documentation says so.
+   */
+  readonly priceAlertManagement?: PriceAlertManagement;
+  /**
    * The routes of Price Observations, for the Providers. Optional: without them the
    * application serves only the routes of Price Alerts, and the documentation says so.
    */
@@ -107,7 +117,9 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
           title: "PricePulse API",
           version: API_VERSION,
           description: [
-            "Create price alerts for the Listings of a catalogue.",
+            dependencies.priceAlertManagement
+              ? "Create price alerts for the Listings of a catalogue, read them and manage them."
+              : "Create price alerts for the Listings of a catalogue.",
             dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
             dependencies.apiDocs.note,
           ]
@@ -149,6 +161,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
   app.register(priceAlertRoutes, {
     createPriceAlert: dependencies.createPriceAlert,
     authenticator: dependencies.authenticator,
+    ...(dependencies.priceAlertManagement ? { management: dependencies.priceAlertManagement } : {}),
   });
 
   if (dependencies.priceObservations) {

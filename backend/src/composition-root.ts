@@ -20,8 +20,12 @@ import {
   InMemoryPriceAlertRepository,
 } from "./price-alerts/adapters";
 import {
+  CancelPriceAlert,
   CreatePriceAlert,
   EvaluatePriceAlerts,
+  GetPriceAlert,
+  ListPriceAlerts,
+  ModifyTargetPrice,
   type CurrentPrice,
   type CurrentPriceSource,
 } from "./price-alerts/application";
@@ -93,6 +97,12 @@ export function composeInMemoryApp(
   const app: FastifyInstance = buildApp({
     createPriceAlert,
     authenticator,
+    priceAlertManagement: {
+      listPriceAlerts: new ListPriceAlerts(alerts),
+      getPriceAlert: new GetPriceAlert(alerts),
+      modifyTargetPrice: new ModifyTargetPrice(alerts, listings),
+      cancelPriceAlert: new CancelPriceAlert(alerts),
+    },
     priceObservations: {
       recordPriceObservation: withEvaluation(
         recordPriceObservation,

@@ -50,7 +50,8 @@ const FEATURES: readonly Feature[] = [
       !path.startsWith("price-alerts/evaluation/") &&
       !path.startsWith("price-alerts/management/") &&
       path !== "composition-root.test.ts" &&
-      path !== "composition-root-evaluation.test.ts",
+      path !== "composition-root-evaluation.test.ts" &&
+      path !== "composition-root-management.test.ts",
     scenarios: 18,
     rules: 11,
     exemptRules: {},

@@ -1,4 +1,7 @@
 import {
+  AlertConflict,
+  AlertNotActive,
+  AlertNotFound,
   DuplicateAlert,
   InvalidTargetPrice,
   ListingNotFound,
@@ -40,6 +43,15 @@ export function priceAlertHttpError(error: unknown): HttpError | null {
   }
   if (error instanceof TargetAlreadyReached) {
     return { status: 409, code: "TARGET_ALREADY_REACHED", message: error.message };
+  }
+  if (error instanceof AlertNotFound) {
+    return { status: 404, code: "ALERT_NOT_FOUND", message: error.message };
+  }
+  if (error instanceof AlertNotActive) {
+    return { status: 409, code: "ALERT_NOT_ACTIVE", message: error.message };
+  }
+  if (error instanceof AlertConflict) {
+    return { status: 409, code: "ALERT_CONFLICT", message: error.message };
   }
   return null;
 }

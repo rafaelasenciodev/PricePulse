@@ -224,6 +224,8 @@ describe("composeInMemoryApp: the two features meet", () => {
     expect(Object.keys(paths).sort()).toEqual([
       "/listings/{listingId}/price-alerts",
       "/listings/{listingId}/price-observations",
+      "/price-alerts",
+      "/price-alerts/{alertId}",
     ]);
   });
 

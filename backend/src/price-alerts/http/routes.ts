@@ -1,10 +1,22 @@
 import type { FastifyPluginAsync } from "fastify";
-import type { CreatePriceAlert } from "../application";
+import type {
+  CancelPriceAlert,
+  CreatePriceAlert,
+  GetPriceAlert,
+  ListPriceAlerts,
+  ModifyTargetPrice,
+} from "../application";
 import { ListingId } from "../../shared/domain";
-import type { UserId } from "../domain";
+import { AlertId, type AlertStatus, type UserId } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
-import { createPriceAlertSchema } from "./schemas";
+import {
+  DEFAULT_LIMIT,
+  createPriceAlertSchema,
+  getPriceAlertSchema,
+  listPriceAlertsSchema,
+  patchPriceAlertSchema,
+} from "./schemas";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -13,9 +25,18 @@ declare module "fastify" {
   }
 }
 
+/** The use cases to read and manage Price Alerts. Optional: without them only creating is served. */
+export interface PriceAlertManagement {
+  readonly listPriceAlerts: ListPriceAlerts;
+  readonly getPriceAlert: GetPriceAlert;
+  readonly modifyTargetPrice: ModifyTargetPrice;
+  readonly cancelPriceAlert: CancelPriceAlert;
+}
+
 export interface PriceAlertRoutesOptions {
   readonly createPriceAlert: CreatePriceAlert;
   readonly authenticator: Authenticator;
+  readonly management?: PriceAlertManagement;
 }
 
 const BEARER = /^Bearer\s+(.+)$/i;
@@ -34,7 +55,7 @@ export function ownerOf(request: { readonly owner: UserId | null }): UserId {
 
 export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = async (
   app,
-  { createPriceAlert, authenticator },
+  { createPriceAlert, authenticator, management },
 ) => {
   app.decorateRequest("owner", null);
 
@@ -59,6 +80,60 @@ export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = asy
       });
       // 201 for a new Price Alert, 200 when an existing one is returned (BR-08).
       return reply.code(result.created ? 201 : 200).send(result.alert);
+    },
+  );
+
+  if (management === undefined) return;
+
+  // UC-01 List my Price Alerts
+  app.get<{ Querystring: { status?: AlertStatus; limit?: number; offset?: number } }>(
+    "/price-alerts",
+    {
+      schema: listPriceAlertsSchema,
+      // The numbers of a URL arrive as text, and the validation of the application is strict on
+      // purpose. Only here, and only for the two numbers, whole numbers written in digits are
+      // read as numbers. Anything else stays as it is and the validation rejects it.
+      preValidation: async (request) => {
+        const query = request.query as Record<string, unknown>;
+        for (const key of ["limit", "offset"]) {
+          const value = query[key];
+          if (typeof value === "string" && /^\d+$/.test(value)) query[key] = Number(value);
+        }
+      },
+    },
+    async (request) => {
+      const { status, limit = DEFAULT_LIMIT, offset = 0 } = request.query;
+      const command = { owner: ownerOf(request), limit, offset };
+      return management.listPriceAlerts.execute(status === undefined ? command : { ...command, status });
+    },
+  );
+
+  // UC-02 Read a Price Alert
+  app.get<{ Params: { alertId: string } }>(
+    "/price-alerts/:alertId",
+    { schema: getPriceAlertSchema },
+    async (request) => {
+      const result = await management.getPriceAlert.execute({
+        owner: ownerOf(request),
+        alertId: AlertId(request.params.alertId),
+      });
+      return result.alert;
+    },
+  );
+
+  // UC-03 Modify the Target Price, or UC-04 Cancel: the body says which
+  app.patch<{ Params: { alertId: string }; Body: { targetAmount: string } | { status: "cancelled" } }>(
+    "/price-alerts/:alertId",
+    { schema: patchPriceAlertSchema },
+    async (request) => {
+      const owner = ownerOf(request);
+      const alertId = AlertId(request.params.alertId);
+      const { body } = request;
+      const result =
+        "status" in body
+          ? await management.cancelPriceAlert.execute({ owner, alertId })
+          : await management.modifyTargetPrice.execute({ owner, alertId, targetAmount: body.targetAmount });
+      return result.alert;
     },
   );
 };

@@ -25,6 +25,7 @@ const { app, catalogue, authenticator, providerAuthenticator, recordPriceObserva
       "- Listings: `headphones-shop-a` (100.00 EUR), `keyboard-shop-b` (50.00 USD) and `monitor-shop-a` (no Current Price).",
       "- The Current Price of a Listing is the price of its latest observation. Record a new one to change it.",
       "- A Price Alert of `demo-user-1` for `headphones-shop-a` with a Target Price of 80.00 EUR. Record an observation of 80.00 or less for that Listing, as the price provider, and the log of the server shows the alert triggered.",
+      "- Read and manage the Price Alerts with the token of a User: `GET /price-alerts` lists them, `GET /price-alerts/{alertId}` reads one, and `PATCH /price-alerts/{alertId}` changes its Target Price or cancels it.",
     ].join("\n"),
   },
 });
