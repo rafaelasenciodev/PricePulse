@@ -2,7 +2,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { CreatePriceAlert } from "./price-alerts/application";
-import { priceAlertHttpError, priceAlertRoutes, type Authenticator, type HttpError } from "./price-alerts/http";
+import { priceAlertHttpError, priceAlertRoutes, type Authenticator } from "./price-alerts/http";
 import type { RecordPriceObservation } from "./price-observations/application";
 import {
   priceObservationHttpError,
@@ -13,7 +13,18 @@ import {
 /** The version of the API shown in its documentation. Kept equal to `package.json` by a test. */
 export const API_VERSION = "0.1.0";
 
-/** A feature's translation of its own errors to HTTP: null when the error is not one of its own. */
+/** The HTTP response that reports an error. */
+interface HttpError {
+  readonly status: number;
+  /** A stable identifier, so a client can tell apart errors that share a status. */
+  readonly code: string;
+  readonly message: string;
+}
+
+/**
+ * A feature's translation of its own errors to HTTP: null when the error is not one of its own.
+ * Each feature declares the same shape for what it returns: a feature does not import this file.
+ */
 type HttpErrorMapper = (error: unknown) => HttpError | null;
 
 const featureMappers: readonly HttpErrorMapper[] = [priceAlertHttpError, priceObservationHttpError];

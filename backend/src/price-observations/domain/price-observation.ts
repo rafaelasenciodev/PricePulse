@@ -3,7 +3,8 @@ import { NegativePrice, ObservationCurrencyMismatch, ObservedInTheFuture } from 
 import type { ProviderId } from "./identifiers";
 import { ObservedAt } from "./observed-at";
 
-export interface RecordPriceObservation {
+/** What the model needs to record a Price Observation. Not the use case of the application. */
+export interface PriceObservationInput {
   readonly provider: ProviderId;
   readonly listingId: ListingId;
   readonly observedAt: ObservedAt;
@@ -34,7 +35,7 @@ export class PriceObservation {
   ) {}
 
   /** Checks BR-04, BR-05 and BR-12. Without a Price, only BR-12 applies (BR-03). */
-  static record(input: RecordPriceObservation): PriceObservation {
+  static record(input: PriceObservationInput): PriceObservation {
     const { price, listingCurrency, observedAt, recordedAt, toleranceMilliseconds } = input;
 
     if (price !== null) {

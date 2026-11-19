@@ -6,4 +6,4 @@ export {
 } from "./errors";
 export { ProviderId } from "./identifiers";
 export { ObservedAt } from "./observed-at";
-export { PriceObservation, type RecordPriceObservation } from "./price-observation";
+export { PriceObservation, type PriceObservationInput } from "./price-observation";

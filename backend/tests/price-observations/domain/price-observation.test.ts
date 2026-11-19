@@ -6,7 +6,7 @@ import {
   ObservedInTheFuture,
   PriceObservation,
   ProviderId,
-  type RecordPriceObservation,
+  type PriceObservationInput,
 } from "../../../src/price-observations/domain";
 import { ListingId, Price } from "../../../src/shared/domain";
 
@@ -16,7 +16,7 @@ const RECORDED_AT = new Date("2026-11-19T10:30:00Z");
 const eur = (amount: string) => Price.fromDecimalString(amount, "EUR");
 
 /** A valid recording, which each test changes in the one thing it is about. */
-function record(changes: Partial<RecordPriceObservation> = {}): PriceObservation {
+function record(changes: Partial<PriceObservationInput> = {}): PriceObservation {
   return PriceObservation.record({
     provider: ProviderId("simulator"),
     listingId: ListingId("headphones-shop-a"),

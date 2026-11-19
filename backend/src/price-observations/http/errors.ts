@@ -8,7 +8,7 @@ export class Unauthenticated extends Error {
   }
 }
 
-/** The HTTP response that reports an error. The same shape as in the other features. */
+/** The HTTP response that reports an error. The same shape as in the other features, declared by each so that none imports another. */
 export interface HttpError {
   readonly status: number;
   /** A stable identifier, so a client can tell apart errors that share a status. */
