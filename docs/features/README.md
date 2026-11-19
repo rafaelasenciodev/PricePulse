@@ -34,7 +34,7 @@ Architecture Review (9) and Documentation and Completion (10) are separate activ
 - a missing term or business rule: back to Phase 1 (Domain Language and Business Rules);
 - a scenario that is wrong or incomplete: back to Phase 2 (Behavioural Scenarios).
 
-**Tests are written progressively.** Executable tests are added while the feature is implemented (Phases 5 to 7), not left until the end. Pytest is sufficient; no dedicated BDD framework is introduced unless a concrete reason justifies it. Phase 8 is the point where the coverage of scenarios and rules is checked and the remaining test levels are completed.
+**Tests are written progressively.** Executable tests are added while the feature is implemented (Phases 5 to 7), not left until the end. The project's regular test runner is sufficient; no dedicated BDD framework is introduced unless a concrete reason justifies it. Phase 8 is the point where the coverage of scenarios and rules is checked and the remaining test levels are completed.
 
 ## Scenarios
 

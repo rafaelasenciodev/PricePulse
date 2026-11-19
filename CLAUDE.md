@@ -106,7 +106,7 @@ At the end of each implementation task, report:
 7. Testing
 
 * Write tests progressively alongside implementation.
-* Prefer pytest unless there is a concrete reason to use another tool.
+* Prefer Vitest unless there is a concrete reason to use another tool.
 * Test observable behaviour and business rules.
 * Avoid testing implementation details unnecessarily.
 * Do not introduce a testing framework simply because it is popular.
