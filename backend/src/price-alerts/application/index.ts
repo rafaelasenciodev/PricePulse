@@ -12,7 +12,19 @@ export {
   TargetAlreadyReached,
 } from "./errors";
 export {
+  EvaluatePriceAlerts,
+  type EvaluatePriceAlertsCommand,
+  type EvaluatePriceAlertsResult,
+  type FailedAlertView,
+  type NotificationView,
+  type TriggeredAlertView,
+} from "./evaluate-price-alerts";
+export {
   ActiveAlertAlreadyExists,
+  NotificationAlreadyExists,
+  type CurrentPrice,
+  type CurrentPriceSource,
+  type NotificationRepository,
   type ListingReader,
   type ListingView,
   type PriceAlertRepository,

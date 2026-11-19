@@ -50,6 +50,16 @@ export class InMemoryPriceAlertRepository implements PriceAlertRepository {
     this.alerts.push(alert);
   }
 
+  async findActiveByListing(listingId: ListingId): Promise<PriceAlert[]> {
+    return this.alerts.filter((a) => a.listingId === listingId && a.isActive);
+  }
+
+  async save(alert: PriceAlert): Promise<void> {
+    const index = this.alerts.findIndex((a) => a.id === alert.id);
+    if (index === -1) throw new Error(`Unknown Price Alert: ${alert.id}`);
+    this.alerts[index] = alert;
+  }
+
   /** Every stored Price Alert. For tests and inspection, not part of the port. */
   all(): PriceAlert[] {
     return [...this.alerts];
