@@ -10,7 +10,7 @@ Tests verify behaviour and business rules, not coverage figures. Code coverage i
 
 ## 2. Levels
 
-136 test cases, all passing. Run with `npm test` in `backend/`.
+147 test cases, all passing. Run with `npm test` in `backend/`.
 
 | Level | What it verifies | Location | Cases |
 |---|---|---|---|
@@ -20,6 +20,7 @@ Tests verify behaviour and business rules, not coverage figures. Code coverage i
 | API | Status codes, error codes and bodies, authentication (SC-14) and the mapping of every application error | `tests/price-alerts/http/` | 31 |
 | Wiring | The Composition Root connects HTTP, use case and adapters | `tests/composition-root.test.ts` | 5 |
 | Traceability | The chain rule → scenario → test does not break (section 4) | `tests/traceability.test.ts` | 6 |
+| Architecture | Dependencies point inward: no layer imports what it may not, no package outside its layer, no cycles (see the [architecture review](09-architecture-review.md)) | `tests/architecture.test.ts` | 11 |
 
 No end-to-end tests exist: there is no frontend yet.
 
@@ -112,7 +113,7 @@ Run with `npm run coverage` in `backend/`.
 
 ## 7. Mutation checks
 
-During implementation, 26 deliberate errors were introduced in scratch copies of the code, such as an exclusive threshold, a missing retry, an `await` between the uniqueness check and the insertion, authentication after validation, or a removed scenario tag. **All 26 made at least one test fail.** The architecture review (Phase 9) added three more, also detected. One more, removing the production guard of `main.ts`, is not detected because `main.ts` has no test; it was verified by running the file. This was done by hand and is not part of the test suite, so it is evidence of the quality of the tests at this point and not a guard for the future.
+During implementation, 26 deliberate errors were introduced in scratch copies of the code, such as an exclusive threshold, a missing retry, an `await` between the uniqueness check and the insertion, authentication after validation, or a removed scenario tag. **All 26 made at least one test fail.** The architecture review (Phase 9) added three more, also detected. The architecture test was checked with 11 deliberate violations, all detected. One more error, removing the production guard of `main.ts`, is not detected because `main.ts` has no test; it was verified by running the file. This was done by hand and is not part of the test suite, so it is evidence of the quality of the tests at this point and not a guard for the future.
 
 ## 8. Known limitations
 

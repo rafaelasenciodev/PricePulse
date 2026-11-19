@@ -8,7 +8,7 @@ A review of the implementation of the feature against the design that was approv
 
 Criteria: direction of dependencies, separation of responsibilities, purity of the domain, coupling, cohesion, error handling, transaction boundaries, idempotency, maintainability.
 
-Method: a script that reads the imports of every source file and builds the dependency graph between layers (looking for forbidden edges and cycles), measures size and branching, and searches for public mutable state and forced type assertions. It was run once before the changes and once after. The script is a one-off tool and is not part of the repository, so this evidence does not protect the design in the future (see section 6).
+Method: a script that reads the imports of every source file and builds the dependency graph between layers (looking for forbidden edges and cycles), measures size and branching, and searches for public mutable state and forced type assertions. It was run once before the changes and once after. The script was a one-off tool, so the dependency rules it checked were then turned into an automated test, `tests/architecture.test.ts` (see section 5).
 
 Not covered: performance, load and a security review beyond what the feature touches.
 
@@ -25,7 +25,7 @@ Not covered: performance, load and a security review beyond what the feature tou
 | Error handling | Business errors are classified by type, not by a list that must be remembered. Unexpected errors reach the caller unchanged and are reported as a generic 500 with no cause |
 | Transaction boundary | One atomic write. Reads of the Listing belong to another part of the system. Consistent with the contract |
 | Idempotency | A repeated request with the same target returns the same Price Alert. Concurrent requests resolve to exactly one Price Alert, tested with real simultaneous calls |
-| Maintainability | 136 tests tracing to the scenarios and rules, and a test that keeps that trace from breaking |
+| Maintainability | 147 tests tracing to the scenarios and rules, a test that keeps that trace from breaking and a test that keeps the dependency rules true |
 
 ## 3. Findings and resolution
 
@@ -50,7 +50,7 @@ Not covered: performance, load and a security review beyond what the feature tou
 | Dependencies from `adapters` to `http` | 1 | 0 |
 | Public mutable fields in entities | 1 | 0 |
 | Forced type assertions outside the identifier factories | 1 | 0 |
-| Tests | 128 | 136 |
+| Tests | 128 | 147 (136 after the changes, 11 more with the architecture test) |
 | Line coverage / branch coverage | 100 % / 95 % | 100 % / 94.9 % |
 
 The branch figure dropped by a tenth of a point because the new guard code added defensive branches. The line figure is unchanged. Coverage is a diagnostic, not a target.
@@ -67,8 +67,18 @@ The branch figure dropped by a tenth of a point because the new guard code added
 - The domain model does not mention `InvalidAmount`, that amounts are held as integer minor units, or `InvalidValue`.
 - The index and status tables of `docs/` still describe the feature as being in Phase 3.
 
+**Automated**
+`tests/architecture.test.ts` reads the imports of every source file and fails if:
+
+- a layer imports a layer it may not (the domain imports nothing internal, the application only the domain, `adapters` and `http` only the application and the domain);
+- a layer uses a package it may not (only `http`, `app` and the Composition Root may use `fastify`; the domain, the application and the adapters use none);
+- there is a cycle between files;
+- a source file imports from the tests, or does not belong to a known layer.
+
+It was checked with 11 deliberate violations, such as the domain importing a Node module, `adapters` importing `http` (the finding F5) and a cycle inside the domain. All were detected.
+
 **Not automated**
-The rules of the review, such as "the domain imports nothing" or "`adapters` does not import `http`", were checked once. Nothing fails if a later change breaks them. An architecture test that reads the imports, in the same way as the traceability test, would keep them true.
+Cohesion and size of the files, public mutable state in entities, and forced type assertions were measured by hand. Nothing fails if a later change worsens them.
 
 ## 6. Conclusion
 
