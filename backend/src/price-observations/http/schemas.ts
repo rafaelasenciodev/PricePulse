@@ -139,3 +139,88 @@ export const readPriceHistorySchema: FastifySchema = {
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };
+
+const currentPrice = {
+  type: "object",
+  nullable: true,
+  description: "The Current Price of the Listing, or null if it has none: it was never observed, or its latest observation has no price",
+  required: ["amount", "currency", "observedAt"],
+  properties: {
+    amount: { type: "string", description: "The amount as text", examples: ["79.90"] },
+    currency: { type: "string", description: "The currency, which is the one of the Listing", examples: ["EUR"] },
+    observedAt: { type: "string", description: "When that price was observed, in UTC", examples: ["2026-11-19T10:00:00.000Z"] },
+  },
+};
+
+const listing = {
+  type: "object",
+  required: ["id", "title", "retailer", "currency", "currentPrice"],
+  properties: {
+    id: { type: "string", description: "Identifier of the Listing", examples: ["headphones-shop-a"] },
+    title: { type: "string", description: "The title of the Listing, for people to read", examples: ["Wireless headphones"] },
+    retailer: { type: "string", description: "The name of the Retailer that offers it, for people to read", examples: ["Shop A"] },
+    currency: { type: "string", description: "The currency of the Listing", examples: ["EUR"] },
+    currentPrice,
+  },
+};
+
+export const listListingsSchema: FastifySchema = {
+  tags: ["Listings"],
+  summary: "List the Listings of the Catalogue",
+  description: [
+    "The Listings that the system knows, with the Current Price of each. Any signed-in User can read them, to choose one to watch.",
+    "",
+    "- The token is the one of a **User**. The token of a price provider is not valid here.",
+    "- They come ordered by title, compared in lower case, and then by identifier. Characters are compared by their codes, so digits come before letters and a letter with an accent after `z`.",
+    `- A page holds \`limit\` Listings (${DEFAULT_LIMIT} by default, ${MAX_LIMIT} at most) after skipping \`offset\`, and \`total\` says how many the Catalogue holds in all.`,
+    "- The Current Price is the price of the latest observation of the Listing. Reading changes nothing, and no request adds, changes or removes a Listing.",
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  querystring: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      limit: { type: "integer", minimum: 1, maximum: MAX_LIMIT, default: DEFAULT_LIMIT, description: "How many Listings at most" },
+      offset: { type: "integer", minimum: 0, default: 0, description: "How many Listings to skip" },
+    },
+  },
+  response: {
+    200: {
+      description: "A page of the Catalogue",
+      type: "object",
+      required: ["items", "total", "limit", "offset"],
+      properties: {
+        items: { type: "array", items: listing },
+        total: { type: "integer", description: "How many Listings the Catalogue holds, in all pages" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+      },
+    },
+    400: error("A query parameter is not valid: an unknown one, or a limit or an offset that is not a whole number in range", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token of a User. The token of a price provider is not valid", ["UNAUTHENTICATED"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const readListingSchema: FastifySchema = {
+  tags: ["Listings"],
+  summary: "Read a Listing",
+  description: [
+    "One Listing of the Catalogue, as the list shows it, with its Current Price. Any signed-in User can read it.",
+    "",
+    "- The token is the one of a **User**. The token of a price provider is not valid here.",
+    "- A Listing with no Current Price is found all the same, and shows `null`.",
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  params: {
+    type: "object",
+    required: ["listingId"],
+    properties: { listingId: { type: "string", minLength: 1, description: "Identifier of the Listing" } },
+  },
+  response: {
+    200: { description: "The Listing", ...listing },
+    401: error("There is no valid bearer token of a User. The token of a price provider is not valid", ["UNAUTHENTICATED"]),
+    404: error("The Listing is not in the Catalogue", ["LISTING_NOT_FOUND"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};

@@ -10,8 +10,14 @@ import {
   type Authenticator,
   type PriceAlertManagement,
 } from "./price-alerts/http";
-import type { PriceObservationRecorder, ReadPriceHistory } from "./price-observations/application";
+import type {
+  ListListings,
+  PriceObservationRecorder,
+  ReadListing,
+  ReadPriceHistory,
+} from "./price-observations/application";
 import {
+  catalogueRoutes,
   priceHistoryRoutes,
   priceObservationHttpError,
   priceObservationRoutes,
@@ -106,6 +112,15 @@ export interface AppDependencies {
     readonly readPriceHistory: ReadPriceHistory;
     readonly authenticator: UserAuthenticator;
   };
+  /**
+   * The routes that read the Catalogue of Listings, for the Users. Optional: without them the Catalogue
+   * is not served, and the documentation does not mention it.
+   */
+  readonly catalogue?: {
+    readonly listListings: ListListings;
+    readonly readListing: ReadListing;
+    readonly authenticator: UserAuthenticator;
+  };
   readonly logger?: boolean;
   /** Serve the interactive API documentation at /docs. Off by default. */
   readonly apiDocs?: ApiDocsOptions;
@@ -146,6 +161,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
             dependencies.priceAlertManagement
               ? "Create price alerts for the Listings of a catalogue, read them and manage them. Read the Notifications that are produced when an alert is reached."
               : "Create price alerts for the Listings of a catalogue.",
+            dependencies.catalogue && "Read the Listings of the catalogue, with their Current Price, to choose one to watch.",
             dependencies.accounts && "Register an Account and sign in to get the token of a Session, which identifies the User in the other requests.",
             dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
             dependencies.apiDocs.note,
@@ -159,6 +175,9 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
                 { name: "Accounts", description: "Register an Account and read one's own" },
                 { name: "Sessions", description: "Sign in to get a token, and sign out to end it" },
               ]
+            : []),
+          ...(dependencies.catalogue
+            ? [{ name: "Listings", description: "The Listings that the system knows, with their Current Price, read by a User" }]
             : []),
           { name: "Price alerts", description: "Requests to be notified when a Listing reaches a price" },
           ...(dependencies.priceAlertManagement
@@ -206,6 +225,8 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     authenticator: dependencies.authenticator,
     ...(dependencies.priceAlertManagement ? { management: dependencies.priceAlertManagement } : {}),
   });
+
+  if (dependencies.catalogue) app.register(catalogueRoutes, dependencies.catalogue);
 
   if (dependencies.priceHistory) {
     app.register(priceHistoryRoutes, {
