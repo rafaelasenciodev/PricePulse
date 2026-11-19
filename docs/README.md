@@ -26,6 +26,8 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | Document | Status |
 |---|---|
 | Architecture overview | ⬜ |
+| [ADR-0001: The backend is written in TypeScript](adr/0001-typescript-backend.md) | In Review |
+| [ADR-0002: A simplified Git Flow organises the branches](adr/0002-branching-model.md) | In Review |
 
 ## Quality
 
