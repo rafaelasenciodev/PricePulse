@@ -55,4 +55,4 @@ Methodology: [features/README.md](features/README.md).
 | 7 HTTP and Application Composition | [HTTP layer](../backend/src/price-alerts/http/) and [Composition Root](../backend/src/composition-root.ts) | Implemented |
 | 8 Testing | [Test plan](features/01-create-price-alert/08-test-plan.md) | In Review |
 | 9 Architecture Review | [Architecture review](features/01-create-price-alert/09-architecture-review.md) | In Review |
-| 10 Documentation and Completion | | In progress |
+| 10 Documentation and Completion | [Completion](features/01-create-price-alert/10-completion.md), [ADR-0001](adr/0001-typescript-backend.md) and [ADR-0002](adr/0002-branching-model.md) | In Review |
