@@ -97,7 +97,7 @@ export class EvaluatePriceAlerts {
     }
 
     // 3.4 Only then does the alert become Triggered (BR-06).
-    await this.alerts.save(alert.trigger());
+    await this.alerts.save(alert.trigger(), alert.status);
     return { notification: toView(notification), produced };
   }
 }

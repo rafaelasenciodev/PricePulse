@@ -21,6 +21,7 @@ export {
 } from "./evaluate-price-alerts";
 export {
   ActiveAlertAlreadyExists,
+  AlertStateChanged,
   NotificationAlreadyExists,
   type Clock,
   type CurrentPrice,

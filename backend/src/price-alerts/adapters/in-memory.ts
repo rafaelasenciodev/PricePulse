@@ -2,6 +2,7 @@
 
 import {
   ActiveAlertAlreadyExists,
+  AlertStateChanged,
   NotificationAlreadyExists,
   type CurrentPrice,
   type CurrentPriceSource,
@@ -11,7 +12,7 @@ import {
   type PriceAlertRepository,
 } from "../application";
 import type { ListingId, Price } from "../../shared/domain";
-import type { AlertId, Notification, PriceAlert, UserId } from "../domain";
+import type { AlertId, AlertStatus, Notification, PriceAlert, UserId } from "../domain";
 
 /** Implements ListingReader over a map that the caller fills. */
 export class InMemoryListingReader implements ListingReader {
@@ -58,10 +59,18 @@ export class InMemoryPriceAlertRepository implements PriceAlertRepository {
     return this.alerts.filter((a) => a.listingId === listingId && a.isActive);
   }
 
-  async save(alert: PriceAlert): Promise<void> {
+  async save(alert: PriceAlert, expectedStatus: AlertStatus): Promise<void> {
+    // The comparison and the replacement must not be separated by an `await`, for the same
+    // reason as in `add`: the condition would not hold if another request got in between.
     const index = this.alerts.findIndex((a) => a.id === alert.id);
-    if (index === -1) throw new Error(`Unknown Price Alert: ${alert.id}`);
-    this.alerts[index] = alert;
+    const stored = this.alerts[index];
+    if (stored === undefined) throw new Error(`Unknown Price Alert: ${alert.id}`);
+    if (stored.status === expectedStatus) {
+      this.alerts[index] = alert;
+      return;
+    }
+    if (stored.status === alert.status) return; // already in the state it would have: nothing to do
+    throw new AlertStateChanged();
   }
 
   /** Every stored Price Alert. For tests and inspection, not part of the port. */

@@ -25,12 +25,38 @@ describe("InMemoryNotificationRepository: what is specific to this adapter", () 
   });
 });
 
+describe("InMemoryPriceAlertRepository: the conditional save", () => {
+  const alertOf = () =>
+    new PriceAlert(newAlertId(), UserId("user-1"), ListingId("headphones-shop-a"), TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active, CREATED_AT);
+
+  it("a refused save leaves the stored alert as it was", async () => {
+    const repository = new InMemoryPriceAlertRepository();
+    const alert = alertOf();
+    await repository.add(alert);
+    await repository.save(alert.cancel(), AlertStatus.Active);
+    await repository.save(alert.trigger(), AlertStatus.Active).catch(() => undefined);
+    expect(repository.all().map((a) => a.status)).toEqual([AlertStatus.Cancelled]);
+  });
+
+  it("a change of the Target Price replaces the alert and keeps the rest", async () => {
+    const repository = new InMemoryPriceAlertRepository();
+    const alert = alertOf();
+    await repository.add(alert);
+    await repository.save(alert.changeTargetPrice(TargetPrice.fromDecimalString("70.00", "EUR"), null), AlertStatus.Active);
+    const [stored] = repository.all();
+    expect(repository.all()).toHaveLength(1);
+    expect(stored?.targetPrice.toDecimalString()).toBe("70.00");
+    expect(stored?.status).toBe(AlertStatus.Active);
+    expect(stored?.createdAt.equals(CREATED_AT)).toBe(true);
+  });
+});
+
 describe("InMemoryPriceAlertRepository: what is specific to this adapter", () => {
   it("save replaces the stored alert and keeps its data: only the state changes", async () => {
     const repository = new InMemoryPriceAlertRepository();
     const alert = new PriceAlert(newAlertId(), UserId("user-1"), ListingId("headphones-shop-a"), TargetPrice.fromDecimalString("80.00", "EUR"), AlertStatus.Active, CREATED_AT);
     await repository.add(alert);
-    await repository.save(alert.trigger());
+    await repository.save(alert.trigger(), AlertStatus.Active);
     const [kept] = repository.all();
     expect(repository.all()).toHaveLength(1);
     expect(kept?.status).toBe(AlertStatus.Triggered);

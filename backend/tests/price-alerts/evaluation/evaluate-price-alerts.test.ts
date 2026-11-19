@@ -79,9 +79,9 @@ class RecordingPrices extends InMemoryCurrentPriceSource {
 class AlertsWithFailingSave extends InMemoryPriceAlertRepository {
   failSave = false;
 
-  override async save(alert: PriceAlert): Promise<void> {
+  override async save(alert: PriceAlert, expectedStatus: AlertStatus): Promise<void> {
     if (this.failSave) throw new Error("the store is down");
-    return super.save(alert);
+    return super.save(alert, expectedStatus);
   }
 }
 

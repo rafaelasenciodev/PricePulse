@@ -1,7 +1,7 @@
 /** Ports: what the use case needs from the outside (contract, section "Ports"). */
 
 import type { ListingId, ObservedAt, Price } from "../../shared/domain";
-import type { AlertId, Notification, PriceAlert, UserId } from "../domain";
+import type { AlertId, AlertStatus, Notification, PriceAlert, UserId } from "../domain";
 
 /** What the use case needs to know about a Listing, read at once. */
 export interface ListingView {
@@ -44,12 +44,20 @@ export interface PriceAlertRepository {
   findActiveByListing(listingId: ListingId): Promise<PriceAlert[]>;
 
   /**
-   * Replace the stored Price Alert that has the same identifier. It fails if none is stored:
-   * saving an alert that was never added is a defect, not a way to add one.
-   * The only change it is used for is Active to Triggered. When alerts can be cancelled or
-   * modified, it will have to be conditional on the state that was read.
+   * Replace the stored Price Alert that has the same identifier, if it is still in the state
+   * that was read (BR-08 of feature 04). It fails if none is stored: saving an alert that was
+   * never added is a defect, not a way to add one.
+   *
+   * - If the stored state is `expectedStatus`, the alert is replaced.
+   * - If the stored one is already in the state that `alert` has, there is nothing to do and it
+   *   succeeds: saving the same change twice is harmless, as when two Evaluations of the same
+   *   Listing run at the same time, or a User cancels twice.
+   * - Otherwise another change came first, and it fails with `AlertStateChanged`.
+   *
+   * It looks at the state only: two modifications of the Target Price of an Active alert at the
+   * same time both succeed, and the last one stays.
    */
-  save(alert: PriceAlert): Promise<void>;
+  save(alert: PriceAlert, expectedStatus: AlertStatus): Promise<void>;
 }
 
 /**
@@ -62,6 +70,19 @@ export class NotificationAlreadyExists extends Error {
   constructor() {
     super("A Notification for this Price Alert is already stored");
     this.name = "NotificationAlreadyExists";
+  }
+}
+
+/**
+ * The stored Price Alert is no longer in the state that was read.
+ *
+ * Thrown by the repository when a conditional save finds that another change came first.
+ * The use cases handle it: it is not exposed to their callers as such.
+ */
+export class AlertStateChanged extends Error {
+  constructor() {
+    super("The Price Alert changed state before it was saved");
+    this.name = "AlertStateChanged";
   }
 }
 

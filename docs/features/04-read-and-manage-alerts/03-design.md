@@ -58,13 +58,14 @@ A missing Listing for an alert that exists is inconsistent data: it is an intern
 |---|---|---|
 | `PriceAlertRepository` | `find(owner, alertId)` | New. The alert if it exists and belongs to the owner, and nothing otherwise |
 | `PriceAlertRepository` | `findByOwner(owner, { status?, limit, offset })` | New. The page and the `total` of the owner's alerts that match, newest first, then by identifier |
-| `PriceAlertRepository` | `save(alert, expectedStatus)` | **Changed.** Replaces the stored alert only if its state is the expected one. Otherwise it fails with `AlertStateChanged`, a failure of the port that the use cases handle. It still fails if none is stored |
+| `PriceAlertRepository` | `save(alert, expectedStatus)` | **Changed.** Replaces the stored alert if its state is the expected one. If it is already in the state that `alert` has, it succeeds and does nothing: saving the same change twice is harmless. Otherwise it fails with `AlertStateChanged`, a failure of the port that the use cases handle. It still fails if none is stored |
 | `Clock` | `now()` | New port of this module. The one of feature 02 cannot be imported, so the Composition Root gives both the same clock |
 | `ListingReader` | `get(listingId)` | Existing. UC-03 reads the currency and the Current Price with it |
 
 ## 4. Concurrency and transaction boundary
 
-- Each change writes one alert with a conditional save. It is atomic, and there is no Unit of Work.
+- Each change writes one alert with a conditional save. It is atomic, and there is no Unit of Work. The save looks at the state only: two modifications of the Target Price of an Active alert at the same time both succeed, and the last one stays.
+- A save of an alert that is already in the state it would have succeeds. Without that rule two Evaluations of the same Listing at the same time (SC-13 of feature 03) would fail, and so would a cancellation repeated at the same time. It was found while building, and it does not change what the scenarios say.
 - If an Evaluation and a User act on the same alert, the first to save wins. The other finds a different state: UC-03 and UC-04 answer `AlertConflict` (SC-20), and the Evaluation lists the alert as `failed`, leaving its Notification stored (SC-21, as decided in Q6).
 - UC-03 reads the Current Price and then saves, and the price can move in between. It is the same gap as creation has, and it is accepted.
 - The race between creating an alert and recording a price, found in feature 03, is not changed by this feature.
@@ -88,7 +89,7 @@ The body of a PATCH carries exactly one of the two fields, and the schema reject
 | 1 | `CreatedAt` is a Value Object in the module of Price Alerts | Accepted |
 | 2 | `cancel` and `changeTargetPrice` are behaviours of `PriceAlert`, which stays immutable and returns a new alert | Accepted |
 | 3 | `Clock` is a port of this module, and the Composition Root gives it the same clock as feature 02 | Accepted |
-| 4 | Saving is conditional on the state that was read, as decided in Q6. The expected state is a parameter | Accepted |
+| 4 | Saving is conditional on the state that was read, as decided in Q6. The expected state is a parameter, and a save of the state that is already stored is harmless | Accepted |
 | 5 | The list is paginated with `limit` and `offset`, and answers with the `total` | Accepted |
 | 6 | Three new application errors: `AlertNotFound`, `AlertNotActive` and `AlertConflict` | Accepted |
 | 7 | One resource, `/price-alerts/{alertId}`, with PATCH for both changes. Cancelling is a change of state | Accepted |
