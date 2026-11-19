@@ -164,7 +164,7 @@ The tests cover the domain, the use case, the adapters, the HTTP interface and t
 
 ## How the project is built
 
-Each feature goes through eleven phases, from discovery to documentation, and each phase ends with an approval. The behaviour is described first as business rules and Gherkin scenarios, then modelled, then implemented, and the tests trace back to the scenarios. [`docs/features/README.md`](docs/features/README.md) describes the method.
+Each feature goes through five stages: understand, scenarios, design, build and close. Each stage ends with an approval, and the build has a stop for each layer. The behaviour is described first as business rules and Gherkin scenarios, then designed, then built, and the tests trace back to the scenarios. [`docs/features/README.md`](docs/features/README.md) describes the method. The first three features followed an earlier method of eleven phases, and their documents are kept as they were.
 
 A simplified Git Flow organises the branches, with one `feature/NN-name` branch per feature ([ADR-0002](docs/adr/0002-branching-model.md)).
 
