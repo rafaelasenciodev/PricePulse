@@ -46,7 +46,8 @@ function businessRules(): string[] {
 function testFiles(dir: URL = TESTS_DIR): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = new URL(entry.name + (entry.isDirectory() ? "/" : ""), dir);
-    if (entry.isDirectory()) return testFiles(path);
+    // The tests of another feature cite their own SC-nn, which would be taken for these.
+    if (entry.isDirectory()) return entry.name === "price-observations" ? [] : testFiles(path);
     const isTest = entry.name.endsWith(".test.ts") && entry.name !== "traceability.test.ts";
     return isTest ? [fileURLToPath(path)] : [];
   });
