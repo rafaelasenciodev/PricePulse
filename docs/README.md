@@ -118,3 +118,15 @@ The second feature of the [method of five stages](features/README.md). The code 
 | 3 Design | [Design](features/05-notifications-and-price-history/03-design.md) | Approved |
 | 4 Build | [Alerts application layer](../backend/src/price-alerts/application/), [observations application layer](../backend/src/price-observations/application/) and their [HTTP layers](../backend/src/price-observations/http/) | Implemented |
 | 5 Close | [Completion](features/05-notifications-and-price-history/04-completion.md) | Approved |
+
+### 06 — Accounts and Authentication
+
+The third feature of the [method of five stages](features/README.md), and the first built on an ADR ([ADR-0004](adr/0004-authentication.md)). The code is in a new module, `accounts`, and in the Composition Root.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/06-accounts-and-authentication/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/06-accounts-and-authentication/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/06-accounts-and-authentication/03-design.md) | Approved |
+| 4 Build | [Domain](../backend/src/accounts/domain/), [application layer](../backend/src/accounts/application/), [adapters](../backend/src/accounts/adapters/) and [HTTP layer](../backend/src/accounts/http/) | Implemented |
+| 5 Close | [Completion](features/06-accounts-and-authentication/04-completion.md) | Approved |
