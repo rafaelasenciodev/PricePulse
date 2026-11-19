@@ -5,6 +5,8 @@ import {
   AlertStateChanged,
   NotificationAlreadyExists,
   type CurrentPrice,
+  type AlertPage,
+  type AlertPageQuery,
   type CurrentPriceSource,
   type ListingReader,
   type ListingView,
@@ -55,6 +57,17 @@ export class InMemoryPriceAlertRepository implements PriceAlertRepository {
     this.alerts.push(alert);
   }
 
+  async find(owner: UserId, alertId: AlertId): Promise<PriceAlert | null> {
+    return this.alerts.find((a) => a.id === alertId && a.owner === owner) ?? null;
+  }
+
+  async findByOwner(owner: UserId, query: AlertPageQuery): Promise<AlertPage> {
+    const matching = this.alerts
+      .filter((a) => a.owner === owner && (query.status === undefined || a.status === query.status))
+      .sort(newestFirst);
+    return { items: matching.slice(query.offset, query.offset + query.limit), total: matching.length };
+  }
+
   async findActiveByListing(listingId: ListingId): Promise<PriceAlert[]> {
     return this.alerts.filter((a) => a.listingId === listingId && a.isActive);
   }
@@ -83,6 +96,13 @@ export class InMemoryPriceAlertRepository implements PriceAlertRepository {
       this.alerts.find((a) => a.owner === owner && a.listingId === listingId && a.isActive) ?? null
     );
   }
+}
+
+/** Newest first by creation moment, and by identifier when two share it. */
+function newestFirst(a: PriceAlert, b: PriceAlert): number {
+  const byMoment = b.createdAt.epochMilliseconds - a.createdAt.epochMilliseconds;
+  if (byMoment !== 0) return byMoment;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 /**

@@ -2,9 +2,12 @@ export {
   CreatePriceAlert,
   type CreatePriceAlertCommand,
   type CreatePriceAlertResult,
-  type PriceAlertView,
 } from "./create-price-alert";
+export { GetPriceAlert, type GetPriceAlertCommand, type GetPriceAlertResult } from "./get-price-alert";
+export { ListPriceAlerts, type ListPriceAlertsCommand, type ListPriceAlertsResult } from "./list-price-alerts";
+export { type PriceAlertView } from "./price-alert-view";
 export {
+  AlertNotFound,
   ApplicationError,
   DuplicateAlert,
   InvalidTargetPrice,
@@ -23,6 +26,8 @@ export {
   ActiveAlertAlreadyExists,
   AlertStateChanged,
   NotificationAlreadyExists,
+  type AlertPage,
+  type AlertPageQuery,
   type Clock,
   type CurrentPrice,
   type CurrentPriceSource,

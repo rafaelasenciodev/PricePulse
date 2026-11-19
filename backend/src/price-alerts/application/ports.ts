@@ -33,12 +33,41 @@ export interface Clock {
   now(): Date;
 }
 
+/** Which Price Alerts of an owner to read, and which page of them (BR-02 of feature 04). */
+export interface AlertPageQuery {
+  /** Only the alerts in this state. Without it, all of them. */
+  readonly status?: AlertStatus;
+  /** How many alerts at most. At least 1. */
+  readonly limit: number;
+  /** How many alerts to skip, counted from the newest. At least 0. */
+  readonly offset: number;
+}
+
+/** A page of Price Alerts, and how many match in all. */
+export interface AlertPage {
+  readonly items: readonly PriceAlert[];
+  readonly total: number;
+}
+
 export interface PriceAlertRepository {
   /** The Active Price Alert of the owner for the Listing, if any. A Triggered one is never returned. */
   findActive(owner: UserId, listingId: ListingId): Promise<PriceAlert | null>;
 
   /** Store a new Price Alert. Throws ActiveAlertAlreadyExists if the owner already has an Active one for that Listing. */
   add(alert: PriceAlert): Promise<void>;
+
+  /**
+   * The Price Alert with that identifier, if it exists and belongs to the owner. Nothing otherwise:
+   * an alert of another owner is not told apart from one that does not exist (BR-01 of feature 04).
+   */
+  find(owner: UserId, alertId: AlertId): Promise<PriceAlert | null>;
+
+  /**
+   * The Price Alerts of the owner that match the query: the page asked for, and the total.
+   * They come newest first by creation moment, and by identifier when two share it, so that
+   * the pages are stable. The limit and the offset are valid: the caller checks them.
+   */
+  findByOwner(owner: UserId, query: AlertPageQuery): Promise<AlertPage>;
 
   /** The Active Price Alerts of a Listing. A Triggered one is never returned (BR-01 of feature 03). */
   findActiveByListing(listingId: ListingId): Promise<PriceAlert[]>;

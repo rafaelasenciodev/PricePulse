@@ -10,6 +10,7 @@ import {
   type UserId,
 } from "../domain";
 import { DuplicateAlert, InvalidTargetPrice, ListingNotFound, TargetAlreadyReached } from "./errors";
+import { toView, type PriceAlertView } from "./price-alert-view";
 import { ActiveAlertAlreadyExists, type Clock, type ListingReader, type PriceAlertRepository } from "./ports";
 
 export interface CreatePriceAlertCommand {
@@ -18,16 +19,6 @@ export interface CreatePriceAlertCommand {
   readonly listingId: ListingId;
   /** Only the amount, as text such as "80.00". The currency is the one of the Listing. */
   readonly targetAmount: string;
-}
-
-export interface PriceAlertView {
-  readonly id: string;
-  readonly listingId: string;
-  readonly targetAmount: string;
-  readonly currency: string;
-  readonly status: string;
-  /** In UTC, such as "2026-11-19T10:00:00.000Z". */
-  readonly createdAt: string;
 }
 
 export interface CreatePriceAlertResult {
@@ -101,15 +92,4 @@ export class CreatePriceAlert {
 
     throw new Error("Could not create the Price Alert: repeated concurrent conflicts");
   }
-}
-
-function toView(alert: PriceAlert): PriceAlertView {
-  return {
-    id: alert.id,
-    listingId: alert.listingId,
-    targetAmount: alert.targetPrice.toDecimalString(),
-    currency: alert.targetPrice.currency,
-    status: alert.status,
-    createdAt: alert.createdAt.toIsoString(),
-  };
 }
