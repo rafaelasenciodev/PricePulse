@@ -1,4 +1,4 @@
-/** Errors of the concepts that several features share: money and its validation. */
+/** Errors of the concepts that several features share: money, instants and their validation. */
 
 /** Errors raised by the domain when a business rule or an invariant is broken. */
 export class DomainError extends Error {
@@ -28,6 +28,13 @@ export class UnsupportedCurrency extends DomainError {
 export class InvalidAmount extends InvalidValue {
   constructor(amount: string) {
     super(`The amount is not a valid number: ${JSON.stringify(amount)}`);
+  }
+}
+
+/** The Observed At is not a valid instant. */
+export class InvalidObservedAt extends InvalidValue {
+  constructor(value: string) {
+    super(`The Observed At is not a valid instant: ${JSON.stringify(value)}`);
   }
 }
 

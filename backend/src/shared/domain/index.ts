@@ -1,3 +1,4 @@
-export { DomainError, InvalidAmount, InvalidValue, TooManyDecimals, UnsupportedCurrency } from "./errors";
+export { DomainError, InvalidAmount, InvalidObservedAt, InvalidValue, TooManyDecimals, UnsupportedCurrency } from "./errors";
 export { ListingId, type Brand } from "./identifiers";
+export { ObservedAt } from "./observed-at";
 export { Price } from "./price";

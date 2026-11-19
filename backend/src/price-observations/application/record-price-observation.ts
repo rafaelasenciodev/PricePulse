@@ -1,9 +1,8 @@
 /** UC-01 Record Price Observation (see the use case contract). */
 
-import { InvalidValue, Price, type ListingId } from "../../shared/domain";
+import { InvalidValue, ObservedAt, Price, type ListingId } from "../../shared/domain";
 import {
   ObservationCurrencyMismatch,
-  ObservedAt,
   ObservedInTheFuture,
   PriceObservation,
   type ProviderId,

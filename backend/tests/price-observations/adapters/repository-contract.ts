@@ -8,8 +8,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { CLOCK_TOLERANCE_MILLISECONDS, ObservationAlreadyExists, type PriceObservationRepository } from "../../../src/price-observations/application";
-import { ObservedAt, PriceObservation, ProviderId } from "../../../src/price-observations/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { PriceObservation, ProviderId } from "../../../src/price-observations/domain";
+import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
 
 const SIMULATOR = ProviderId("simulator");
 const OTHER_PROVIDER = ProviderId("other-provider");

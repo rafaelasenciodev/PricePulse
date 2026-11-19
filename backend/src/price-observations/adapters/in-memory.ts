@@ -1,13 +1,13 @@
 /** In-memory implementations of the ports, to run the application without infrastructure. */
 
-import type { ListingId } from "../../shared/domain";
+import type { ListingId, ObservedAt } from "../../shared/domain";
 import {
   ObservationAlreadyExists,
   type CatalogueListing,
   type ListingCatalogue,
   type PriceObservationRepository,
 } from "../application";
-import type { ObservedAt, PriceObservation, ProviderId } from "../domain";
+import type { PriceObservation, ProviderId } from "../domain";
 
 /** Implements ListingCatalogue over a map that the caller fills. */
 export class InMemoryListingCatalogue implements ListingCatalogue {

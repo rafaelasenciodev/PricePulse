@@ -16,13 +16,6 @@ export class NegativePrice extends InvalidValue {
   }
 }
 
-/** The Observed At is not a valid instant. */
-export class InvalidObservedAt extends InvalidValue {
-  constructor(value: string) {
-    super(`The Observed At is not a valid instant: ${JSON.stringify(value)}`);
-  }
-}
-
 /** BR-05: the currency of the Price is not the one of the Listing. */
 export class ObservationCurrencyMismatch extends DomainError {
   constructor(priceCurrency: string, listingCurrency: string) {

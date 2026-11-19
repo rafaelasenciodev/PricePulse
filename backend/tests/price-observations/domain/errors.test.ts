@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  InvalidObservedAt,
   NegativePrice,
   ObservationCurrencyMismatch,
   ObservedInTheFuture,
@@ -16,7 +15,6 @@ import { InvalidValue } from "../../../src/shared/domain";
 describe("classification of the domain errors of Price Observations", () => {
   it.each([
     ["NegativePrice", new NegativePrice("-5.00")],
-    ["InvalidObservedAt", new InvalidObservedAt("yesterday")],
   ])("%s is a value that cannot be accepted", (_name, error) => {
     expect(error).toBeInstanceOf(InvalidValue);
   });

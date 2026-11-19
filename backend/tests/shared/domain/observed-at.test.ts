@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { InvalidObservedAt, ObservedAt } from "../../../src/price-observations/domain";
-import { InvalidValue } from "../../../src/shared/domain";
+import { InvalidObservedAt, InvalidValue, ObservedAt } from "../../../src/shared/domain";
 
 describe("ObservedAt", () => {
   it("reads the same instant written in different time zones as equal", () => {

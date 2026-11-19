@@ -2,13 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   NegativePrice,
   ObservationCurrencyMismatch,
-  ObservedAt,
   ObservedInTheFuture,
   PriceObservation,
   ProviderId,
   type PriceObservationInput,
 } from "../../../src/price-observations/domain";
-import { ListingId, Price } from "../../../src/shared/domain";
+import { ListingId, ObservedAt, Price } from "../../../src/shared/domain";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 const RECORDED_AT = new Date("2026-11-19T10:30:00Z");

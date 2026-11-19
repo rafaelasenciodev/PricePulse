@@ -25,8 +25,8 @@ import {
   type PriceObservationRepository,
   type RecordPriceObservationCommand,
 } from "../../../src/price-observations/application";
-import { ObservedAt, PriceObservation, ProviderId } from "../../../src/price-observations/domain";
-import { ListingId, Price, UnsupportedCurrency } from "../../../src/shared/domain";
+import { PriceObservation, ProviderId } from "../../../src/price-observations/domain";
+import { ListingId, ObservedAt, Price, UnsupportedCurrency } from "../../../src/shared/domain";
 
 const SIMULATOR = ProviderId("simulator");
 const HEADPHONES = ListingId("headphones-shop-a");

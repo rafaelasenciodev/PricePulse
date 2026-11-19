@@ -1,7 +1,6 @@
-import type { ListingId, Price } from "../../shared/domain";
+import { ObservedAt, type ListingId, type Price } from "../../shared/domain";
 import { NegativePrice, ObservationCurrencyMismatch, ObservedInTheFuture } from "./errors";
 import type { ProviderId } from "./identifiers";
-import { ObservedAt } from "./observed-at";
 
 /** What the model needs to record a Price Observation. Not the use case of the application. */
 export interface PriceObservationInput {

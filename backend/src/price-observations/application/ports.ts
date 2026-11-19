@@ -1,7 +1,7 @@
 /** Ports: what the use case needs from the outside (contract, section "Ports"). */
 
-import type { ListingId } from "../../shared/domain";
-import type { ObservedAt, PriceObservation, ProviderId } from "../domain";
+import type { ListingId, ObservedAt } from "../../shared/domain";
+import type { PriceObservation, ProviderId } from "../domain";
 
 /** What this use case needs to know about a Listing: only its currency. */
 export interface CatalogueListing {
