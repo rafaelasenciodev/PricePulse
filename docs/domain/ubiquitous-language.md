@@ -11,14 +11,14 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Retailer** | A seller that offers Products. | Feature 01 |
 | **Listing** | A Retailer's offer of a Product. A Price Alert watches a Listing. | Feature 01 |
 | **Price** | An amount of money in a currency. | Feature 01 |
-| **Current Price** | The Price of the Price Observation of a Listing with the greatest Observed At. A Listing may have none: a Listing whose latest Price Observation is unavailable has no Current Price, and neither does a Listing with no Price Observation. | Feature 01, refined in [Feature 02](../features/02-price-observation/00-discovery.md) |
+| **Current Price** | The Price of the Price Observation of a Listing with the greatest Observed At. A Listing may have none: a Listing whose latest Price Observation has no Price has no Current Price, and neither does a Listing with no Price Observation. | Feature 01, refined in [Feature 02](../features/02-price-observation/00-discovery.md) |
 | **Target Price** | The Price at which a User wants to be notified. It is expressed in the Listing's currency. | Feature 01 |
 | **Price Alert** | A User's request to be notified when the Current Price of a Listing reaches a Target Price. | Feature 01 |
 | **Target reached** | The condition that a Current Price is less than or equal to a Target Price. A Price equal to the Target Price reaches it. | Feature 01 |
 | **Active** | The state of a Price Alert that has been created and has not ended. It is the only state that Feature 01 produces. | Feature 01 |
 | **Triggered** | The state of a Price Alert whose Target Price was reached and whose User was notified. A Triggered Price Alert is no longer Active. Only a later feature makes a Price Alert Triggered; Feature 01 needs the state to tell such alerts apart from Active ones. | Feature 01 |
 | **Duplicate** | An attempt to create a Price Alert when the User already has an Active one for the same Listing. | Feature 01 |
-| **Price Observation** | A record of whether a Listing was available at a point in time and, if it was, its Price. | Feature 02 |
+| **Price Observation** | A record of the Price of a Listing at a point in time, or of its absence: a Price Observation without a Price means that the Listing is unavailable at that moment. Unavailable does not mean out of stock, because stock quantities are not modelled. | Feature 02 |
 | **Observed At** | The moment at which a Provider saw the state of a Listing. It is the time that orders Price Observations, not the moment they are received. | Feature 02 |
 | **Provider** | A source that supplies Price Observations, identified by an identifier. Today it is the simulator. A Provider is not a User, and it is not a Retailer. | Feature 02 |
 | **Conflict** | An attempt to record a Price Observation with the same Provider, Listing and Observed At as a stored one, but with different content. | Feature 02 |

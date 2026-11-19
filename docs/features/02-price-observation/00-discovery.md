@@ -54,6 +54,8 @@ Each question shows the options, a *lean* (the proposal discussed) and the **Dec
 
 **Decision (Accepted):** B. A Price Observation records the availability of a Listing at a point in time and, only when it is available, its price. An unavailable observation has no price. A price that is not known is expressed as unavailable, never as an amount of zero.
 
+**Revised (Accepted, Phase 2):** While writing the scenarios, the two data of option B (availability and price) were seen to allow contradictory combinations that needed a scenario to reject them. The decision is simplified to one datum: a Price Observation has a price that may be absent. With a price, the Listing is available at that price. Without one, the Listing is unavailable. Contradictions cannot be expressed, and the behaviour is the one decided above. "Unavailable" means that no price is offered at that moment; it is not a stock quantity, which the project does not model.
+
 ### ● Q2 — How far does this feature go?
 
 | Option | Includes |
@@ -79,7 +81,7 @@ An observation carries the time the provider saw the price (`observedAt`). Arriv
 | Option | Effect |
 |---|---|
 | A | Every observation | Faithful history, shows "checked and unchanged" |
-| B | Only when price or availability changes | Less data, loses that information |
+| B | Only when the price, or its absence, changes | Less data, loses that information |
 
 *Lean:* **A**. Compaction is a later optimisation.
 
@@ -87,7 +89,7 @@ An observation carries the time the provider saw the price (`observedAt`). Arriv
 
 ### ● Q5 — Resends and idempotency
 
-**Decision (Accepted):** If the same provider sends again an observation for the same Listing and the same `observedAt` with the same content, the existing one is returned as a success and nothing is duplicated. If the content differs (price or availability), the request is rejected as a conflict and the stored observation is not overwritten.
+**Decision (Accepted):** If the same provider sends again an observation for the same Listing and the same `observedAt` with the same content, the existing one is returned as a success and nothing is duplicated. If the content differs (a different price, or a price against none), the request is rejected as a conflict and the stored observation is not overwritten.
 
 ### ● Q6 — Validation of price and currency
 
