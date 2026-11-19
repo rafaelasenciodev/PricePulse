@@ -1,6 +1,6 @@
 /** Application errors expected by the use case contract. */
 
-import type { ListingId } from "../domain";
+import type { ListingId } from "../../shared/domain";
 
 /** Base class of the errors the caller of a use case must expect. */
 export class ApplicationError extends Error {

@@ -1,6 +1,6 @@
+import type { ListingId, Price } from "../../shared/domain";
 import { TargetAlreadyReached } from "./errors";
-import type { AlertId, ListingId, UserId } from "./identifiers";
-import type { Price } from "./price";
+import type { AlertId, UserId } from "./identifiers";
 import type { TargetPrice } from "./target-price";
 
 export const AlertStatus = {

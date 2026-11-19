@@ -3,25 +3,28 @@
  *
  * The design says dependencies point inward: the domain knows nothing of the rest, the
  * application knows only the domain, and the adapters and the HTTP layer know the
- * application. This test fails when a change breaks that, so the review of Phase 9 does not
- * have to be repeated by hand.
+ * application. Two more rules keep the features apart: `shared` holds only what several
+ * features need and imports nothing, and a feature never imports another feature. This test
+ * fails when a change breaks any of that, so the review of Phase 9 does not have to be
+ * repeated by hand.
  */
 
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-type Layer = "domain" | "application" | "http" | "adapters" | "app" | "composition-root" | "main";
+type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "composition-root" | "main";
 
 /** For each layer: the internal layers it may import, and the packages it may use. */
 const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: readonly string[] }>> = {
-  domain: { imports: [], packages: [] },
-  application: { imports: ["domain"], packages: [] },
-  adapters: { imports: ["application", "domain"], packages: [] },
-  http: { imports: ["application", "domain"], packages: ["fastify"] },
+  shared: { imports: [], packages: [] },
+  domain: { imports: ["shared"], packages: [] },
+  application: { imports: ["domain", "shared"], packages: [] },
+  adapters: { imports: ["application", "domain", "shared"], packages: [] },
+  http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
   app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
   "composition-root": { imports: ["adapters", "application", "http", "app"], packages: ["fastify"] },
-  main: { imports: ["domain", "composition-root"], packages: [] },
+  main: { imports: ["domain", "shared", "composition-root"], packages: [] },
 };
 
 const SRC = new URL("../src/", import.meta.url);
@@ -32,9 +35,16 @@ interface Source {
   readonly imports: readonly string[]; // as written
 }
 
+/** The feature a file belongs to (the folder under src/ that holds the layers), or null. */
+function featureOf(path: string): string | null {
+  const feature = /^([a-z-]+)\/(?:domain|application|http|adapters)\//.exec(path)?.[1];
+  return feature && feature !== "shared" ? feature : null;
+}
+
 function layerOf(path: string): Layer | null {
-  const folder = /^price-alerts\/(domain|application|http|adapters)\//.exec(path)?.[1];
-  if (folder) return folder as Layer;
+  if (path.startsWith("shared/domain/")) return "shared";
+  const folder = /^[a-z-]+\/(domain|application|http|adapters)\//.exec(path)?.[1];
+  if (folder && featureOf(path)) return folder as Layer;
   if (path === "app.ts") return "app";
   if (path === "composition-root.ts") return "composition-root";
   if (path === "main.ts") return "main";
@@ -106,6 +116,22 @@ describe("architecture of the backend", () => {
       expect(violations).toEqual([]);
     },
   );
+
+  it("a feature does not import another feature", () => {
+    const violations: string[] = [];
+    for (const file of all) {
+      const feature = featureOf(file.path);
+      if (feature === null) continue;
+      for (const specifier of file.imports.filter((i) => i.startsWith("."))) {
+        const target = resolve(file.path, specifier, all);
+        const targetFeature = target ? featureOf(target) : null;
+        if (targetFeature !== null && targetFeature !== feature) {
+          violations.push(`${file.path} (${feature}) imports ${specifier} (${targetFeature})`);
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+  });
 
   it("no source file imports from the tests", () => {
     expect(all.filter((s) => s.imports.some((i) => i.includes("tests"))).map((s) => s.path)).toEqual([]);

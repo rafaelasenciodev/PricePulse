@@ -1,12 +1,11 @@
 /** UC-01 Create Price Alert (see the use case contract). */
 
+import { InvalidValue, type ListingId } from "../../shared/domain";
 import {
-  InvalidValue,
   PriceAlert,
   TargetAlreadyReached as DomainTargetAlreadyReached,
   TargetPrice,
   newAlertId,
-  type ListingId,
   type UserId,
 } from "../domain";
 import { DuplicateAlert, InvalidTargetPrice, ListingNotFound, TargetAlreadyReached } from "./errors";

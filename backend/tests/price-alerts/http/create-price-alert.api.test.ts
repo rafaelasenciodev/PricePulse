@@ -11,7 +11,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../../src/app";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { CreatePriceAlert, type ListingReader } from "../../../src/price-alerts/application";
-import { ListingId, Price, UserId } from "../../../src/price-alerts/domain";
+import { UserId } from "../../../src/price-alerts/domain";
+import { ListingId, Price } from "../../../src/shared/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
 
 const USER_1 = UserId("user-1");

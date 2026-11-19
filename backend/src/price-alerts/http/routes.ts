@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { CreatePriceAlert } from "../application";
-import { ListingId, type UserId } from "../domain";
+import { ListingId } from "../../shared/domain";
+import type { UserId } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
 import { createPriceAlertSchema } from "./schemas";

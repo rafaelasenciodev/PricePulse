@@ -2,14 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   AlertId,
   AlertStatus,
-  ListingId,
-  Price,
   PriceAlert,
   TargetAlreadyReached,
   TargetPrice,
   UserId,
   newAlertId,
 } from "../../../src/price-alerts/domain";
+import { ListingId, Price } from "../../../src/shared/domain";
 
 const OWNER = UserId("user-1");
 const LISTING = ListingId("headphones-shop-a");

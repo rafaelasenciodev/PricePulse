@@ -1,6 +1,6 @@
 import { InvalidAmount, TooManyDecimals, UnsupportedCurrency } from "./errors";
 
-// Decimal places allowed by each supported currency (BR-04).
+// Decimal places allowed by each supported currency.
 // Supporting another currency means adding a line here.
 const DECIMALS_BY_CURRENCY: Readonly<Record<string, number>> = { EUR: 2, USD: 2 };
 

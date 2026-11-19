@@ -5,7 +5,8 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { composeInMemoryApp } from "../src/composition-root";
-import { ListingId, Price, UserId } from "../src/price-alerts/domain";
+import { UserId } from "../src/price-alerts/domain";
+import { ListingId, Price } from "../src/shared/domain";
 
 const HEADPHONES = ListingId("headphones-shop-a");
 

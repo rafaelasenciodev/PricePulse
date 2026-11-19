@@ -10,13 +10,12 @@ import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../sr
 import { ActiveAlertAlreadyExists } from "../../../src/price-alerts/application";
 import {
   AlertStatus,
-  ListingId,
-  Price,
   PriceAlert,
   TargetPrice,
   UserId,
   newAlertId,
 } from "../../../src/price-alerts/domain";
+import { ListingId, Price } from "../../../src/shared/domain";
 
 const USER = UserId("user-1");
 const OTHER_USER = UserId("user-2");

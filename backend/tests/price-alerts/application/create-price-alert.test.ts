@@ -20,14 +20,12 @@ import {
 import {
   AlertStatus,
   CurrencyMismatch,
-  ListingId,
-  Price,
   PriceAlert,
   TargetPrice,
-  UnsupportedCurrency,
   UserId,
   newAlertId,
 } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UnsupportedCurrency } from "../../../src/shared/domain";
 
 const USER = UserId("user-1");
 const OTHER_USER = UserId("user-2");

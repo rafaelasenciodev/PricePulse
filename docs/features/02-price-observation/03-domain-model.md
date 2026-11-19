@@ -1,8 +1,8 @@
 # 02 — Price Observation: Domain Model (Phase 3)
 
-Status: Draft
+Status: Approved
 
-The domain model of the feature. It is derived from the [business rules](01-business-rules.md) and validated against the [scenarios](02-scenarios.feature). Only what those justify is modelled. Every decision in section 4 is **Proposed** until the author approves it.
+The domain model of the feature. It is derived from the [business rules](01-business-rules.md) and validated against the [scenarios](02-scenarios.feature). Only what those justify is modelled.
 
 ## 1. Where each business rule lives
 
@@ -78,10 +78,10 @@ A Conflict (BR-10) is not a domain error. It appears when the application compar
 
 | ID | Decision | Status |
 |---|---|---|
-| A | `PriceObservation` is an immutable record whose identity is Provider, Listing and Observed At. Each one is its own aggregate. The history of a Listing is not an aggregate | Proposed |
-| B | The Current Price is obtained through a port that returns the latest observation of a Listing by Observed At. No domain function and no stored copy | Proposed |
-| C | `ObservedAt` is a Value Object, not a bare date | Proposed |
-| D | `ProviderId` is a typed identifier. The closed set of Providers lives in authentication, not in the domain | Proposed |
+| A | `PriceObservation` is an immutable record whose identity is Provider, Listing and Observed At. Each one is its own aggregate. The history of a Listing is not an aggregate | Accepted |
+| B | The Current Price is obtained through a port that returns the latest observation of a Listing by Observed At. No domain function and no stored copy | Accepted |
+| C | `ObservedAt` is a Value Object, not a bare date | Accepted |
+| D | `ProviderId` is a typed identifier. The closed set of Providers lives in authentication, not in the domain | Accepted |
 
 ### Decision A in detail
 
