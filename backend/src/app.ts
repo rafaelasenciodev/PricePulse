@@ -2,10 +2,41 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { CreatePriceAlert } from "./price-alerts/application";
-import { priceAlertRoutes, toHttpError, type Authenticator } from "./price-alerts/http";
+import { priceAlertHttpError, priceAlertRoutes, type Authenticator, type HttpError } from "./price-alerts/http";
 
 /** The version of the API shown in its documentation. Kept equal to `package.json` by a test. */
 export const API_VERSION = "0.1.0";
+
+/** A feature's translation of its own errors to HTTP: null when the error is not one of its own. */
+type HttpErrorMapper = (error: unknown) => HttpError | null;
+
+const featureMappers: readonly HttpErrorMapper[] = [priceAlertHttpError];
+
+/** Map an error to the HTTP response that reports it. Unexpected errors reveal nothing. */
+function toHttpError(error: unknown): HttpError {
+  for (const mapper of featureMappers) {
+    const mapped = mapper(error);
+    if (mapped !== null) return mapped;
+  }
+  const status = clientErrorStatus(error);
+  if (status !== null) {
+    // The request itself is wrong: bad JSON, a body that does not match the schema, ...
+    return {
+      status,
+      code: status === 400 ? "BAD_REQUEST" : "CLIENT_ERROR",
+      message: error instanceof Error ? error.message : "Invalid request",
+    };
+  }
+  return { status: 500, code: "INTERNAL_ERROR", message: "Internal server error" };
+}
+
+function clientErrorStatus(error: unknown): number | null {
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    const status = (error as { statusCode: unknown }).statusCode;
+    if (typeof status === "number" && status >= 400 && status < 500) return status;
+  }
+  return null;
+}
 
 export interface ApiDocsOptions {
   /** A note shown at the top of the documentation, for example which demo data exists. */

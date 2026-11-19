@@ -237,4 +237,28 @@ describe("other responses", () => {
     expect(response.json()).toEqual({ code: "INTERNAL_ERROR", message: "Internal server error" });
     expect(response.body).not.toContain("hunter2");
   });
+
+  // An error that carries a status of its own is a mistake of the client only if the status
+  // is a 4xx. Anything else is an unexpected failure and reveals nothing, whatever it says.
+  it.each([
+    [302, 500, "INTERNAL_ERROR"],
+    [399, 500, "INTERNAL_ERROR"],
+    [503, 500, "INTERNAL_ERROR"],
+    [599, 500, "INTERNAL_ERROR"],
+    [400, 400, "BAD_REQUEST"],
+    [418, 418, "CLIENT_ERROR"],
+    [499, 499, "CLIENT_ERROR"],
+  ])("an error with the status %i is answered %i %s", async (carried, expected, code) => {
+    await app.close();
+    const failing: ListingReader = {
+      get: async () => {
+        throw Object.assign(new Error("db-prod-01 refused"), { statusCode: carried });
+      },
+    };
+    startApp(failing);
+    const response = await post();
+    expect(response.statusCode).toBe(expected);
+    expect(response.json().code).toBe(code);
+    if (expected === 500) expect(response.json().message).toBe("Internal server error");
+  });
 });
