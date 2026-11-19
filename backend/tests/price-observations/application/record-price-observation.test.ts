@@ -233,6 +233,12 @@ describe("validity of the observation", () => {
     expect(world.observations.all()).toEqual([]);
   });
 
+  it("decision 8: the currency is compared before the amount is read, so it is the one reported", async () => {
+    const outcome = world.record({ price: { amount: "abc", currency: "USD" } });
+    await expect(outcome).rejects.toThrow(InvalidObservation);
+    await expect(outcome).rejects.toThrow("not the one of the Listing");
+  });
+
   it("decision 8: a currency the system does not support is reported as not the Listing's, not as an internal error", async () => {
     const outcome = world.record({ price: { amount: "79.90", currency: "GBP" } });
     await expect(outcome).rejects.toThrow(InvalidObservation);
