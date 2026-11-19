@@ -11,4 +11,3 @@ export {
   ScryptPasswordHasher,
   type ScryptParameters,
 } from "./scrypt-password-hasher";
-export { SystemClock } from "./system-clock";

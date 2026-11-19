@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { ListingId } from "../../shared/domain";
+import { bearerTokenOf } from "../../shared/http";
 import type { PriceObservationRecorder } from "../application";
 import type { ProviderId } from "../domain";
 import type { ProviderAuthenticator } from "./authenticator";
@@ -17,8 +18,6 @@ export interface PriceObservationRoutesOptions {
   readonly recordPriceObservation: PriceObservationRecorder;
   readonly authenticator: ProviderAuthenticator;
 }
-
-const BEARER = /^Bearer\s+(.+)$/i;
 
 /**
  * The authenticated Provider of a request.
@@ -42,7 +41,7 @@ export const priceObservationRoutes: FastifyPluginAsync<PriceObservationRoutesOp
   // authenticated learns nothing about what a valid request looks like (BR-01, SC-16, SC-17).
   // The hook belongs to this plugin: it does not apply to the routes of other features.
   app.addHook("onRequest", async (request) => {
-    const token = BEARER.exec(request.headers.authorization ?? "")?.[1]?.trim();
+    const token = bearerTokenOf(request.headers.authorization);
     const provider = token ? await authenticator.authenticate(token) : null;
     if (provider === null) throw new Unauthenticated();
     request.provider = provider;

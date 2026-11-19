@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { ListingId } from "../../shared/domain";
+import { bearerTokenOf } from "../../shared/http";
 import type { ReadPriceHistory } from "../application";
 import { Unauthenticated } from "./errors";
 import { DEFAULT_LIMIT, readPriceHistorySchema } from "./schemas";
@@ -9,8 +10,6 @@ export interface PriceHistoryRoutesOptions {
   readonly readPriceHistory: ReadPriceHistory;
   readonly authenticator: UserAuthenticator;
 }
-
-const BEARER = /^Bearer\s+(.+)$/i;
 
 /**
  * The numbers of a URL arrive as text, and the validation of the application is strict on purpose.
@@ -37,7 +36,7 @@ export const priceHistoryRoutes: FastifyPluginAsync<PriceHistoryRoutesOptions> =
   // Authentication runs first, before the query is validated: a request that is not
   // authenticated learns nothing about what a valid request looks like (BR-04).
   app.addHook("onRequest", async (request) => {
-    const token = BEARER.exec(request.headers.authorization ?? "")?.[1]?.trim();
+    const token = bearerTokenOf(request.headers.authorization);
     const signedIn = token ? await authenticator.isUser(token) : false;
     if (!signedIn) throw new Unauthenticated();
   });

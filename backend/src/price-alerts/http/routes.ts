@@ -8,6 +8,7 @@ import type {
   ModifyTargetPrice,
 } from "../application";
 import { ListingId, type UserId } from "../../shared/domain";
+import { bearerTokenOf } from "../../shared/http";
 import { AlertId, type AlertStatus } from "../domain";
 import type { Authenticator } from "./authenticator";
 import { Unauthenticated } from "./errors";
@@ -41,8 +42,6 @@ export interface PriceAlertRoutesOptions {
   readonly authenticator: Authenticator;
   readonly management?: PriceAlertManagement;
 }
-
-const BEARER = /^Bearer\s+(.+)$/i;
 
 /**
  * The numbers of a URL arrive as text, and the validation of the application is strict on purpose.
@@ -78,7 +77,7 @@ export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = asy
   // Authentication runs first, before the body is validated: a request that is not
   // authenticated learns nothing about what a valid request looks like (BR-01, SC-14).
   app.addHook("onRequest", async (request) => {
-    const token = BEARER.exec(request.headers.authorization ?? "")?.[1]?.trim();
+    const token = bearerTokenOf(request.headers.authorization);
     const owner = token ? await authenticator.authenticate(token) : null;
     if (owner === null) throw new Unauthenticated();
     request.owner = owner;

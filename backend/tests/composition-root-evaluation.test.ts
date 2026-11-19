@@ -13,10 +13,12 @@ import type { EvaluationReport } from "../src/evaluation-trigger";
 import { AlertStatus } from "../src/price-alerts/domain";
 import { ProviderId } from "../src/price-observations/domain";
 import { ListingId, UserId } from "../src/shared/domain";
+import { FAST_HASHER, signedInUser } from "./support/accounts";
 
 const HEADPHONES = ListingId("headphones-shop-a");
 const KEYBOARD = ListingId("keyboard-shop-b");
-const USER_TOKEN = "token-1";
+let USER_TOKEN = ""; // the token of a User who signed in, set by compose()
+let USER_ID = UserId("");
 const PROVIDER_TOKEN = "provider-token";
 const NOW = new Date("2026-11-19T12:00:00Z");
 
@@ -27,10 +29,10 @@ afterEach(async () => {
   await application.app.close();
 });
 
-function compose() {
+async function compose() {
   reports = [];
-  application = composeInMemoryApp({ clock: { now: () => NOW }, onEvaluation: (report) => reports.push(report) });
-  application.authenticator.addUser(USER_TOKEN, UserId("user-1"));
+  application = composeInMemoryApp({ clock: { now: () => NOW }, passwordHasher: FAST_HASHER, onEvaluation: (report) => reports.push(report) });
+  ({ token: USER_TOKEN, userId: USER_ID } = await signedInUser(application, "user1@example.com"));
   application.providerAuthenticator.addProvider(PROVIDER_TOKEN, ProviderId("simulator"));
   application.catalogue.addListing(HEADPHONES, "EUR");
   application.catalogue.addListing(KEYBOARD, "EUR");
@@ -57,7 +59,7 @@ const statuses = () => application.alerts.all().map((a) => a.status);
 
 describe("composeInMemoryApp: recording a price evaluates the Price Alerts of its Listing", () => {
   it("SC-01 / BR-02 / BR-04: a price that reaches the target Triggers the alert and produces a Notification", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     expect((await create("80.00")).statusCode).toBe(201);
 
@@ -67,13 +69,13 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
     expect(statuses()).toEqual([AlertStatus.Triggered]);
     const [notification] = application.notifications.all();
     expect(application.notifications.all()).toHaveLength(1);
-    expect(notification?.owner).toBe("user-1");
+    expect(notification?.owner).toBe(USER_ID);
     expect(notification?.currentPrice.toDecimalString()).toBe("79.90");
     expect(notification?.observedAt.toIsoString()).toBe("2026-11-19T11:00:00.000Z");
   });
 
   it("SC-03 / BR-02: a price that does not reach the target leaves the alert Active", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     await observe("11", "90.00");
@@ -82,7 +84,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("SC-05 / BR-03: an observation without a Price triggers nothing", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     await observe("11", null);
@@ -90,7 +92,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("SC-10 / BR-01: recording the price of another Listing evaluates that Listing and not this one", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     reports.length = 0;
@@ -100,7 +102,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("SC-12 / BR-07: a repeated recording (200) evaluates again and produces nothing new", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     await observe("11", "79.90");
@@ -115,7 +117,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("a recording that fails evaluates nothing", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     reports.length = 0;
@@ -128,7 +130,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("the report says which Price Alerts were Triggered by the recording", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     await observe("11", "75.00");
@@ -137,7 +139,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("BR-11 of feature 01: a Triggered alert does not block a new one for the same Listing", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     await observe("11", "79.90");
@@ -150,7 +152,7 @@ describe("composeInMemoryApp: recording a price evaluates the Price Alerts of it
   });
 
   it("BR-11 of feature 02: the use case of recording does not evaluate; the Composition Root does", async () => {
-    compose();
+    await compose();
     await observe("10", "100.00");
     await create("80.00");
     reports.length = 0;
