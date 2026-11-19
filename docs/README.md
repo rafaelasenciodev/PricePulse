@@ -28,6 +28,7 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | Architecture overview | ⬜ |
 | [ADR-0001: The backend is written in TypeScript](adr/0001-typescript-backend.md) | Approved |
 | [ADR-0002: A simplified Git Flow organises the branches](adr/0002-branching-model.md) | Approved |
+| [ADR-0003: Persistence is deferred and the in-memory adapters stay](adr/0003-persistence-deferred.md) | In Review |
 
 ## Quality
 
