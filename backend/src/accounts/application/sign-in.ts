@@ -16,6 +16,11 @@ export interface SignInResult {
   readonly token: string;
   /** In UTC, such as "2026-11-26T10:00:00.000Z". */
   readonly expiresAt: string;
+  /**
+   * The whole seconds that the Session has left, counted with the clock of this use case. A cookie that
+   * carries the token lasts as long (BR-02 of feature 08), and a test that moves the clock moves both.
+   */
+  readonly expiresInSeconds: number;
   readonly account: AccountView;
 }
 
@@ -64,6 +69,7 @@ export class SignIn {
     return {
       token,
       expiresAt: new Date(session.expiresAt).toISOString(),
+      expiresInSeconds: Math.floor((session.expiresAt - now) / 1000),
       account: toView(account),
     };
   }

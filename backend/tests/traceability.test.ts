@@ -49,6 +49,7 @@ const FEATURES: readonly Feature[] = [
     // and by file name.
     owns: (path) =>
       !path.startsWith("accounts/") &&
+      !path.startsWith("session-cookie/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
