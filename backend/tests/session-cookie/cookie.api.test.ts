@@ -414,6 +414,33 @@ describe("what does not change", () => {
   });
 });
 
+describe("the whole round trip, with the cookie and nothing else", () => {
+  it("register, sign in, create an alert, a price reaches it, read the Notification, sign out", async () => {
+    await compose();
+    const registered = await send("POST", "/accounts", { headers: { origin: ORIGIN }, payload: { email: "eve@example.com", password: PASSWORD } });
+    expect(registered.statusCode).toBe(201);
+    const { cookie } = await person("eve@example.com");
+
+    const created = await create(HEADPHONES, fromApp(cookie));
+    expect(created.statusCode).toBe(201);
+
+    // The Provider records a price that reaches the alert: it has its own credential and no cookie.
+    const recorded = await send("POST", `/listings/${HEADPHONES}/price-observations`, {
+      headers: { authorization: `Bearer ${PROVIDER_TOKEN}` },
+      payload: { observedAt: "2026-11-19T10:00:00Z", price: { amount: "79.00", currency: "EUR" } },
+    });
+    expect(recorded.statusCode).toBe(201);
+
+    const notifications = (await send("GET", "/notifications", { headers: { cookie } })).json();
+    expect(notifications.total).toBe(1);
+    expect(notifications.items[0].owner).toBe(registered.json().id);
+    expect((await send("GET", `/listings/${HEADPHONES}`, { headers: { cookie } })).json().currentPrice.amount).toBe("79.00");
+
+    expect((await send("DELETE", "/sessions/current", { headers: fromApp(cookie) })).statusCode).toBe(204);
+    expect((await send("GET", "/notifications", { headers: { cookie } })).statusCode).toBe(401);
+  });
+});
+
 describe("the setting", () => {
   it("is written in its normal form, so the origin that the browser sends matches", async () => {
     clock = new MutableClock(START);
