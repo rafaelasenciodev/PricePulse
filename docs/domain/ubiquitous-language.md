@@ -30,6 +30,7 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Account** | The registration of a User: an email that identifies it, and a password. | Feature 06 |
 | **Session** | The period during which a token identifies an Account. It starts when the person signs in, and ends when it expires or when they sign out. | Feature 06 |
 | **Catalogue** | The set of Listings that the system knows. Only a Listing in it can be observed, watched or read. | Feature 07 |
+| **Session cookie** | The cookie that carries the token of a Session, which the browser sends by itself. It is not a second kind of Session: it holds the same token as the header does. | Feature 08 |
 
 ## Vocabulary decisions
 
