@@ -35,7 +35,7 @@ Behaviour in this feature: **creation**. Creating a Price Alert takes the owner,
 
 | Value Object | Purpose | Invariants |
 |---|---|---|
-| `Price` | An amount in a currency | The number of decimals does not exceed what the currency allows (BR-04). Prices in different currencies cannot be compared |
+| `Price` | An amount in a currency | The amount is a valid number held exactly, as an integer number of minor units, and its decimals do not exceed what the currency allows (BR-04). Prices in different currencies cannot be compared. [ADR-0001](../../adr/0001-typescript-backend.md) explains why the amount is held this way |
 | `TargetPrice` | The price at which a User wants to be notified | Greater than zero (BR-03). It answers whether a given Price reaches it: the Price is less than or equal to the Target Price (BR-05). Two Target Prices with the same value are equal |
 | `AlertId`, `UserId`, `ListingId` | Typed identifiers | None beyond being identifiers. They prevent mixing identifiers of different kinds |
 
@@ -43,9 +43,19 @@ Behaviour in this feature: **creation**. Creating a Price Alert takes the owner,
 
 Two values: **Active** and **Triggered**. The transition from Active to Triggered (BR-11) is applied by the feature that evaluates alerts and is not modelled here. Triggered exists in this feature because scenario SC-17 needs a Price Alert that is no longer Active.
 
+The status is read-only: it can change only through an operation of the aggregate, and this feature has none.
+
 ### Domain errors
 
-One error per rule that the domain enforces: the Target Price is not greater than zero (BR-03), has too many decimals (BR-04), or is already reached (BR-05). Their exact names and mapping belong to the use case contract (Phase 4).
+The domain raises one error per broken rule or invariant, in three groups:
+
+| Group | Errors | Meaning |
+|---|---|---|
+| A mistake of the User (`InvalidValue`) | `InvalidAmount`, `TooManyDecimals` (BR-04), `NonPositiveTargetPrice` (BR-03) | The value given cannot be accepted. The application reports all of them as an invalid Target Price |
+| A business rule | `TargetAlreadyReached` (BR-05) | The Current Price already reaches the Target Price |
+| Internal | `UnsupportedCurrency`, `CurrencyMismatch` | Data from the catalogue that the system cannot handle. Not a mistake of the User |
+
+The mapping to application errors is in the use case contract.
 
 ## 3. Not modelled, and why
 
@@ -101,3 +111,8 @@ Every scenario must be expressible with this model. If one is not, the work retu
 - The order in which several broken rules are reported.
 - Where the Current Price and the currency of the Listing come from, and how the use case obtains them.
 - Generation of identifiers and transaction boundaries.
+
+## Revisions
+
+- 2026-11-19: aligned with the TypeScript implementation. `Price` is held as integer minor units and its amount must be a valid number. The domain errors are named and grouped. The status of a Price Alert is read-only. No decision changed.
+- 2026-11-19: approved by the author after the review.
