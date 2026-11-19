@@ -413,6 +413,19 @@ describe("one alert that fails does not stop the others (contract, decision 5)",
     expect(result.failed[0]?.error).toBeInstanceOf(CurrencyMismatch);
   });
 
+  it("a failure that is not an Error is still reported as one", async () => {
+    const alert = await givenAlert("80.00");
+    prices.setPrice(LISTING, "75.00");
+    notifications.add = async () => Promise.reject("the store said no");
+
+    const result = await evaluate();
+
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.alertId).toBe(alert.id);
+    expect(result.failed[0]?.error).toBeInstanceOf(Error);
+    expect(result.failed[0]?.error.message).toBe("the store said no");
+  });
+
   it("a failure of the source of the Current Price is not about one alert: it is raised", async () => {
     await givenAlert("80.00");
     prices.failing = true;

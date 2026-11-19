@@ -75,7 +75,7 @@ export function withEvaluation(
 }
 
 /** The default report: a line in the log for each Notification produced, and a warning for each failure. */
-function logEvaluation(log: FastifyBaseLogger): (report: EvaluationReport) => void {
+export function logEvaluation(log: FastifyBaseLogger): (report: EvaluationReport) => void {
   return (report) => {
     if ("error" in report) {
       log.error({ err: report.error, listingId: report.listingId }, "The Evaluation of the Price Alerts failed");

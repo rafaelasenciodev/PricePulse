@@ -35,9 +35,10 @@ interface Feature {
   readonly exemptScenarios: Readonly<Record<string, string>>;
 }
 
-// The tests of the Composition Root exercise how the two features meet. Their titles cite
-// the scenarios of feature 02, which is what makes the Current Price derive from the
-// observations (BR-07), so they belong to that feature.
+// The tests of the Composition Root exercise how the features meet. `composition-root.test.ts`
+// cites the scenarios of feature 02, which is what makes the Current Price derive from the
+// observations (BR-07), so it belongs to that feature. `composition-root-evaluation.test.ts`
+// cites those of feature 03, which starts the Evaluation of the Price Alerts.
 const FEATURES: readonly Feature[] = [
   {
     name: "feature 01",
@@ -67,6 +68,17 @@ const FEATURES: readonly Feature[] = [
       "BR-13":
         "While the set of Providers is closed and has one member, the case it describes cannot happen (see the scenarios file).",
     },
+    exemptScenarios: {},
+  },
+  {
+    name: "feature 03",
+    docs: "03-alert-evaluation/",
+    // The evaluation lives in the module of Price Alerts, so its tests are told apart by folder
+    // and by file name.
+    owns: (path) => path.startsWith("price-alerts/evaluation/") || path === "composition-root-evaluation.test.ts",
+    scenarios: 19,
+    rules: 10,
+    exemptRules: {},
     exemptScenarios: {},
   },
 ];
