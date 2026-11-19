@@ -131,3 +131,15 @@ The third feature of the [method of five stages](features/README.md), and the fi
 | 3 Design | [Design](features/06-accounts-and-authentication/03-design.md) | Approved |
 | 4 Build | [Domain](../backend/src/accounts/domain/), [application layer](../backend/src/accounts/application/), [adapters](../backend/src/accounts/adapters/) and [HTTP layer](../backend/src/accounts/http/) | Implemented |
 | 5 Close | [Completion](features/06-accounts-and-authentication/04-completion.md) | Approved |
+
+### 07 — Listings Catalogue
+
+The fourth feature of the [method of five stages](features/README.md). The code is in the module of Price Observations, which holds the Catalogue, and in the Composition Root.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/07-listings-catalogue/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/07-listings-catalogue/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/07-listings-catalogue/03-design.md) | Approved |
+| 4 Build | [Application layer](../backend/src/price-observations/application/), [adapters](../backend/src/price-observations/adapters/) and [HTTP layer](../backend/src/price-observations/http/) | Implemented |
+| 5 Close | [Completion](features/07-listings-catalogue/04-completion.md) | Approved |
