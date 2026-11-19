@@ -23,6 +23,12 @@ export class ListingNotFound extends ApplicationError {
  */
 export class InvalidObservation extends ApplicationError {}
 
+/**
+ * BR-06 of feature 05: the range of the Price History is not valid. The message tells which part:
+ * the start or the end is not an instant, or the start is not before the end.
+ */
+export class InvalidRange extends ApplicationError {}
+
 /** BR-10: a Price Observation with the same Provider, Listing and Observed At is stored with different content. */
 export class ObservationConflict extends ApplicationError {
   constructor() {

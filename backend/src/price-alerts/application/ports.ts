@@ -115,12 +115,34 @@ export class AlertStateChanged extends Error {
   }
 }
 
+/** Which page of the Notifications of an owner to read (BR-02 of feature 05). */
+export interface NotificationPageQuery {
+  /** How many Notifications at most. At least 1. */
+  readonly limit: number;
+  /** How many Notifications to skip, counted from the newest. At least 0. */
+  readonly offset: number;
+}
+
+/** A page of Notifications, and how many the owner has in all. */
+export interface NotificationPage {
+  readonly items: readonly Notification[];
+  readonly total: number;
+}
+
 export interface NotificationRepository {
   /** The Notification of a Price Alert, if any. */
   findByAlert(alertId: AlertId): Promise<Notification | null>;
 
   /** Store a Notification. Throws NotificationAlreadyExists if one for that Price Alert is stored. */
   add(notification: Notification): Promise<void>;
+
+  /**
+   * The Notifications of the owner: the page asked for, and the total. They come newest first by
+   * the Observed At of the price that reached the target, and by the identifier of the Price Alert
+   * when two share it, so that the pages are stable. The limit and the offset are valid: the
+   * caller checks them.
+   */
+  findByOwner(owner: UserId, query: NotificationPageQuery): Promise<NotificationPage>;
 }
 
 /** The Current Price of a Listing, with the moment at which it was observed. */

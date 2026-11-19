@@ -1,4 +1,4 @@
-import { InvalidObservation, ListingNotFound, ObservationConflict } from "../application";
+import { InvalidObservation, InvalidRange, ListingNotFound, ObservationConflict } from "../application";
 
 /** BR-01: the request does not carry a valid credential of a Provider. Raised at the HTTP boundary. */
 export class Unauthenticated extends Error {
@@ -33,6 +33,9 @@ export function priceObservationHttpError(error: unknown): HttpError | null {
   }
   if (error instanceof InvalidObservation) {
     return { status: 422, code: "INVALID_OBSERVATION", message: error.message };
+  }
+  if (error instanceof InvalidRange) {
+    return { status: 422, code: "INVALID_RANGE", message: error.message };
   }
   if (error instanceof ObservationConflict) {
     return { status: 409, code: "OBSERVATION_CONFLICT", message: error.message };

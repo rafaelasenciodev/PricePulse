@@ -5,6 +5,8 @@ import {
   ObservationAlreadyExists,
   type CatalogueListing,
   type ListingCatalogue,
+  type PriceHistoryPage,
+  type PriceHistoryQuery,
   type PriceObservationRepository,
 } from "../application";
 import type { PriceObservation, ProviderId } from "../domain";
@@ -60,6 +62,13 @@ export class InMemoryPriceObservationRepository implements PriceObservationRepos
     return latest;
   }
 
+  async findByListing(listingId: ListingId, query: PriceHistoryQuery): Promise<PriceHistoryPage> {
+    const matching = this.observations
+      .filter((o) => o.listingId === listingId && query.range.includes(o.observedAt))
+      .sort(newestObservedFirst);
+    return { items: matching.slice(query.offset, query.offset + query.limit), total: matching.length };
+  }
+
   /** Every stored Price Observation. For tests and inspection, not part of the port. */
   all(): PriceObservation[] {
     return [...this.observations];
@@ -72,4 +81,11 @@ export class InMemoryPriceObservationRepository implements PriceObservationRepos
       ) ?? null
     );
   }
+}
+
+/** Newest Observed At first, and by Provider when two share it. */
+function newestObservedFirst(a: PriceObservation, b: PriceObservation): number {
+  const byMoment = b.observedAt.epochMilliseconds - a.observedAt.epochMilliseconds;
+  if (byMoment !== 0) return byMoment;
+  return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
 }

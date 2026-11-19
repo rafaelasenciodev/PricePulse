@@ -8,11 +8,13 @@ import {
   type Authenticator,
   type PriceAlertManagement,
 } from "./price-alerts/http";
-import type { PriceObservationRecorder } from "./price-observations/application";
+import type { PriceObservationRecorder, ReadPriceHistory } from "./price-observations/application";
 import {
+  priceHistoryRoutes,
   priceObservationHttpError,
   priceObservationRoutes,
   type ProviderAuthenticator,
+  type UserAuthenticator,
 } from "./price-observations/http";
 
 /** The version of the API shown in its documentation. Kept equal to `package.json` by a test. */
@@ -81,6 +83,14 @@ export interface AppDependencies {
     readonly recordPriceObservation: PriceObservationRecorder;
     readonly authenticator: ProviderAuthenticator;
   };
+  /**
+   * The route that reads the Price History of a Listing, for the Users. Optional: without it the
+   * history is not served, and the documentation does not mention it.
+   */
+  readonly priceHistory?: {
+    readonly readPriceHistory: ReadPriceHistory;
+    readonly authenticator: UserAuthenticator;
+  };
   readonly logger?: boolean;
   /** Serve the interactive API documentation at /docs. Off by default. */
   readonly apiDocs?: ApiDocsOptions;
@@ -118,7 +128,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
           version: API_VERSION,
           description: [
             dependencies.priceAlertManagement
-              ? "Create price alerts for the Listings of a catalogue, read them and manage them."
+              ? "Create price alerts for the Listings of a catalogue, read them and manage them. Read the Notifications that are produced when an alert is reached."
               : "Create price alerts for the Listings of a catalogue.",
             dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
             dependencies.apiDocs.note,
@@ -128,6 +138,12 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
         },
         tags: [
           { name: "Price alerts", description: "Requests to be notified when a Listing reaches a price" },
+          ...(dependencies.priceAlertManagement
+            ? [{ name: "Notifications", description: "The records of the Price Alerts that were reached" }]
+            : []),
+          ...(dependencies.priceHistory
+            ? [{ name: "Price history", description: "How the price of a Listing has moved, read by a User" }]
+            : []),
           ...(dependencies.priceObservations
             ? [{ name: "Price observations", description: "Reports of the price of a Listing, made by a price provider" }]
             : []),
@@ -163,6 +179,13 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     authenticator: dependencies.authenticator,
     ...(dependencies.priceAlertManagement ? { management: dependencies.priceAlertManagement } : {}),
   });
+
+  if (dependencies.priceHistory) {
+    app.register(priceHistoryRoutes, {
+      readPriceHistory: dependencies.priceHistory.readPriceHistory,
+      authenticator: dependencies.priceHistory.authenticator,
+    });
+  }
 
   if (dependencies.priceObservations) {
     app.register(priceObservationRoutes, {

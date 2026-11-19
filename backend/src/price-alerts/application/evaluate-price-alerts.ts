@@ -2,6 +2,7 @@
 
 import type { ListingId } from "../../shared/domain";
 import { Notification, type PriceAlert } from "../domain";
+import { toNotificationView, type NotificationView } from "./notification-view";
 import {
   NotificationAlreadyExists,
   type CurrentPrice,
@@ -13,16 +14,6 @@ import {
 export interface EvaluatePriceAlertsCommand {
   /** The Listing to evaluate. It may not exist (BR-10). */
   readonly listingId: ListingId;
-}
-
-export interface NotificationView {
-  readonly alertId: string;
-  readonly owner: string;
-  readonly listingId: string;
-  readonly targetPrice: { readonly amount: string; readonly currency: string };
-  readonly currentPrice: { readonly amount: string; readonly currency: string };
-  /** In UTC, such as "2026-11-19T10:00:00.000Z". */
-  readonly observedAt: string;
 }
 
 export interface TriggeredAlertView {
@@ -98,17 +89,6 @@ export class EvaluatePriceAlerts {
 
     // 3.4 Only then does the alert become Triggered (BR-06).
     await this.alerts.save(alert.trigger(), alert.status);
-    return { notification: toView(notification), produced };
+    return { notification: toNotificationView(notification), produced };
   }
-}
-
-function toView(notification: Notification): NotificationView {
-  return {
-    alertId: notification.alertId,
-    owner: notification.owner,
-    listingId: notification.listingId,
-    targetPrice: { amount: notification.targetPrice.toDecimalString(), currency: notification.targetPrice.currency },
-    currentPrice: { amount: notification.currentPrice.toDecimalString(), currency: notification.currentPrice.currency },
-    observedAt: notification.observedAt.toIsoString(),
-  };
 }

@@ -3,6 +3,7 @@ import type {
   CancelPriceAlert,
   CreatePriceAlert,
   GetPriceAlert,
+  ListNotifications,
   ListPriceAlerts,
   ModifyTargetPrice,
 } from "../application";
@@ -14,6 +15,7 @@ import {
   DEFAULT_LIMIT,
   createPriceAlertSchema,
   getPriceAlertSchema,
+  listNotificationsSchema,
   listPriceAlertsSchema,
   patchPriceAlertSchema,
 } from "./schemas";
@@ -28,6 +30,7 @@ declare module "fastify" {
 /** The use cases to read and manage Price Alerts. Optional: without them only creating is served. */
 export interface PriceAlertManagement {
   readonly listPriceAlerts: ListPriceAlerts;
+  readonly listNotifications: ListNotifications;
   readonly getPriceAlert: GetPriceAlert;
   readonly modifyTargetPrice: ModifyTargetPrice;
   readonly cancelPriceAlert: CancelPriceAlert;
@@ -40,6 +43,19 @@ export interface PriceAlertRoutesOptions {
 }
 
 const BEARER = /^Bearer\s+(.+)$/i;
+
+/**
+ * The numbers of a URL arrive as text, and the validation of the application is strict on purpose.
+ * Only for the two numbers of a page, and only on the routes that have them, whole numbers written
+ * in digits are read as numbers. Anything else stays as it is and the validation rejects it.
+ */
+async function readPageNumbers(request: { readonly query: unknown }): Promise<void> {
+  const query = request.query as Record<string, unknown>;
+  for (const key of ["limit", "offset"]) {
+    const value = query[key];
+    if (typeof value === "string" && /^\d+$/.test(value)) query[key] = Number(value);
+  }
+}
 
 /**
  * The authenticated User of a request.
@@ -88,23 +104,21 @@ export const priceAlertRoutes: FastifyPluginAsync<PriceAlertRoutesOptions> = asy
   // UC-01 List my Price Alerts
   app.get<{ Querystring: { status?: AlertStatus; limit?: number; offset?: number } }>(
     "/price-alerts",
-    {
-      schema: listPriceAlertsSchema,
-      // The numbers of a URL arrive as text, and the validation of the application is strict on
-      // purpose. Only here, and only for the two numbers, whole numbers written in digits are
-      // read as numbers. Anything else stays as it is and the validation rejects it.
-      preValidation: async (request) => {
-        const query = request.query as Record<string, unknown>;
-        for (const key of ["limit", "offset"]) {
-          const value = query[key];
-          if (typeof value === "string" && /^\d+$/.test(value)) query[key] = Number(value);
-        }
-      },
-    },
+    { schema: listPriceAlertsSchema, preValidation: readPageNumbers },
     async (request) => {
       const { status, limit = DEFAULT_LIMIT, offset = 0 } = request.query;
       const command = { owner: ownerOf(request), limit, offset };
       return management.listPriceAlerts.execute(status === undefined ? command : { ...command, status });
+    },
+  );
+
+  // UC-01 of feature 05 List my Notifications
+  app.get<{ Querystring: { limit?: number; offset?: number } }>(
+    "/notifications",
+    { schema: listNotificationsSchema, preValidation: readPageNumbers },
+    async (request) => {
+      const { limit = DEFAULT_LIMIT, offset = 0 } = request.query;
+      return management.listNotifications.execute({ owner: ownerOf(request), limit, offset });
     },
   );
 

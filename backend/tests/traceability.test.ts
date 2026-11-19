@@ -49,11 +49,13 @@ const FEATURES: readonly Feature[] = [
     // and by file name.
     owns: (path) =>
       !path.startsWith("price-observations/") &&
+      !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
       !path.startsWith("price-alerts/management/") &&
       path !== "composition-root.test.ts" &&
       path !== "composition-root-evaluation.test.ts" &&
-      path !== "composition-root-management.test.ts",
+      path !== "composition-root-management.test.ts" &&
+      path !== "composition-root-history.test.ts",
     scenarios: 18,
     rules: 11,
     exemptRules: {},
@@ -65,7 +67,8 @@ const FEATURES: readonly Feature[] = [
   {
     name: "feature 02",
     docs: "02-price-observation/",
-    owns: (path) => path.startsWith("price-observations/") || path === "composition-root.test.ts",
+    owns: (path) =>
+      (path.startsWith("price-observations/") && !path.startsWith("price-observations/history/")) || path === "composition-root.test.ts",
     scenarios: 21,
     rules: 13,
     exemptRules: {
@@ -93,6 +96,20 @@ const FEATURES: readonly Feature[] = [
     // and by file name.
     owns: (path) => path.startsWith("price-alerts/management/") || path === "composition-root-management.test.ts",
     scenarios: 22,
+    rules: 9,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
+  {
+    name: "feature 05",
+    docs: "05-notifications-and-price-history/",
+    rulesFile: "01-discovery.md",
+    // It reads from two modules that have other features' tests: told apart by folder and by file name.
+    owns: (path) =>
+      path.startsWith("price-alerts/notifications/") ||
+      path.startsWith("price-observations/history/") ||
+      path === "composition-root-history.test.ts",
+    scenarios: 20,
     rules: 9,
     exemptRules: {},
     exemptScenarios: {},

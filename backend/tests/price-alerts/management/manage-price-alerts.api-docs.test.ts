@@ -6,8 +6,8 @@
 import type { FastifyInstance } from "fastify";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../../src/app";
-import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
-import { CancelPriceAlert, CreatePriceAlert, GetPriceAlert, ListPriceAlerts, ModifyTargetPrice } from "../../../src/price-alerts/application";
+import { InMemoryListingReader, InMemoryNotificationRepository, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
+import { CancelPriceAlert, CreatePriceAlert, GetPriceAlert, ListNotifications, ListPriceAlerts, ModifyTargetPrice } from "../../../src/price-alerts/application";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
 import { FIXED_CLOCK } from "../../support/created-at";
 
@@ -27,6 +27,7 @@ function start(withManagement: boolean) {
       ? {
           priceAlertManagement: {
             listPriceAlerts: new ListPriceAlerts(alerts),
+            listNotifications: new ListNotifications(new InMemoryNotificationRepository()),
             getPriceAlert: new GetPriceAlert(alerts),
             modifyTargetPrice: new ModifyTargetPrice(alerts, listings),
             cancelPriceAlert: new CancelPriceAlert(alerts),
@@ -43,7 +44,7 @@ describe("the OpenAPI document with the routes of reading and managing", () => {
   it("describes the three routes, and says that each needs a bearer token", async () => {
     start(true);
     const { paths } = await spec();
-    expect(Object.keys(paths).sort()).toEqual(["/listings/{listingId}/price-alerts", "/price-alerts", "/price-alerts/{alertId}"]);
+    expect(Object.keys(paths).sort()).toEqual(["/listings/{listingId}/price-alerts", "/notifications", "/price-alerts", "/price-alerts/{alertId}"]);
     expect(Object.keys(paths["/price-alerts"])).toEqual(["get"]);
     expect(Object.keys(paths["/price-alerts/{alertId}"]).sort()).toEqual(["get", "patch"]);
     for (const operation of [paths["/price-alerts"].get, paths["/price-alerts/{alertId}"].get, paths["/price-alerts/{alertId}"].patch]) {

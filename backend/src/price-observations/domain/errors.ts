@@ -16,6 +16,13 @@ export class NegativePrice extends InvalidValue {
   }
 }
 
+/** BR-06 of feature 05: the start of a range is not before its end. A mistake of whoever asks for the range. */
+export class InvalidObservedRange extends InvalidValue {
+  constructor(from: string, to: string) {
+    super(`The start of the range, ${from}, is not before its end, ${to}`);
+  }
+}
+
 /** BR-05: the currency of the Price is not the one of the Listing. */
 export class ObservationCurrencyMismatch extends DomainError {
   constructor(priceCurrency: string, listingCurrency: string) {
