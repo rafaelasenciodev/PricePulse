@@ -252,7 +252,7 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-Not decided yet: the database, background jobs, the frontend, how the application is built for production, and where it is deployed.
+The web interface will be a single-page application served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). Not decided yet: the database, background jobs, how the application is built for production, and where it is deployed.
 
 ## Testing
 
