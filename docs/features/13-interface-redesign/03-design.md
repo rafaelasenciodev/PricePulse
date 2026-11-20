@@ -1,6 +1,6 @@
 # 13 — Interface Redesign: Design (Stage 3)
 
-Status: Approved. The decisions of section 8 are Accepted.
+Status: Approved. The decisions of section 8 are Accepted. The appearance (section 6 and D8) was added in a reopened review.
 
 It builds on the [discovery and rules](01-discovery.md), the [scenarios](02-scenarios.feature) and the designs of features [09](../09-web-interface/03-design.md) and [10](../10-my-alerts-and-notifications/03-design.md), whose layers and dependency rules stay as they are. The backend and the API do not change.
 
@@ -10,7 +10,7 @@ It builds on the [discovery and rules](01-discovery.md), the [scenarios](02-scen
 |---|---|
 | `src/api/` | One operation, `priceHistory`, and one type, `PriceObservation` |
 | `src/texts/` | The texts of the chart, of the lowest and highest price and of the failure to read the history |
-| `src/ui/` | Every component gets Tailwind classes in place of `styles.css`, which is removed. New: `PriceHistory` (reads and decides), `PriceChart` (draws) and `chartPoints.ts` (a pure function). `CatalogueScreen` and `ListingScreen` change their markup |
+| `src/ui/` | The appearance: `theme.tsx` (the mode and the attribute of the page) and `ThemeSelector` in the header and in the access screens. Every component gets Tailwind classes in place of `styles.css`, which is removed. New: `PriceHistory` (reads and decides), `PriceChart` (draws) and `chartPoints.ts` (a pure function). `CatalogueScreen` and `ListingScreen` change their markup |
 | `src/session/` | Nothing |
 | `vite.config.ts`, `package.json` | The Tailwind plugin, and `recharts` |
 | `tests/architecture.test.ts` | `recharts` is allowed in `ui` and nowhere else (decision D5) |
@@ -58,6 +58,7 @@ The scenarios are checked on **that table and on `chartPoints`**, not on the SVG
 - **Small pieces only where a class string is repeated three times or more**: the button, the card and the field. No component library and no variants framework.
 - **Layout.** A content width of about 64rem. The Catalogue is a grid of cards: one column on a phone, two on a tablet and three on a computer. The Listing is one column on a phone, and on a wide screen the price and the chart are on the left and the form of the alert is on the right.
 - **The checks of `sources.test.ts`** read the `.css` files too, and the new one holds nothing that they forbid.
+- **The appearance (Q8, BR-10, D8).** The tokens of the dark set are written twice in `index.css`: under `prefers-color-scheme: dark` for a page with no choice (`:root:not([data-theme])`), and under `:root[data-theme="dark"]`. The light set is the default and also `:root[data-theme="light"]`. `ThemeProvider` is inside `App`, so a test of any screen has it, and keeps the mode in state: `"system"` is the first, and it removes the attribute `data-theme` of `<html>`, while `"light"` and `"dark"` set it. It stores nothing. `ThemeSelector` is a `select` with the label "Apariencia" and the options "Sistema", "Claro" and "Oscuro". The scenarios are checked on the attribute, because a simulated page does not evaluate the media query.
 - **Replacement in steps.** The old file is deleted only when the last screen has stopped using it, so that every commit builds and passes.
 
 ## 7. Risks and how they are verified
@@ -80,6 +81,7 @@ The scenarios are checked on **that table and on `chartPoints`**, not on the SVG
 | D5 | `recharts` is allowed in `ui`, with a visible entry in `RULES` of the architecture test | Allowing any package in `ui`: it would stop the test from catching an unplanned dependency |
 | D6 | **SC-15 and SC-16 are checked by hand** in a real browser at the width of a phone and of a computer and in both colour modes, at stop 5, and the result is written in the completion. No test asserts on classes | A test of the classes that Tailwind applies: it tests the implementation and not what is seen; a browser test: ADR-0005 leaves them for later |
 | D7 | The chart shows the newest 100 observations, as Q5 says, and **says nothing** when there are more | A note saying that older ones exist: it needs `total`, which is read, but adds a rule that the scenarios do not have |
+| D8 | The appearance is a `select` whose state is in memory and shows as an attribute of `<html>`. Nothing is stored, so BR-01 of feature 09 and its test do not change | `localStorage`: it needs an exception in a rule of security. Buttons instead of a `select`: more markup for the same, and a narrow header has little room |
 
 ## 9. Build stops
 
@@ -92,6 +94,7 @@ Each is one commit or a few, reviewed before the next.
 | 3 | The Catalogue as cards | SC-01, SC-02, SC-03 |
 | 4 | The Listing, with `PriceHistory`, `PriceChart` and `recharts`. Verification under the CSP, and the weight | SC-04, SC-05, SC-08, SC-09, SC-11, SC-12, SC-13 |
 | 5 | My alerts and my notifications, `styles.css` removed, the manual check of D6 and the review | SC-14, SC-15, SC-16 |
+| 6 | The appearance: `ThemeProvider`, `ThemeSelector`, the tokens under the attribute, and the update of the completion | SC-17 to SC-21 |
 
 ## 10. Where each scenario is handled
 
@@ -107,3 +110,6 @@ Each is one commit or a few, reviewed before the next.
 | SC-13 | `ListingScreen`, unchanged | `tests/ui/redesign-listing.test.tsx` |
 | SC-14 | Every screen, whose behaviour is not touched | The existing tests, which must pass |
 | SC-15, SC-16 | The classes of every component | By hand (D6) |
+| SC-17, SC-18, SC-19 | `ThemeProvider`, `ThemeSelector` | `tests/ui/redesign-theme.test.tsx` |
+| SC-20 | `CredentialsForm` | `tests/ui/redesign-theme.test.tsx` |
+| SC-21 | `ThemeProvider`, which stores nothing | `tests/ui/redesign-theme.test.tsx`, and `tests/sources.test.ts`, which forbids the storage |

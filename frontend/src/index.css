@@ -10,6 +10,12 @@
   :root {
     color-scheme: light dark;
   }
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
 
   /* A link is the colour of the accent and underlined, unless a component says otherwise with a utility. */
   a {
@@ -18,8 +24,12 @@
   }
 }
 
-/* One accent colour and neutral greys, for the light mode and the dark one (Q7). The system font is Tailwind's default. */
-:root {
+/*
+ * One accent colour and neutral greys (Q7). The light set is the default and the one of `data-theme="light"`. The dark set
+ * is the one of the system when the person has not chosen (no attribute), and the one of `data-theme="dark"` (BR-10).
+ */
+:root,
+:root[data-theme="light"] {
   --page: #f5f6f8;
   --surface: #ffffff;
   --ink: #1c2430;
@@ -31,7 +41,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --page: #0e1217;
     --surface: #161b22;
     --ink: #e6eaf0;
@@ -41,6 +51,17 @@
     --line: #2b3441;
     --danger: #ff8a80;
   }
+}
+
+:root[data-theme="dark"] {
+  --page: #0e1217;
+  --surface: #161b22;
+  --ink: #e6eaf0;
+  --muted: #9aa5b5;
+  --accent: #6ea2f5;
+  --accent-ink: #0b1220;
+  --line: #2b3441;
+  --danger: #ff8a80;
 }
 
 /* The utilities use the variables, so a component does not need to say `dark:` for each colour. */

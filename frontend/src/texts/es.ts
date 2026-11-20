@@ -56,6 +56,13 @@ export const screens = {
   demo: {
     notice: "Demo con datos simulados: las tiendas, los productos y los precios son ficticios.",
   },
+  /** BR-10: the choice of the appearance. */
+  theme: {
+    label: "Apariencia",
+    system: "Sistema",
+    light: "Claro",
+    dark: "Oscuro",
+  },
   loading: "Cargando…",
   retry: "Reintentar",
   catalogue: {

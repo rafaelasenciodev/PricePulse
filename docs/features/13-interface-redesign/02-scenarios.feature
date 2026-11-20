@@ -156,3 +156,44 @@ Feature: Interface Redesign
       | mode  |
       | light |
       | dark  |
+
+  # ---------------------------------------------------------------------------
+  # The choice of the appearance
+  # ---------------------------------------------------------------------------
+
+  @SC-17 @BR-10 @BR-09
+  Scenario Outline: The person chooses the appearance and it applies at once
+    Given the system is in the dark mode
+    When the person chooses "<choice>" in the selector of the appearance
+    Then the interface is shown in the <mode> mode
+    And the selector says that "<choice>" is the one chosen
+
+    Examples:
+      | choice | mode  |
+      | Claro  | light |
+      | Oscuro | dark  |
+
+  @SC-18 @BR-10
+  Scenario: Choosing the system goes back to following it
+    Given the person has chosen "Claro"
+    When the person chooses "Sistema"
+    Then the interface follows the colour mode of the system again
+
+  @SC-19 @BR-10
+  Scenario: The choice stays while the person moves between screens
+    Given the person has chosen "Claro"
+    When the person goes from the Catalogue to "my alerts" and to a Listing
+    Then every one of them is shown in the light mode
+
+  @SC-20 @BR-10
+  Scenario: The selector is also on the screens of access
+    Given the person is not signed in
+    When the person opens the sign-in screen and the register screen
+    Then each of them has the selector of the appearance
+    And choosing "Claro" there applies, and stays after signing in
+
+  @SC-21 @BR-10
+  Scenario: The choice is not kept
+    Given the person has chosen "Claro"
+    When the interface is loaded again
+    Then it follows the colour mode of the system, and nothing of the choice was stored

@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { screens } from "../texts";
 import { Button } from "./Button";
 import { Field } from "./Field";
+import { ThemeSelector } from "./ThemeSelector";
 import { useSubmit } from "./useSubmit";
 
 interface Props {
@@ -46,6 +47,9 @@ export function CredentialsForm({ title, submit, submitting, initialEmail = "", 
 
   return (
     <main className="mx-auto w-full max-w-sm px-4 py-10">
+      <div className="mb-2 flex justify-end">
+        <ThemeSelector />
+      </div>
       <p className="mb-4 text-center text-lg font-bold text-accent">{screens.appName}</p>
       <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
         <h1 className="mb-4 text-xl font-semibold">{title}</h1>

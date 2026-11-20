@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useSession } from "../session";
 import { isSessionEnded, messageFor, screens } from "../texts";
 import { Button } from "./Button";
+import { ThemeSelector } from "./ThemeSelector";
 import { useSubmit } from "./useSubmit";
 
 const NAV = [
@@ -40,6 +41,7 @@ export function Layout({ children }: { readonly children: ReactNode }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3">
+            <ThemeSelector />
             {state.status === "signedIn" && <span className="hidden text-sm text-muted sm:inline">{state.account.email}</span>}
             <Button variant="secondary" onClick={() => void handleSignOut()} disabled={pending}>
               {pending ? screens.signOut.submitting : screens.signOut.submit}

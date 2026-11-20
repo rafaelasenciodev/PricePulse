@@ -239,8 +239,8 @@ const FEATURES: readonly Feature[] = [
     // The client against the application is in a folder of its own, and the screens are in the tests of the interface.
     owns: (path) => path.startsWith("interface-redesign/"),
     ownsFrontend: isFeature13FrontendTest,
-    scenarios: 16,
-    rules: 9,
+    scenarios: 21,
+    rules: 10,
     exemptRules: {},
     exemptScenarios: {
       "SC-14":

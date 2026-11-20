@@ -6,6 +6,7 @@ import { NotificationsScreen } from "./NotificationsScreen";
 import { RegisterScreen } from "./RegisterScreen";
 import { RequireGuest, RequireSession } from "./RequireSession";
 import { SignInScreen } from "./SignInScreen";
+import { ThemeProvider } from "./theme";
 
 /**
  * The routes, without the router: the page gives a `BrowserRouter` with the base `/app`, and a test gives a
@@ -14,18 +15,20 @@ import { SignInScreen } from "./SignInScreen";
  */
 export function App() {
   return (
-    <Routes>
-      <Route element={<RequireGuest />}>
-        <Route path="sign-in" element={<SignInScreen />} />
-        <Route path="register" element={<RegisterScreen />} />
-      </Route>
-      <Route element={<RequireSession />}>
-        <Route path="catalogue" element={<CatalogueScreen />} />
-        <Route path="listings/:id" element={<ListingScreen />} />
-        <Route path="alerts" element={<AlertsScreen />} />
-        <Route path="notifications" element={<NotificationsScreen />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/catalogue" replace />} />
-    </Routes>
+    <ThemeProvider>
+      <Routes>
+        <Route element={<RequireGuest />}>
+          <Route path="sign-in" element={<SignInScreen />} />
+          <Route path="register" element={<RegisterScreen />} />
+        </Route>
+        <Route element={<RequireSession />}>
+          <Route path="catalogue" element={<CatalogueScreen />} />
+          <Route path="listings/:id" element={<ListingScreen />} />
+          <Route path="alerts" element={<AlertsScreen />} />
+          <Route path="notifications" element={<NotificationsScreen />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/catalogue" replace />} />
+      </Routes>
+    </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 # 13 — Interface Redesign: Discovery and Business Rules (Stage 1)
 
-Status: Approved. A question is closed only when it has a **Decision** line with status Accepted. *Lean* lines record the proposal under discussion.
+Status: Approved. Q8 and BR-10, the choice of the appearance, were added in a reopened review. A question is closed only when it has a **Decision** line with status Accepted. *Lean* lines record the proposal under discussion.
 
 ## 1. The business problem
 
@@ -20,7 +20,7 @@ This feature changes how the interface looks and how a Listing is presented, so 
 
 ## 3. Scope (proposed)
 
-**Is:** a new look for every screen (sign in, register, Catalogue, Listing, alerts, notifications), the Catalogue as cards with the Current Price, and, in the Listing, the Current Price made prominent and a chart of its Price History.
+**Is:** a new look for every screen (sign in, register, Catalogue, Listing, alerts, notifications), the Catalogue as cards with the Current Price, and, in the Listing, the Current Price made prominent and a chart of its Price History. A selector of the appearance (system, light or dark) is added to the header and to the access screens.
 
 **Is not:** search or filters in the Catalogue (they need a backend feature), new endpoints or any change in the backend, a second language, updates in real time, browser end-to-end tests, a guide page, and any new rule of the system.
 
@@ -37,6 +37,8 @@ This feature changes how the interface looks and how a Listing is presented, so 
 | The interface has no call to the Price History: the client of the API (`frontend/src/api/`) must learn it | `frontend/src/api/` |
 | A rule of the architecture test allows in `ui` only `react`, `react-dom` and `react-router-dom` | `frontend/tests/architecture.test.ts` |
 | The interface tests look for text and roles on a simulated DOM, not for styles or classes | `frontend/tests/ui/` |
+| The colours are tokens with a light set and a dark set, and the system chooses between them | `frontend/src/index.css` |
+| No source file of the interface may use `localStorage`, `sessionStorage`, `indexedDB` or `document.cookie`, so that a token never ends in them. A test reads the sources, comments too | BR-01 of [feature 09](../09-web-interface/01-discovery.md), `frontend/tests/sources.test.ts` |
 
 ## 5. Questions
 
@@ -112,6 +114,18 @@ Price trackers show them. They would be computed from the points that the chart 
 
 There is no brand. **Decision (Accepted):** the system font, one accent colour, and the light and dark modes that exist, with no font to download.
 
+### Q8 — How does the person choose the appearance?
+
+The light and the dark mode exist, and the system of the person chooses between them. The Author asks to choose it in the interface.
+
+| Option | Trade-off |
+|---|---|
+| A | A selector with three choices, system, light and dark, that applies at once and is **not kept**: a reload goes back to the system. It touches no rule of security and is the smallest |
+| B | The same selector, kept in `localStorage`. It is what a person expects, and it needs an exception in BR-01 of feature 09 and in its test, for a preference that is not sensitive. A decision on security of its own |
+| C | Light by default and no selector. The dark mode would follow the system or disappear |
+
+**Decision (Accepted):** A. The selector is in the header and also on the sign-in and register screens, so that it can be used before signing in. Keeping the choice is left as a possible later step (B).
+
 ## 6. Business rules (proposed)
 
 | ID | Rule |
@@ -125,6 +139,7 @@ There is no brand. **Decision (Accepted):** the system font, one accent colour, 
 | BR-07 | When it has points, the chart is accompanied by the lowest and the highest price of the points shown, said to be of that period, and has a text alternative, so that its content is not available only to those who see it |
 | BR-08 | The screens that already exist keep their behaviour. Only their look changes. Their tests stay as they are, except where the text of a control changes |
 | BR-09 | The interface works on a narrow screen (a phone) and on a wide one, in the light and the dark mode |
+| BR-10 | The person can choose the appearance: the one of the system, which is the first, light or dark. The choice applies at once to every screen, also those of access, and it is not kept: a page that is loaded again follows the system |
 
 ## 7. New terms for the glossary
 
