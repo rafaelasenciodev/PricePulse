@@ -52,6 +52,10 @@ export const screens = {
     submit: v.signOut,
     submitting: "Saliendo…",
   },
+  /** Feature 12: what the public demo says about itself, on every screen. */
+  demo: {
+    notice: "Demo con datos simulados: las tiendas, los productos y los precios son ficticios.",
+  },
   loading: "Cargando…",
   retry: "Reintentar",
   catalogue: {

@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { createApiClient } from "./api";
 import { SessionProvider } from "./session";
 import { App } from "./ui/App";
+import { DemoNotice } from "./ui/DemoNotice";
 import "./ui/styles.css";
 
 // The page gives its own `fetch` to the client, the only place that makes requests. The addresses are relative,
@@ -16,6 +17,7 @@ if (root === null) throw new Error("The page has no element with the id root");
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter basename="/app">
+      <DemoNotice client={client} />
       <SessionProvider client={client}>
         <App />
       </SessionProvider>

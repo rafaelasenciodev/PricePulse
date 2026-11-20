@@ -88,4 +88,9 @@ export type Failure =
   | { readonly kind: "unexpected" };
 
 /** What every operation of the client gives. It is a value: no operation throws. */
+/** What the server declares about itself (feature 12): whether it is a demo with simulated data. */
+export interface ServerMode {
+  readonly demo: boolean;
+}
+
 export type Result<T> = { readonly ok: true; readonly data: T } | { readonly ok: false; readonly failure: Failure };

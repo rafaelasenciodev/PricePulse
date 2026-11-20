@@ -33,6 +33,7 @@ export function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     changeTarget: vi.fn(async () => sessionEnded),
     cancelAlert: vi.fn(async () => sessionEnded),
     notifications: vi.fn(async () => ok({ items: [], total: 0, limit: 20, offset: 0 })),
+    demo: vi.fn(async () => ok({ demo: false })),
     ...overrides,
   };
 }

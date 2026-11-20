@@ -26,6 +26,7 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     changeTarget: vi.fn(async () => ended),
     cancelAlert: vi.fn(async () => ended),
     notifications: vi.fn(async () => ended),
+    demo: vi.fn(async () => ok({ demo: false })),
     ...overrides,
   };
 }

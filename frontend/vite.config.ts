@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 const apiUrl = process.env["API_URL"] ?? "http://127.0.0.1:3000";
 
 // The paths of the API that the interface uses (design of feature 09, section 5). Nothing under /app/ is forwarded.
-const apiPaths = ["/accounts", "/sessions", "/listings", "/price-alerts", "/notifications"];
+const apiPaths = ["/accounts", "/sessions", "/listings", "/price-alerts", "/notifications", "/demo"];
 
 // The interface is served under /app/ (design of feature 09, section 4).
 export default defineConfig({

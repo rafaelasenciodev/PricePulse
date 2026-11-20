@@ -49,6 +49,16 @@ main {
   border-bottom: 1px solid var(--border);
 }
 
+.demo-notice {
+  margin: 0;
+  padding: 0.4rem var(--gap);
+  border-bottom: 1px solid var(--border);
+  background: var(--accent);
+  color: var(--accent-text);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 .brand {
   font-weight: 700;
 }
