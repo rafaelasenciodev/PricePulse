@@ -87,6 +87,27 @@ export const screens = {
     targetPrice: (amount: string) => `Precio objetivo: ${amount}`,
     state: (status: string) => `Estado: ${status}`,
     createdAt: (when: string) => `Creada el ${when}`,
+    /** BR-04: what an Active alert offers. */
+    change: `Cambiar ${v.targetPrice}`,
+    cancel: "Cancelar alerta",
+    changeForm: {
+      label: (currency: string) => `Nuevo ${v.targetPrice} (${currency})`,
+      submit: "Guardar",
+      submitting: "Guardando…",
+      /** BR-05: an empty amount is not sent. */
+      missing: `Escribe el ${v.targetPrice}.`,
+      giveUp: "No cambiar",
+    },
+    /** BR-06: cancelling cannot be undone, so it asks first. */
+    confirmCancel: {
+      question: `¿Cancelar esta ${v.priceAlert}?`,
+      yes: "Sí, cancelar",
+      no: "No, volver",
+      submitting: "Cancelando…",
+    },
+    /** What the screen says when the change was made. */
+    changed: (amount: string) => `${v.targetPrice[0]!.toUpperCase()}${v.targetPrice.slice(1)} cambiado a ${amount}.`,
+    cancelled: `${v.priceAlert[0]!.toUpperCase()}${v.priceAlert.slice(1)} cancelada.`,
   },
   /** Feature 10: the Notifications of the person. */
   notifications: {

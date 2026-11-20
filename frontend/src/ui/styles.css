@@ -151,3 +151,15 @@ a {
   font-weight: 700;
   text-decoration: none;
 }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.actions p {
+  margin: 0;
+}

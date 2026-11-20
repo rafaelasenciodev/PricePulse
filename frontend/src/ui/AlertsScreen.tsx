@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { AlertStatus } from "../api";
 import { useSession } from "../session";
 import { failures, screens } from "../texts";
-import { AlertEntry } from "./AlertEntry";
+import { AlertEntry, type Outcome } from "./AlertEntry";
 import { LoadFailed } from "./LoadFailed";
 import { PAGE_SIZE, Pager, pageFrom } from "./Pager";
 import { useRequest } from "./useRequest";
@@ -30,6 +31,12 @@ export function AlertsScreen() {
   const status = statusFrom(params.get("status"));
   const query = { ...(status === undefined ? {} : { status }), limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE };
   const { state, retry } = useRequest(() => api.alerts(query), [status, page]);
+  // What a change told is kept here, not in the entry: the list is read again after it and the entries are made anew (BR-08).
+  const [notice, setNotice] = useState<Outcome | null>(null);
+  useEffect(() => setNotice(null), [status, page]);
+  // Each outcome starts a new generation of entries, so that the form or the question of the one that was acted on is
+  // gone at once, and does not wait for the read to replace the list: a fast answer would not unmount it.
+  const [generation, setGeneration] = useState(0);
   const titles = useTitles(state.status === "ready" ? state.data.items.map((alert) => alert.listingId) : []);
 
   let content;
@@ -49,7 +56,16 @@ export function AlertsScreen() {
       <Pager page={page} data={state.data} label={screens.alerts.pagesLabel} addressOf={(n) => alertsAddress(status, n)}>
         <ul className="listings">
           {state.data.items.map((alert) => (
-            <AlertEntry key={alert.id} alert={alert} listing={titles.get(alert.listingId)} />
+            <AlertEntry
+              key={`${generation}:${alert.id}`}
+              alert={alert}
+              listing={titles.get(alert.listingId)}
+              onOutcome={(outcome) => {
+                setNotice(outcome);
+                setGeneration((n) => n + 1);
+                retry();
+              }}
+            />
           ))}
         </ul>
       </Pager>
@@ -66,6 +82,11 @@ export function AlertsScreen() {
           </Link>
         ))}
       </nav>
+      {notice !== null && (
+        <p role={notice.done ? "status" : "alert"} className={notice.done ? undefined : "error"}>
+          {notice.text}
+        </p>
+      )}
       {content}
     </>
   );
