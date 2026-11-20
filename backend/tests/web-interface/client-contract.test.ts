@@ -275,7 +275,7 @@ describe("creating a Price Alert", () => {
 });
 
 describe("what the check of the origin needs from a page (SC-36)", () => {
-  it("SC-36 / BR-01: a change from a page that does not send its Origin is refused, which is why a browser must", async () => {
+  it("BR-01: a change from a page that does not send its Origin is refused, which is why a browser must (that it does is checked by hand)", async () => {
     const client = person({ sendsOrigin: false });
     const signedIn = await client.signIn("ana@example.com", PASSWORD);
     // Signing in with no Origin is accepted: it is what a program does. What is refused is a change with the cookie alone.

@@ -20,6 +20,8 @@ import { describe, expect, it } from "vitest";
 
 const DOCS_DIR = new URL("../../docs/features/", import.meta.url);
 const TESTS_DIR = new URL("./", import.meta.url);
+// The interface has its own project and its own tests (feature 09).
+const FRONTEND_TESTS_DIR = new URL("../../frontend/tests/", import.meta.url);
 
 interface Feature {
   readonly name: string;
@@ -29,6 +31,8 @@ interface Feature {
   readonly rulesFile?: string;
   /** The test files that belong to the feature: paths relative to tests/ */
   readonly owns: (path: string) => boolean;
+  /** Whether the tests of `frontend/` are also the feature's: every test file there is. */
+  readonly ownsFrontendTests?: boolean;
   readonly scenarios: number;
   readonly rules: number;
   /** Rules that have no scenario, and why. An entry must stay justified. */
@@ -156,6 +160,21 @@ const FEATURES: readonly Feature[] = [
     exemptRules: {},
     exemptScenarios: {},
   },
+  {
+    name: "feature 09",
+    docs: "09-web-interface/",
+    rulesFile: "01-discovery.md",
+    // The interface is tested in its own project, and what it needs of the application is tested here, in a folder of its own.
+    owns: (path) => path.startsWith("web-interface/"),
+    ownsFrontendTests: true,
+    scenarios: 36,
+    rules: 14,
+    exemptRules: {},
+    exemptScenarios: {
+      "SC-36":
+        "It needs a real browser, which no test of the project uses (ADR-0005): that a change made by the interface carries an Origin that the application accepts is checked by hand.",
+    },
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;
@@ -178,22 +197,21 @@ function businessRules(feature: Feature): string[] {
   return [...file.matchAll(/^\| (BR-\d+) \|/gm)].map((m) => pad(m[1] as string));
 }
 
-/** The test files of the feature, relative to tests/ */
-function testFiles(feature: Feature, dir: URL = TESTS_DIR, prefix = ""): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isDirectory()) return testFiles(feature, new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`);
-    const path = `${prefix}${entry.name}`;
-    const isTest = entry.name.endsWith(".test.ts") && entry.name !== "traceability.test.ts";
-    return isTest && feature.owns(path) ? [path] : [];
-  });
+/** The test files of the feature: the ones of `tests/` that it owns, and all those of `frontend/tests/` if they are its own. */
+function testFiles(feature: Feature): URL[] {
+  const walk = (dir: URL, keep: (path: string) => boolean, prefix = ""): URL[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      if (entry.isDirectory()) return walk(new URL(`${entry.name}/`, dir), keep, `${prefix}${entry.name}/`);
+      const path = `${prefix}${entry.name}`;
+      return /\.test\.tsx?$/.test(entry.name) && entry.name !== "traceability.test.ts" && keep(path) ? [new URL(entry.name, dir)] : [];
+    });
+  return [...walk(TESTS_DIR, feature.owns), ...(feature.ownsFrontendTests ? walk(FRONTEND_TESTS_DIR, () => true) : [])];
 }
 
 /** The titles of the tests: it("title", ...) and it.each(...)("title", ...) */
 function testTitles(feature: Feature): string[] {
   const title = /(?:\bit|\))\(\s*(["`])((?:\\.|(?!\1).)*)\1\s*,\s*(?:async\s*)?\(/g;
-  return testFiles(feature).flatMap((file) =>
-    [...readFileSync(fileURLToPath(new URL(file, TESTS_DIR)), "utf8").matchAll(title)].map((m) => m[2] as string),
-  );
+  return testFiles(feature).flatMap((file) => [...readFileSync(fileURLToPath(file), "utf8").matchAll(title)].map((m) => m[2] as string));
 }
 
 function scenariosCitedByTests(feature: Feature): Set<string> {
