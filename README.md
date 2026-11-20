@@ -23,7 +23,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented. It has not been tried in a real browser |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence | Not started |
-| Frontend | Not started |
+| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09) | Built and tested on a simulated page. The check in a real browser is pending |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
 
@@ -126,6 +126,29 @@ The server starts with demo data, defined in [`backend/src/main.ts`](backend/src
 The Current Price of each Listing is not stored. The server records one observation per Listing when it starts, as the provider would, and the Current Price is the price of the latest observation.
 
 The retailers are fictitious. Everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. The demo passwords are public, as they are in this file, so the server refuses to run in production. The server listens on `127.0.0.1` only, and it refuses to start when `NODE_ENV` is `production`. Use `PORT=3001 npm run dev` to change the port.
+
+### The web interface
+
+The interface is a single-page application in [`frontend/`](frontend/), with its own packages (it needs Node 22.12 or later). Its screens are in Spanish. The backend serves it under `/app/` when it has been built, and `/` leads there:
+
+```bash
+cd frontend
+npm ci
+npm run build           # writes frontend/dist
+cd ../backend
+npm run dev             # then open http://127.0.0.1:3000/app/
+```
+
+Without the build the server says so when it starts, and goes on without the interface. Sign in with a demo Account. The cookie belongs to one origin, so open the interface at the address that the server prints.
+
+To work on the interface, run it with its own development server, which forwards the paths of the API to the backend. The backend is told the origin at which the browser sees the application:
+
+```bash
+cd backend && WEB_ORIGIN=http://localhost:5173 npm run dev
+cd frontend && npm run dev      # then open http://localhost:5173/app/
+```
+
+`API_URL` tells the development server where the backend listens, `http://127.0.0.1:3000` by default. The tests of the interface are run with `npm test` in `frontend/`.
 
 ## The API
 
@@ -301,7 +324,7 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-The web interface will be a single-page application served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). Not decided yet: the database, background jobs, how the application is built for production, and where it is deployed.
+The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. Not decided yet: the database, background jobs, how the application is built for production, and where it is deployed.
 
 ## Testing
 
@@ -312,7 +335,9 @@ npm run typecheck        # type checking
 npm run coverage         # tests with a coverage report, used as a diagnostic
 ```
 
-The tests cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md) for feature 01, and section 4 of the completion of [feature 02](docs/features/02-price-observation/10-completion.md), [feature 03](docs/features/03-alert-evaluation/10-completion.md) [feature 04](docs/features/04-read-and-manage-alerts/04-completion.md), [feature 05](docs/features/05-notifications-and-price-history/04-completion.md), [feature 06](docs/features/06-accounts-and-authentication/04-completion.md), [feature 07](docs/features/07-listings-catalogue/04-completion.md) and [feature 08](docs/features/08-session-cookie/04-completion.md).
+The interface has its own tests, run with `npm test` and `npm run typecheck` in `frontend/`. They run on a simulated page, and a test of the backend runs the client of the interface against the real application.
+
+The tests of the backend cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md) for feature 01, and section 4 of the completion of [feature 02](docs/features/02-price-observation/10-completion.md), [feature 03](docs/features/03-alert-evaluation/10-completion.md) [feature 04](docs/features/04-read-and-manage-alerts/04-completion.md), [feature 05](docs/features/05-notifications-and-price-history/04-completion.md), [feature 06](docs/features/06-accounts-and-authentication/04-completion.md), [feature 07](docs/features/07-listings-catalogue/04-completion.md) and [feature 08](docs/features/08-session-cookie/04-completion.md).
 
 ## How the project is built
 
@@ -333,6 +358,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 06, stage by stage | [`docs/features/06-accounts-and-authentication/`](docs/features/06-accounts-and-authentication/) |
 | Feature 07, stage by stage | [`docs/features/07-listings-catalogue/`](docs/features/07-listings-catalogue/) |
 | Feature 08, stage by stage | [`docs/features/08-session-cookie/`](docs/features/08-session-cookie/) |
+| Feature 09, stage by stage | [`docs/features/09-web-interface/`](docs/features/09-web-interface/) |
 
 ## Data
 
