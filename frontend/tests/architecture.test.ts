@@ -16,7 +16,7 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   session: { imports: ["api", "texts"], packages: ["react"] },
   ui: { imports: ["api", "texts", "session"], packages: ["react", "react-dom", "react-router-dom"] },
   // The file that starts the page puts the pieces together, as the Composition Root of the backend does.
-  entry: { imports: ["api", "texts", "session", "ui"], packages: ["react", "react-dom", "react-router-dom"] },
+  entry: { imports: ["api", "texts", "session", "ui"], packages: ["react", "react-dom", "react-dom/client", "react-router-dom"] },
 };
 
 const SRC = new URL("../src/", import.meta.url);

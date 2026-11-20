@@ -7,6 +7,8 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "coverage": "vitest run --coverage --coverage.include=src --coverage.reporter=text"

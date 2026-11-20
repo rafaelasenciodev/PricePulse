@@ -1,2 +1,2 @@
-export { failures, vocabulary } from "./es";
+export { failures, screens, vocabulary } from "./es";
 export { isSessionEnded, messageFor, type Action } from "./messages";

@@ -24,6 +24,38 @@ export const vocabulary = {
 
 const v = vocabulary;
 
+/** The words of the screens that are not a failure: titles, labels, buttons and what they say while they work. */
+export const screens = {
+  appName: "PricePulse",
+  checkingSession: `Comprobando la ${v.session}…`,
+  email: "Correo",
+  password: "Contraseña",
+  /** BR-14: a form with an empty field is not sent, and says which one. */
+  emailMissing: "Escribe el correo.",
+  passwordMissing: "Escribe la contraseña.",
+  signIn: {
+    title: v.signIn,
+    submit: v.signIn,
+    submitting: "Entrando…",
+    toRegister: "¿No tienes cuenta? Crea una",
+    /** SC-10: the Account exists and the sign-in that followed it did not work. */
+    accountCreated: `Tu ${v.account} se ha creado, pero no se ha podido entrar. Entra con tu correo y contraseña.`,
+  },
+  register: {
+    title: v.register,
+    submit: v.register,
+    submitting: "Creando…",
+    toSignIn: "¿Ya tienes cuenta? Entra",
+  },
+  signOut: {
+    submit: v.signOut,
+    submitting: "Saliendo…",
+  },
+  catalogue: {
+    title: "Catálogo",
+  },
+} as const;
+
 /** What the person is told when each action fails. Nothing of the cause is in any of them (BR-12). */
 export const failures = {
   /** BR-06: the answer was that the Session is not valid. */
