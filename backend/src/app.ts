@@ -1,6 +1,8 @@
+import fastifyStatic from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+import { relative, sep } from "node:path";
 import type { Authenticate, ReadMyAccount, RegisterAccount, SignIn, SignOut } from "./accounts/application";
 import { accountRoutes, accountsHttpError } from "./accounts/http";
 import { normalizeOrigin, sharedHttpError, type SessionCookieSettings } from "./shared/http";
@@ -95,6 +97,32 @@ export interface SessionCookieOptions {
   readonly secure?: boolean;
 }
 
+/** The built interface: the folder that holds `index.html` and its `assets/` (feature 09). */
+export interface WebInterfaceOptions {
+  readonly root: string;
+}
+
+const WEB_BASE = "/app/";
+
+/** What the answers under `/app/` carry. The interface has no inline script or style, and loads nothing from outside. */
+const WEB_HEADERS = {
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "same-origin",
+  "content-security-policy": "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+} as const;
+
+const pathOf = (request: FastifyRequest) => request.url.split("?")[0] ?? "";
+
+/**
+ * Whether an unknown address is a page of the interface, which gets `index.html` and not a 404: a GET or a HEAD
+ * under `/app/` whose last segment has no dot. A missing script or style sheet has a dot, and is a 404.
+ */
+function isPageOfInterface(request: FastifyRequest): boolean {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  const path = pathOf(request);
+  return path.startsWith(WEB_BASE) && !(path.split("/").pop() ?? "").includes(".");
+}
+
 export interface AppDependencies {
   /** The cookie of the Session, for the browser. Optional: without it only the header identifies a User. */
   readonly sessionCookie?: SessionCookieOptions;
@@ -144,6 +172,11 @@ export interface AppDependencies {
   readonly logger?: boolean;
   /** Serve the interactive API documentation at /docs. Off by default. */
   readonly apiDocs?: ApiDocsOptions;
+  /**
+   * Serve the web interface under /app/, and lead / to it. Optional: without it /app/ is an unknown route and
+   * the application is what it was before the interface.
+   */
+  readonly webInterface?: WebInterfaceOptions;
 }
 
 /** Build the HTTP application from its dependencies. It does not decide which ones to use. */
@@ -168,9 +201,31 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     return reply.code(status).send({ code, message, ...(reason === undefined ? {} : { reason }) });
   });
 
-  app.setNotFoundHandler((_request, reply) =>
-    reply.code(404).send({ code: "NOT_FOUND", message: "Route not found" }),
-  );
+  const webInterface = dependencies.webInterface;
+
+  app.setNotFoundHandler((request, reply) => {
+    if (webInterface && isPageOfInterface(request)) return reply.sendFile("index.html");
+    return reply.code(404).send({ code: "NOT_FOUND", message: "Route not found" });
+  });
+
+  if (webInterface) {
+    // Only what is under /app/ gets these headers: the documentation page has its own scripts and styles.
+    app.addHook("onSend", async (request, reply) => {
+      if (pathOf(request).startsWith(WEB_BASE)) reply.headers(WEB_HEADERS);
+    });
+    app.register(fastifyStatic, {
+      root: webInterface.root,
+      prefix: WEB_BASE,
+      // `index.html` must be asked for again each time, so a new build is seen. What is under `assets/` has the hash of its content in its name, so it never changes.
+      cacheControl: false,
+      setHeaders: (reply, path) => {
+        const inAssets = relative(webInterface.root, path).startsWith(`assets${sep}`);
+        reply.header("cache-control", inAssets ? "public, max-age=31536000, immutable" : "no-cache");
+      },
+    });
+    // Temporary, not permanent: a browser would keep a permanent redirect for ever.
+    app.get("/", { schema: { hide: true } }, (_request, reply) => reply.redirect(WEB_BASE, 302));
+  }
 
   // The documentation is generated from the schemas of the routes, so it must be
   // registered before them.

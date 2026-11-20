@@ -32,7 +32,7 @@ import {
   SignOut,
   type PasswordHasher,
 } from "./accounts/application";
-import { buildApp, type ApiDocsOptions, type SessionCookieOptions } from "./app";
+import { buildApp, type ApiDocsOptions, type SessionCookieOptions, type WebInterfaceOptions } from "./app";
 import {
   ComposedListingReader,
   InMemoryNotificationRepository,
@@ -92,6 +92,8 @@ export function composeInMemoryApp(
   options: {
     logger?: boolean;
     apiDocs?: ApiDocsOptions;
+    /** Serves the built web interface under /app/ (feature 09). */
+    webInterface?: WebInterfaceOptions;
     clock?: Clock;
     /** How passwords are hashed. By default `scrypt` with its production cost, which is slow on purpose: tests give a fast one. */
     passwordHasher?: PasswordHasher;
@@ -177,6 +179,7 @@ export function composeInMemoryApp(
     },
     logger: options.logger,
     apiDocs: options.apiDocs,
+    ...(options.webInterface ? { webInterface: options.webInterface } : {}),
     ...(options.sessionCookie ? { sessionCookie: options.sessionCookie } : {}),
   });
 

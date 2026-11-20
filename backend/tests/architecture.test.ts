@@ -24,11 +24,13 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto"] },
   http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
   // `shared`: the error of a refused origin and the check of the origin of the settings (feature 08).
-  app: { imports: ["application", "http", "shared"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
+  // `@fastify/static` serves the built interface (feature 09), and `node:path` tells a file of `assets/` from another.
+  app: { imports: ["application", "http", "shared"], packages: ["fastify", "@fastify/static", "@fastify/swagger", "@fastify/swagger-ui", "node:path"] },
   // The policy that joins two features: it knows both through their applications and nothing else.
   "evaluation-trigger": { imports: ["application"], packages: ["fastify"] },
   "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger"], packages: ["fastify"] },
-  main: { imports: ["domain", "shared", "composition-root"], packages: [] },
+  // `node:fs` and `node:url`: main is the one place that looks at the machine, to find out whether the interface was built (feature 09).
+  main: { imports: ["domain", "shared", "composition-root"], packages: ["node:fs", "node:url"] },
 };
 
 const SRC = new URL("../src/", import.meta.url);
