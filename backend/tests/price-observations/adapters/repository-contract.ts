@@ -35,11 +35,11 @@ export function observation(
 
 const at = (iso: string) => ObservedAt.fromIsoString(iso);
 
-export function describeRepositoryContract(name: string, create: () => PriceObservationRepository): void {
+export function describeRepositoryContract(name: string, create: () => PriceObservationRepository | Promise<PriceObservationRepository>): void {
   describe(`${name} fulfils the contract of PriceObservationRepository`, () => {
     let repository: PriceObservationRepository;
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     describe("find", () => {

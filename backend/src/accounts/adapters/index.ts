@@ -5,7 +5,7 @@ export {
   InMemoryLoginAttemptStore,
   InMemorySessionStore,
 } from "./in-memory";
-export { PostgresAccountRepository, PostgresSessionStore } from "./postgres";
+export { PostgresAccountRepository, PostgresLoginAttemptStore, PostgresSessionStore } from "./postgres";
 export {
   DEFAULT_SCRYPT_PARAMETERS,
   FAST_SCRYPT_PARAMETERS,

@@ -37,4 +37,20 @@ export class Notification {
     if (!alert.isReachedBy(currentPrice)) throw new TargetNotReached(alert.id);
     return new Notification(alert.id, alert.owner, alert.listingId, alert.targetPrice, currentPrice, observedAt);
   }
+
+  /**
+   * Rebuilds a Notification from what was stored. The alert is not at hand, since it may have changed state since then,
+   * so it checks what stored data can get wrong: that the Current Price reaches the Target Price (BR-04), in its currency.
+   */
+  static restore(
+    alertId: AlertId,
+    owner: UserId,
+    listingId: ListingId,
+    targetPrice: TargetPrice,
+    currentPrice: Price,
+    observedAt: ObservedAt,
+  ): Notification {
+    if (!targetPrice.isReachedBy(currentPrice)) throw new TargetNotReached(alertId);
+    return new Notification(alertId, owner, listingId, targetPrice, currentPrice, observedAt);
+  }
 }

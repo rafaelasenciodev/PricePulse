@@ -53,6 +53,15 @@ export class PriceObservation {
     return new PriceObservation(input.provider, input.listingId, observedAt, price);
   }
 
+  /**
+   * Rebuilds a Price Observation from what was stored. It checks what stored data can get wrong: a negative price (BR-04).
+   * It does not check the moment of recording or the currency of the Listing, which were checked when it was recorded.
+   */
+  static restore(provider: ProviderId, listingId: ListingId, observedAt: ObservedAt, price: Price | null): PriceObservation {
+    if (price !== null && price.minorUnits < 0) throw new NegativePrice(price.toDecimalString());
+    return new PriceObservation(provider, listingId, observedAt, price);
+  }
+
   /** Whether another observation has the same Price, or both have none (BR-09, BR-10). */
   hasSameContentAs(other: PriceObservation): boolean {
     if (this.price === null || other.price === null) return this.price === other.price;

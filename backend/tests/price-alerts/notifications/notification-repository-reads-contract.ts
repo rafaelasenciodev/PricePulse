@@ -14,7 +14,7 @@ import { UserId } from "../../../src/shared/domain";
 
 const OWNER = UserId("user-1");
 
-export function describeNotificationRepositoryReadsContract(name: string, create: () => NotificationRepository): void {
+export function describeNotificationRepositoryReadsContract(name: string, create: () => NotificationRepository | Promise<NotificationRepository>): void {
   describe(`NotificationRepository, reading by owner: ${name}`, () => {
     let repository: NotificationRepository;
 
@@ -27,8 +27,8 @@ export function describeNotificationRepositoryReadsContract(name: string, create
 
     const alerts = (notifications: readonly Notification[]) => notifications.map((n) => n.alertId as string);
 
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     it("returns an empty page and a total of zero for an owner without Notifications", async () => {

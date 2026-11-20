@@ -9,3 +9,4 @@ export {
   InMemoryNotificationRepository,
   InMemoryPriceAlertRepository,
 } from "./in-memory";
+export { PostgresNotificationRepository, PostgresPriceAlertRepository } from "./postgres";

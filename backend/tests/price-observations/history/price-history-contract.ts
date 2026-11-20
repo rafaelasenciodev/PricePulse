@@ -15,7 +15,7 @@ import { anObservation, type ObservationSpec } from "../../support/observations"
 const HEADPHONES = ListingId("headphones-shop-a");
 const at = (text: string) => ObservedAt.fromIsoString(`2026-11-19T${text}:00Z`);
 
-export function describePriceHistoryContract(name: string, create: () => PriceObservationRepository): void {
+export function describePriceHistoryContract(name: string, create: () => PriceObservationRepository | Promise<PriceObservationRepository>): void {
   describe(`PriceObservationRepository, reading the Price History: ${name}`, () => {
     let repository: PriceObservationRepository;
 
@@ -34,8 +34,8 @@ export function describePriceHistoryContract(name: string, create: () => PriceOb
 
     const hours = (items: readonly PriceObservation[]) => items.map((o) => o.observedAt.toIsoString().slice(11, 16));
 
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     it("returns an empty page and a total of zero for a Listing without observations", async () => {

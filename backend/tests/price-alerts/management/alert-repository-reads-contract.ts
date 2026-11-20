@@ -16,7 +16,7 @@ import { UserId } from "../../../src/shared/domain";
 const OWNER = UserId("user-1");
 const OTHER_OWNER = UserId("user-2");
 
-export function describeAlertRepositoryReadsContract(name: string, create: () => PriceAlertRepository): void {
+export function describeAlertRepositoryReadsContract(name: string, create: () => PriceAlertRepository | Promise<PriceAlertRepository>): void {
   describe(`PriceAlertRepository, reading alerts: ${name}`, () => {
     let repository: PriceAlertRepository;
 
@@ -37,8 +37,8 @@ export function describeAlertRepositoryReadsContract(name: string, create: () =>
 
     const ids = (alerts: readonly PriceAlert[]) => alerts.map((a) => a.id);
 
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     describe("find", () => {

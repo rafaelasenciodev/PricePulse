@@ -14,11 +14,11 @@ export async function peek(store: LoginAttemptStore, email: string): Promise<Fai
   return (await store.update(email, (current) => current)).before;
 }
 
-export function describeLoginAttemptStoreContract(name: string, create: () => LoginAttemptStore): void {
+export function describeLoginAttemptStoreContract(name: string, create: () => LoginAttemptStore | Promise<LoginAttemptStore>): void {
   describe(`LoginAttemptStore: ${name}`, () => {
     let store: LoginAttemptStore;
-    beforeEach(() => {
-      store = create();
+    beforeEach(async () => {
+      store = await create();
     });
 
     it("an email without attempts has none and is not locked", async () => {

@@ -26,12 +26,12 @@ export const notificationOf = (alert: PriceAlert, price = "75.00") =>
     observedAt: ObservedAt.fromIsoString("2026-11-19T10:00:00Z"),
   });
 
-export function describeNotificationRepositoryContract(name: string, create: () => NotificationRepository): void {
+export function describeNotificationRepositoryContract(name: string, create: () => NotificationRepository | Promise<NotificationRepository>): void {
   describe(`NotificationRepository: ${name}`, () => {
     let repository: NotificationRepository;
 
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     it("returns nothing when nothing is stored", async () => {

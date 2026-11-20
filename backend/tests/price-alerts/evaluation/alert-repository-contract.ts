@@ -22,12 +22,12 @@ const active = (owner: UserId = OWNER, listing: ListingId = LISTING) =>
 
 const ids = (alerts: readonly PriceAlert[]) => alerts.map((a) => a.id).sort();
 
-export function describeAlertRepositoryEvaluationContract(name: string, create: () => PriceAlertRepository): void {
+export function describeAlertRepositoryEvaluationContract(name: string, create: () => PriceAlertRepository | Promise<PriceAlertRepository>): void {
   describe(`PriceAlertRepository, operations of the evaluation: ${name}`, () => {
     let repository: PriceAlertRepository;
 
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     describe("findActiveByListing", () => {
