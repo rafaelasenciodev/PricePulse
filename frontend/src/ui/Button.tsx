@@ -11,11 +11,14 @@ const VARIANTS: Readonly<Record<Variant, string>> = {
   secondary: "border-line bg-surface text-ink hover:bg-page",
 };
 
+/** The classes of a button, for a link that has to look like one. */
+export const buttonClasses = (variant: Variant = "primary") => `${BASE} ${VARIANTS[variant]}`;
+
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly variant?: Variant;
 }
 
 /** The button of the interface. It is a `button` that does not send a form unless it says `type="submit"`. */
 export function Button({ variant = "primary", type = "button", className = "", ...rest }: Props) {
-  return <button type={type} className={`${BASE} ${VARIANTS[variant]} ${className}`} {...rest} />;
+  return <button type={type} className={`${buttonClasses(variant)} ${className}`} {...rest} />;
 }

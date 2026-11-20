@@ -1,7 +1,7 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useSession } from "../session";
 import { failures, screens } from "../texts";
-import { ListingFacts } from "./ListingFacts";
+import { ListingCard } from "./ListingCard";
 import { LoadFailed } from "./LoadFailed";
 import { PAGE_SIZE, Pager, pageFrom } from "./Pager";
 import { useRequest } from "./useRequest";
@@ -16,22 +16,17 @@ export function CatalogueScreen() {
 
   let content;
   if (state.status === "loading") {
-    content = <p role="status">{screens.loading}</p>;
+    content = <p role="status" className="text-muted">{screens.loading}</p>;
   } else if (state.status === "failed") {
     content = <LoadFailed message={failures.readCatalogue.other} onRetry={retry} />;
   } else if (state.data.total === 0) {
-    content = <p>{screens.catalogue.empty}</p>;
+    content = <p className="text-muted">{screens.catalogue.empty}</p>;
   } else {
     content = (
       <Pager page={page} data={state.data} label={screens.catalogue.pagesLabel} addressOf={pageAddress}>
-        <ul className="listings">
+        <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
           {state.data.items.map((listing) => (
-            <li key={listing.id}>
-              <h2>
-                <Link to={`/listings/${encodeURIComponent(listing.id)}`}>{listing.title}</Link>
-              </h2>
-              <ListingFacts listing={listing} />
-            </li>
+            <ListingCard key={listing.id} listing={listing} />
           ))}
         </ul>
       </Pager>
@@ -40,7 +35,7 @@ export function CatalogueScreen() {
 
   return (
     <>
-      <h1>{screens.catalogue.title}</h1>
+      <h1 className="mb-4 text-2xl font-semibold">{screens.catalogue.title}</h1>
       {content}
     </>
   );

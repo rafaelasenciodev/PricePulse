@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, Navigate, type To } from "react-router-dom";
 import type { Page } from "../api";
 import { screens } from "../texts";
+import { buttonClasses } from "./Button";
 
 /** How many items a list shows at a time. The API allows up to 100. */
 export const PAGE_SIZE = 20;
@@ -34,11 +35,19 @@ export function Pager({ page, data, label, addressOf, children }: Props) {
   if (items.length === 0) return <Navigate to={addressOf(Math.max(1, Math.ceil(total / PAGE_SIZE)))} replace />;
   return (
     <>
-      <p>{screens.paging.range(offset + 1, offset + items.length, total)}</p>
+      <p className="mb-4 text-sm text-muted">{screens.paging.range(offset + 1, offset + items.length, total)}</p>
       {children}
-      <nav aria-label={label} className="pages">
-        {page > 1 && <Link to={addressOf(page - 1)}>{screens.paging.previous}</Link>}
-        {offset + items.length < total && <Link to={addressOf(page + 1)}>{screens.paging.next}</Link>}
+      <nav aria-label={label} className="mt-6 flex gap-3">
+        {page > 1 && (
+          <Link to={addressOf(page - 1)} className={`${buttonClasses("secondary")} no-underline`}>
+            {screens.paging.previous}
+          </Link>
+        )}
+        {offset + items.length < total && (
+          <Link to={addressOf(page + 1)} className={`${buttonClasses("secondary")} no-underline`}>
+            {screens.paging.next}
+          </Link>
+        )}
       </nav>
     </>
   );
