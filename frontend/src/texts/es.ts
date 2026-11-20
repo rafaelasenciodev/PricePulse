@@ -68,6 +68,22 @@ export const screens = {
     /** SC-16: a Listing with no Current Price says so, and shows no amount. */
     noPrice: "Sin precio",
     observedAt: (when: string) => `${v.observedAt} ${when}`,
+    backToCatalogue: "← Volver al catálogo",
+    /** SC-22: the Listing does not exist, so the way out is the Catalogue. */
+    toCatalogue: "Ir al catálogo",
+  },
+  /** The form to create a Price Alert on the screen of a Listing. */
+  alertForm: {
+    title: `Crear una ${v.priceAlert}`,
+    amount: (currency: string) => `Precio objetivo (${currency})`,
+    submit: `Crear ${v.priceAlert}`,
+    submitting: "Creando…",
+    /** BR-14: an empty target is not sent. */
+    amountMissing: `Escribe el ${v.targetPrice}.`,
+    /** SC-23: it was created now. */
+    created: (amount: string) => `Alerta de precio creada: ${v.targetPrice} ${amount}.`,
+    /** SC-24: it already existed, so it is not said to be new. */
+    existed: (amount: string) => `Ya tenías esa ${v.priceAlert}: ${v.targetPrice} ${amount}.`,
   },
 } as const;
 

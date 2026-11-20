@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CatalogueScreen } from "./CatalogueScreen";
+import { ListingScreen } from "./ListingScreen";
 import { RegisterScreen } from "./RegisterScreen";
 import { RequireGuest, RequireSession } from "./RequireSession";
 import { SignInScreen } from "./SignInScreen";
@@ -18,6 +19,7 @@ export function App() {
       </Route>
       <Route element={<RequireSession />}>
         <Route path="catalogue" element={<CatalogueScreen />} />
+        <Route path="listings/:id" element={<ListingScreen />} />
       </Route>
       <Route path="*" element={<Navigate to="/catalogue" replace />} />
     </Routes>
