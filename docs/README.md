@@ -167,3 +167,15 @@ The sixth feature of the [method of five stages](features/README.md), and the fi
 | 3 Design | [Design](features/09-web-interface/03-design.md) | Approved |
 | 4 Build | [The interface](../frontend/src/), and in the backend [serving it](../backend/src/app.ts) and [`main.ts`](../backend/src/main.ts) | Implemented |
 | 5 Close | [Completion](features/09-web-interface/04-completion.md) | Approved |
+
+### 10 — My Alerts and My Notifications
+
+The seventh feature of the [method of five stages](features/README.md), and the second half of the interface of [feature 09](features/09-web-interface/04-completion.md): the Price Alerts of a person, with changing the Target Price and cancelling, and their Notifications, in Spanish.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/10-my-alerts-and-notifications/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/10-my-alerts-and-notifications/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/10-my-alerts-and-notifications/03-design.md) | Approved |
+| 4 Build | [The interface](../frontend/src/) | Implemented |
+| 5 Close | [Completion](features/10-my-alerts-and-notifications/04-completion.md) | Approved |

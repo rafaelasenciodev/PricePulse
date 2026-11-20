@@ -2,7 +2,7 @@
 
 A price-tracking platform: monitor product prices, consult price history, and get alerted when a product reaches a target price.
 
-> **Status: in development.** Eight features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue** and **Session Cookie**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
+> **Status: in development.** Ten features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface** and **My Alerts and My Notifications**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
 
 PricePulse is a Master's Final Project (TFM), a professional portfolio project, and a vehicle for a repeatable, design-first engineering methodology (see [`docs/features/README.md`](docs/features/README.md)).
 
@@ -23,7 +23,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented, and tried in a real browser with the interface of feature 09 (Chrome, over HTTP on the local machine) |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence | Not started |
-| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
+| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
 
@@ -359,6 +359,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 07, stage by stage | [`docs/features/07-listings-catalogue/`](docs/features/07-listings-catalogue/) |
 | Feature 08, stage by stage | [`docs/features/08-session-cookie/`](docs/features/08-session-cookie/) |
 | Feature 09, stage by stage | [`docs/features/09-web-interface/`](docs/features/09-web-interface/) |
+| Feature 10, stage by stage | [`docs/features/10-my-alerts-and-notifications/`](docs/features/10-my-alerts-and-notifications/) |
 
 ## Data
 
