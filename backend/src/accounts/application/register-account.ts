@@ -34,7 +34,7 @@ export class RegisterAccount {
       assertValidPassword(command.password, email);
     } catch (error) {
       const problem = problemOf(error);
-      if (problem !== null) throw new InvalidRegistration((error as InvalidValue).message, problem, { cause: error });
+      if (problem !== null && error instanceof InvalidValue) throw new InvalidRegistration(error.message, problem, { cause: error });
       throw error;
     }
 

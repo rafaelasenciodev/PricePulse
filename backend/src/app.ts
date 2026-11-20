@@ -225,6 +225,8 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     });
     // Temporary, not permanent: a browser would keep a permanent redirect for ever.
     app.get("/", { schema: { hide: true } }, (_request, reply) => reply.redirect(WEB_BASE, 302));
+    // `/app` without the slash is the same place as `/app/`, and not an unknown route.
+    app.get("/app", { schema: { hide: true } }, (_request, reply) => reply.redirect(WEB_BASE, 302));
   }
 
   // The documentation is generated from the schemas of the routes, so it must be

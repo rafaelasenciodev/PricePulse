@@ -55,6 +55,14 @@ describe("SC-31: the root leads to the interface", () => {
   });
 });
 
+describe("/app without the slash", () => {
+  it("leads to /app/, as / does, and not to an unknown route", async () => {
+    const response = await get("/app");
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location).toBe("/app/");
+  });
+});
+
 describe("SC-32: the page of the interface and the addresses of the API", () => {
   it.each(["/app/", "/app/listings/headphones-shop-a", "/app/an/address/that/is/not/one", "/app/catalogue?page=2"])(
     "SC-32: %s is answered with the page of the interface",
@@ -123,7 +131,7 @@ describe("SC-34: nothing outside the folder is served", () => {
 describe("SC-35: without the interface", () => {
   it("SC-35: /app/ and / are unknown routes, as before the feature", async () => {
     const app = compose({ withInterface: false });
-    for (const url of ["/app/", "/app/catalogue", "/"]) {
+    for (const url of ["/app", "/app/", "/app/catalogue", "/"]) {
       const response = await app.inject({ method: "GET", url });
       expect(response.statusCode).toBe(404);
       expect(JSON.parse(response.body)).toEqual({ code: "NOT_FOUND", message: "Route not found" });
