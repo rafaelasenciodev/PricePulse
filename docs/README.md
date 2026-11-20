@@ -31,7 +31,7 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | [ADR-0003: Persistence is deferred and the in-memory adapters stay](adr/0003-persistence-deferred.md) | Approved |
 | [ADR-0004: Users authenticate with server-side sessions, scrypt and a bearer token](adr/0004-authentication.md) | Approved |
 | [ADR-0005: The web interface is a single-page application served by the backend, with the session in a cookie](adr/0005-web-interface.md) | Approved |
-| [ADR-0006: Data is kept in PostgreSQL, through its driver and SQL written by hand](adr/0006-postgresql.md) | In Review |
+| [ADR-0006: Data is kept in PostgreSQL, through its driver and SQL written by hand](adr/0006-postgresql.md) | Approved |
 
 ## Quality
 

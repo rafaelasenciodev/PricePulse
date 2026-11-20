@@ -1,6 +1,6 @@
 # ADR-0006: Data is kept in PostgreSQL, through its driver and SQL written by hand
 
-- Document status: In Review
+- Document status: Approved
 - Decision status: Accepted
 - Date: 2026-11-20
 

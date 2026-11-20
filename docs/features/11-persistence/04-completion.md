@@ -155,6 +155,6 @@ The documents of the first three stages have 713 lines (discovery and rules 200,
 - [x] Documentation of stage 5 written (this document)
 - [x] This document is approved by the author
 - [x] The README and the documentation indexes describe this feature
-- [ ] [ADR-0006](../../adr/0006-postgresql.md) has its document status decided
+- [x] [ADR-0006](../../adr/0006-postgresql.md) has its document status decided: Approved
 - [ ] The feature is merged into `develop` with `--no-ff`, and `develop` into `main` and tagged (done by the developer, [ADR-0002](../../adr/0002-branching-model.md))
 - [ ] A licence is chosen before the repository is published
