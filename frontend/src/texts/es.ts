@@ -51,8 +51,23 @@ export const screens = {
     submit: v.signOut,
     submitting: "Saliendo…",
   },
+  loading: "Cargando…",
+  retry: "Reintentar",
   catalogue: {
     title: "Catálogo",
+    empty: "Todavía no hay productos.",
+    /** Which ones of how many are shown (SC-18). */
+    range: (from: number, to: number, total: number) => `Mostrando ${from}–${to} de ${total}`,
+    pagesLabel: "Páginas del catálogo",
+    previous: "Anterior",
+    next: "Siguiente",
+  },
+  /** What a Listing shows wherever it is shown. */
+  listing: {
+    retailer: (name: string) => `Tienda: ${name}`,
+    /** SC-16: a Listing with no Current Price says so, and shows no amount. */
+    noPrice: "Sin precio",
+    observedAt: (when: string) => `${v.observedAt} ${when}`,
   },
 } as const;
 

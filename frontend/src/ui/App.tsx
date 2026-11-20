@@ -1,13 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { screens } from "../texts";
+import { CatalogueScreen } from "./CatalogueScreen";
 import { RegisterScreen } from "./RegisterScreen";
 import { RequireGuest, RequireSession } from "./RequireSession";
 import { SignInScreen } from "./SignInScreen";
-
-// The Catalogue is the next stop; until then this is where signing in leads.
-function CataloguePlaceholder() {
-  return <h1>{screens.catalogue.title}</h1>;
-}
 
 /**
  * The routes, without the router: the page gives a `BrowserRouter` with the base `/app`, and a test gives a
@@ -22,7 +17,7 @@ export function App() {
         <Route path="register" element={<RegisterScreen />} />
       </Route>
       <Route element={<RequireSession />}>
-        <Route path="catalogue" element={<CataloguePlaceholder />} />
+        <Route path="catalogue" element={<CatalogueScreen />} />
       </Route>
       <Route path="*" element={<Navigate to="/catalogue" replace />} />
     </Routes>

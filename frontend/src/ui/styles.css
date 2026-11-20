@@ -96,6 +96,39 @@ a {
   color: var(--accent);
 }
 
+.listings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.listings li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.listings h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.listings p,
+.retailer,
+.price {
+  margin: 0.15rem 0;
+}
+
+.muted,
+.retailer {
+  color: var(--muted);
+}
+
+.pages {
+  display: flex;
+  gap: var(--gap);
+  margin-top: var(--gap);
+}
+
 .error {
   margin: 0;
   color: var(--error);

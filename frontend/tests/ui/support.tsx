@@ -25,7 +25,8 @@ export function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     register: vi.fn(async () => ok(eve)),
     signOut: vi.fn(async () => ok(null)),
     account: vi.fn(async () => sessionEnded),
-    listings: vi.fn(async () => sessionEnded),
+    // What a person reaches after signing in: an empty Catalogue, which is not an ended Session.
+    listings: vi.fn(async () => ok({ items: [], total: 0, limit: 20, offset: 0 })),
     listing: vi.fn(async () => sessionEnded),
     createAlert: vi.fn(async () => sessionEnded),
     ...overrides,
