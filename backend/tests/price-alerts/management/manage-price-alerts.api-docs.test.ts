@@ -58,7 +58,7 @@ describe("the OpenAPI document with the routes of reading and managing", () => {
     const { paths } = await spec();
     expect(codes(paths["/price-alerts"].get)).toEqual(["200", "400", "401", "500"]);
     expect(codes(paths["/price-alerts/{alertId}"].get)).toEqual(["200", "401", "404", "500"]);
-    expect(codes(paths["/price-alerts/{alertId}"].patch)).toEqual(["200", "400", "401", "404", "409", "422", "500"]);
+    expect(codes(paths["/price-alerts/{alertId}"].patch)).toEqual(["200", "400", "401", "403", "404", "409", "422", "500"]);
   });
 
   it("documents the codes of the errors that are new", async () => {

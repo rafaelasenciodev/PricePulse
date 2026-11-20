@@ -49,6 +49,7 @@ const FEATURES: readonly Feature[] = [
     // and by file name.
     owns: (path) =>
       !path.startsWith("accounts/") &&
+      !path.startsWith("session-cookie/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
@@ -140,6 +141,17 @@ const FEATURES: readonly Feature[] = [
     owns: (path) => path.startsWith("price-observations/catalogue/") || path === "composition-root-catalogue.test.ts",
     scenarios: 21,
     rules: 8,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
+  {
+    name: "feature 08",
+    docs: "08-session-cookie/",
+    rulesFile: "01-discovery.md",
+    // It crosses four modules of Users, so its tests live in a folder of their own and are told apart by it.
+    owns: (path) => path.startsWith("session-cookie/"),
+    scenarios: 24,
+    rules: 11,
     exemptRules: {},
     exemptScenarios: {},
   },

@@ -3,6 +3,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Authenticate, ReadMyAccount, RegisterAccount, SignIn, SignOut } from "./accounts/application";
 import { accountRoutes, accountsHttpError } from "./accounts/http";
+import { normalizeOrigin, sharedHttpError, type SessionCookieSettings } from "./shared/http";
 import type { CreatePriceAlert } from "./price-alerts/application";
 import {
   priceAlertHttpError,
@@ -44,7 +45,7 @@ interface HttpError {
  */
 type HttpErrorMapper = (error: unknown) => HttpError | null;
 
-const featureMappers: readonly HttpErrorMapper[] = [accountsHttpError, priceAlertHttpError, priceObservationHttpError];
+const featureMappers: readonly HttpErrorMapper[] = [accountsHttpError, priceAlertHttpError, priceObservationHttpError, sharedHttpError];
 
 /** Map an error to the HTTP response that reports it. Unexpected errors reveal nothing. */
 function toHttpError(error: unknown): HttpError {
@@ -77,7 +78,24 @@ export interface ApiDocsOptions {
   readonly note?: string;
 }
 
+/**
+ * Turns the cookie of the Session on (feature 08). Without it, nothing is set and nothing is read, and the
+ * application behaves as it did before (BR-10).
+ */
+export interface SessionCookieOptions {
+  /**
+   * The only origin that the application accepts for a request that the cookie authenticates, such as
+   * `http://127.0.0.1:3000`: the scheme, the host and the port, with no path. A value that is not one makes
+   * `buildApp` throw, so that a wrong setting is found when the application starts.
+   */
+  readonly origin: string;
+  /** Mark the cookie `Secure`: only when the application is served over HTTPS. `false` unless it is said. */
+  readonly secure?: boolean;
+}
+
 export interface AppDependencies {
+  /** The cookie of the Session, for the browser. Optional: without it only the header identifies a User. */
+  readonly sessionCookie?: SessionCookieOptions;
   /**
    * The routes of accounts: registering, signing in and out, and reading one's own Account. Optional:
    * without them the application serves no way to get a token, and the documentation does not mention them.
@@ -128,6 +146,10 @@ export interface AppDependencies {
 
 /** Build the HTTP application from its dependencies. It does not decide which ones to use. */
 export function buildApp(dependencies: AppDependencies): FastifyInstance {
+  const sessionCookie: SessionCookieSettings | undefined = dependencies.sessionCookie
+    ? { origin: normalizeOrigin(dependencies.sessionCookie.origin), secure: dependencies.sessionCookie.secure ?? false }
+    : undefined;
+
   const app = Fastify({
     logger: dependencies.logger ?? false,
     ajv: {
@@ -163,6 +185,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
               : "Create price alerts for the Listings of a catalogue.",
             dependencies.catalogue && "Read the Listings of the catalogue, with their Current Price, to choose one to watch.",
             dependencies.accounts && "Register an Account and sign in to get the token of a Session, which identifies the User in the other requests.",
+            dependencies.sessionCookie && "A browser that signs in also gets the session cookie, which identifies the User in the requests that come from the pages of the application. A request that carries the token in the header does not need it.",
             dependencies.priceObservations && "Price providers report the price of a Listing with price observations.",
             dependencies.apiDocs.note,
           ]
@@ -218,20 +241,22 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
     });
   }
 
-  if (dependencies.accounts) app.register(accountRoutes, dependencies.accounts);
+  if (dependencies.accounts) app.register(accountRoutes, { ...dependencies.accounts, sessionCookie });
 
   app.register(priceAlertRoutes, {
     createPriceAlert: dependencies.createPriceAlert,
     authenticator: dependencies.authenticator,
+    sessionCookie,
     ...(dependencies.priceAlertManagement ? { management: dependencies.priceAlertManagement } : {}),
   });
 
-  if (dependencies.catalogue) app.register(catalogueRoutes, dependencies.catalogue);
+  if (dependencies.catalogue) app.register(catalogueRoutes, { ...dependencies.catalogue, sessionCookie });
 
   if (dependencies.priceHistory) {
     app.register(priceHistoryRoutes, {
       readPriceHistory: dependencies.priceHistory.readPriceHistory,
       authenticator: dependencies.priceHistory.authenticator,
+      sessionCookie,
     });
   }
 

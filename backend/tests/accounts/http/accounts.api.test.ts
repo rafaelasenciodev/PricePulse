@@ -264,7 +264,7 @@ describe("the documentation of the routes", () => {
       expect(op("/sessions/current", "delete").security).toEqual([{ bearerAuth: [] }]);
       expect(op("/accounts/me", "get").security).toEqual([{ bearerAuth: [] }]);
       expect(spec.tags.map((t: { name: string }) => t.name)).toEqual(expect.arrayContaining(["Accounts", "Sessions"]));
-      expect(Object.keys(op("/sessions", "post").responses).sort()).toEqual(["201", "400", "401", "429", "500"]);
+      expect(Object.keys(op("/sessions", "post").responses).sort()).toEqual(["201", "400", "401", "403", "429", "500"]);
     } finally {
       await documented.close();
     }

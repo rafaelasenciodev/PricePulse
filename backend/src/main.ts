@@ -3,6 +3,7 @@
 import { composeInMemoryApp } from "./composition-root";
 import { ProviderId } from "./price-observations/domain";
 import { ListingId, UserId } from "./shared/domain";
+import { normalizeOrigin } from "./shared/http";
 
 // The demo passwords below are public: this server must never run in production.
 if (process.env["NODE_ENV"] === "production") {
@@ -13,12 +14,27 @@ if (process.env["NODE_ENV"] === "production") {
 const requestedPort = Number(process.env["PORT"]);
 const port = Number.isInteger(requestedPort) && requestedPort > 0 ? requestedPort : 3000;
 
+// The cookie of the Session (feature 08) is set for one origin: the address at which the browser reaches the
+// application. By default it is where this server listens. The interface in development is served by another
+// server that forwards the API, and the browser then sees the origin of that one: `WEB_ORIGIN` says it, for
+// example `WEB_ORIGIN=http://localhost:5173`. `secure` is off because this server speaks HTTP only.
+const requestedOrigin = process.env["WEB_ORIGIN"] ?? `http://127.0.0.1:${port}`;
+let webOrigin: string;
+try {
+  webOrigin = normalizeOrigin(requestedOrigin);
+} catch (error) {
+  console.error(`WEB_ORIGIN is not valid: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
+
 const { app, catalogue, registerAccount, providerAuthenticator, recordPriceObservation, createPriceAlert } = composeInMemoryApp({
   logger: true,
+  sessionCookie: { origin: webOrigin, secure: false },
   apiDocs: {
     note: [
       "Development server with demo data held in memory.",
       "",
+      `- Signing in also sets the session cookie, for a browser: \`HttpOnly\`, for ${webOrigin} only. Open this page at that address, so that the browser sends the cookie and the origin matches. The token in the body and the header \`Authorization\` work as always.`,
       "- Two Accounts to try: `demo1@example.com` with the password `demo-password-1`, and `demo2@example.com` with `demo-password-2`. They are two different Users. Sign in with `POST /sessions` and paste the `token` of the answer in Authorize: it is the token of a User, and it lasts 7 days. Accounts and Sessions are kept in memory, so a restart loses them and the demo Accounts are created again.",
       "- Token of the price provider, for the price observations: `demo-provider-token` (the provider `simulator`). It is not valid for the price alerts, and the tokens of the Users are not valid for the price observations.",
       "- Six Listings with fictitious titles and Retailers, read with `GET /listings` (a page, ordered by title and then by identifier) and `GET /listings/{listingId}`, with the token of a User: `headphones-shop-a` (100.00 EUR), `headphones-shop-b` (104.90 EUR), `keyboard-shop-a` (59.00 EUR), `keyboard-shop-b` (50.00 USD), `webcam-shop-b` (45.00 USD) and `monitor-shop-a` (no Current Price). Choose one, and create a price alert for it.",
@@ -71,6 +87,7 @@ await createPriceAlert.execute({
 // Listen on the local machine only: the demo Accounts must not be reachable from outside.
 await app.listen({ port, host: "127.0.0.1" });
 app.log.info(`Interactive API documentation: http://127.0.0.1:${port}/docs`);
+app.log.info(`Session cookie on for the origin ${webOrigin}`);
 
 const stop = async () => {
   await app.close();

@@ -143,3 +143,15 @@ The fourth feature of the [method of five stages](features/README.md). The code 
 | 3 Design | [Design](features/07-listings-catalogue/03-design.md) | Approved |
 | 4 Build | [Application layer](../backend/src/price-observations/application/), [adapters](../backend/src/price-observations/adapters/) and [HTTP layer](../backend/src/price-observations/http/) | Implemented |
 | 5 Close | [Completion](features/07-listings-catalogue/04-completion.md) | Approved |
+
+### 08 — Session Cookie
+
+The fifth feature of the [method of five stages](features/README.md). It has no stage of ports and adapters, because it has none. The code is in the shared module, in the plugins of Users and in the Composition Root.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/08-session-cookie/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/08-session-cookie/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/08-session-cookie/03-design.md) | Approved |
+| 4 Build | [Shared HTTP module](../backend/src/shared/http/), [Accounts](../backend/src/accounts/http/) and the [Composition Root](../backend/src/composition-root.ts) | Implemented |
+| 5 Close | [Completion](features/08-session-cookie/04-completion.md) | Approved |
