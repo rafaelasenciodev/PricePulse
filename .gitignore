@@ -11,3 +11,7 @@
 # Node
 node_modules/
 dist/
+
+# Local environment files: they hold connection strings and must never be committed
+.env
+.env.*
