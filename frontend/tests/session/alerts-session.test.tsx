@@ -33,6 +33,7 @@ describe("an ended Session in the operations of feature 10", () => {
       changeTarget: vi.fn(async () => ended),
       cancelAlert: vi.fn(async () => ended),
       notifications: vi.fn(async () => ended),
+      priceHistory: vi.fn(),
       demo: vi.fn(),
     };
     render(

@@ -62,6 +62,15 @@ export interface Notification {
   readonly observedAt: string;
 }
 
+/**
+ * One entry of the Price History of a Listing: the moment it was observed and its price, or no price when the Listing was
+ * unavailable. The `provider` and the `listingId` that the API also sends are not copied: the interface does not use them.
+ */
+export interface PriceObservation {
+  readonly observedAt: string;
+  readonly price: Money | null;
+}
+
 /** The result of asking for a Price Alert: `created` is false when the one that already existed was returned. */
 export interface CreatedAlert {
   readonly alert: PriceAlert;

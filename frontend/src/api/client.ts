@@ -1,4 +1,18 @@
-import type { Account, AlertStatus, CreatedAlert, CurrentPrice, Failure, Listing, Money, Notification, Page, PriceAlert, Result, ServerMode } from "./types";
+import type {
+  Account,
+  AlertStatus,
+  CreatedAlert,
+  CurrentPrice,
+  Failure,
+  Listing,
+  Money,
+  Notification,
+  Page,
+  PriceAlert,
+  PriceObservation,
+  Result,
+  ServerMode,
+} from "./types";
 
 /**
  * The part of `fetch` that the client uses. The page gives its own, and a test gives a fake one.
@@ -20,7 +34,7 @@ export interface AlertQuery extends PageQuery {
 }
 
 /**
- * The twelve operations of the API that the interface uses. None of them throws: each gives a `Result`.
+ * The thirteen operations of the API that the interface uses. None of them throws: each gives a `Result`.
  *
  * The page never holds the token of a Session (BR-01 of feature 09): what the API returns when signing in is
  * read for the Account only, and the token is not copied anywhere. No request carries a header that names a
@@ -43,6 +57,8 @@ export interface ApiClient {
   cancelAlert(alertId: string): Promise<Result<PriceAlert>>;
   /** The Notifications of the person, newest first. */
   notifications(query: PageQuery): Promise<Result<Page<Notification>>>;
+  /** The Price History of a Listing, newest first (feature 13). */
+  priceHistory(listingId: string, query: PageQuery): Promise<Result<Page<PriceObservation>>>;
   /** Whether the server is a demo with simulated data (feature 12). It needs no Session. */
   demo(): Promise<Result<ServerMode>>;
 }
@@ -97,6 +113,14 @@ function toNotification(value: unknown): Notification | null {
   const currentPrice = toMoney(value["currentPrice"]);
   if (!isText(alertId) || !isText(listingId) || !isText(observedAt) || targetPrice === null || currentPrice === null) return null;
   return { alertId, listingId, targetPrice, currentPrice, observedAt };
+}
+
+function toObservation(value: unknown): PriceObservation | null {
+  if (!isRecord(value) || !isText(value["observedAt"])) return null;
+  // A price that is null means that the Listing was unavailable. A price that is not a Money is not what the API gives.
+  const price = value["price"] === null ? null : toMoney(value["price"]);
+  if (value["price"] !== null && price === null) return null;
+  return { observedAt: value["observedAt"], price };
 }
 
 function toPage<T>(value: unknown, toItem: (item: unknown) => T | null): Page<T> | null {
@@ -226,6 +250,12 @@ export function createApiClient({ fetch: send }: ApiClientOptions): ApiClient {
     notifications: ({ limit, offset }) =>
       call("GET", `/notifications?limit=${limit}&offset=${offset}`, undefined, (status, json) => {
         const page = status === 200 ? toPage(json, toNotification) : null;
+        return page === null ? null : { value: page };
+      }),
+
+    priceHistory: (listingId, { limit, offset }) =>
+      call("GET", `/listings/${encodeURIComponent(listingId)}/price-observations?limit=${limit}&offset=${offset}`, undefined, (status, json) => {
+        const page = status === 200 ? toPage(json, toObservation) : null;
         return page === null ? null : { value: page };
       }),
 

@@ -10,6 +10,7 @@ export type {
   Notification,
   Page,
   PriceAlert,
+  PriceObservation,
   Result,
   ServerMode,
 } from "./types";

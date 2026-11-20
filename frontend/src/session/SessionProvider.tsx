@@ -55,6 +55,7 @@ export function SessionProvider({ client, children }: { readonly client: ApiClie
       changeTarget: watch(client.changeTarget.bind(client)),
       cancelAlert: watch(client.cancelAlert.bind(client)),
       notifications: watch(client.notifications.bind(client)),
+      priceHistory: watch(client.priceHistory.bind(client)),
       // It needs no Session, so no answer of it ends one.
       demo: client.demo.bind(client),
     };

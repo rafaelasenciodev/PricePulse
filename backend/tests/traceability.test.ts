@@ -29,6 +29,8 @@ const FRONTEND_TESTS_DIR = new URL("../../frontend/tests/", import.meta.url);
 const isFeature10FrontendTest = (path: string) => /(^|\/)(alerts|notifications)[^/]*\.test\.tsx?$/.test(path);
 // The tests of feature 12 in the interface (the notice of the demo) are in files whose name starts with "demo".
 const isFeature12FrontendTest = (path: string) => /(^|\/)demo[^/]*\.test\.tsx?$/.test(path);
+// The tests of feature 13 in the interface are in files whose name starts with "redesign".
+const isFeature13FrontendTest = (path: string) => /(^|\/)redesign[^/]*\.test\.tsx?$/.test(path);
 
 interface Feature {
   readonly name: string;
@@ -63,6 +65,7 @@ const FEATURES: readonly Feature[] = [
       !path.startsWith("session-cookie/") &&
       !path.startsWith("web-interface/") &&
       !path.startsWith("my-alerts/") &&
+      !path.startsWith("interface-redesign/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
@@ -176,7 +179,7 @@ const FEATURES: readonly Feature[] = [
     rulesFile: "01-discovery.md",
     // The interface is tested in its own project, and what it needs of the application is tested here, in a folder of its own.
     owns: (path) => path.startsWith("web-interface/"),
-    ownsFrontend: (path) => !isFeature10FrontendTest(path) && !isFeature12FrontendTest(path),
+    ownsFrontend: (path) => !isFeature10FrontendTest(path) && !isFeature12FrontendTest(path) && !isFeature13FrontendTest(path),
     scenarios: 36,
     rules: 14,
     exemptRules: {},
