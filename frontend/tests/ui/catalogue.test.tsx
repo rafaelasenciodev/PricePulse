@@ -58,17 +58,17 @@ describe("the Catalogue is read one page at a time (SC-18, BR-07)", () => {
     const user = renderApp(clientWith(listings), "/catalogue");
     await screen.findByText("Product 01");
     expect(titles()).toHaveLength(20);
-    expect(screen.getByText(screens.catalogue.range(1, 20, 25))).toBeTruthy();
-    expect(screen.getByRole("link", { name: screens.catalogue.next }).getAttribute("href")).toBe("/catalogue?page=2");
-    expect(screen.queryByRole("link", { name: screens.catalogue.previous })).toBeNull();
+    expect(screen.getByText(screens.paging.range(1, 20, 25))).toBeTruthy();
+    expect(screen.getByRole("link", { name: screens.paging.next }).getAttribute("href")).toBe("/catalogue?page=2");
+    expect(screen.queryByRole("link", { name: screens.paging.previous })).toBeNull();
     expect(listings).toHaveBeenLastCalledWith({ limit: 20, offset: 0 });
 
-    await user.click(screen.getByRole("link", { name: screens.catalogue.next }));
+    await user.click(screen.getByRole("link", { name: screens.paging.next }));
     await screen.findByText("Product 21");
     expect(titles()).toHaveLength(5);
-    expect(screen.getByText(screens.catalogue.range(21, 25, 25))).toBeTruthy();
-    expect(screen.getByRole("link", { name: screens.catalogue.previous }).getAttribute("href")).toBe("/catalogue?page=1");
-    expect(screen.queryByRole("link", { name: screens.catalogue.next })).toBeNull();
+    expect(screen.getByText(screens.paging.range(21, 25, 25))).toBeTruthy();
+    expect(screen.getByRole("link", { name: screens.paging.previous }).getAttribute("href")).toBe("/catalogue?page=1");
+    expect(screen.queryByRole("link", { name: screens.paging.next })).toBeNull();
     expect(listings).toHaveBeenLastCalledWith({ limit: 20, offset: 20 });
   });
 
@@ -140,7 +140,7 @@ describe("an ended Session while reading the Catalogue (SC-14, BR-06)", () => {
           : sessionEnded,
       );
     const user = renderApp(clientWith(listings), "/catalogue");
-    await user.click(await screen.findByRole("link", { name: screens.catalogue.next }));
+    await user.click(await screen.findByRole("link", { name: screens.paging.next }));
     await screen.findByRole("heading", { name: screens.signIn.title });
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe(failures.sessionEnded));
   });

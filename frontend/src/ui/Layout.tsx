@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 import { useSession } from "../session";
 import { isSessionEnded, messageFor, screens } from "../texts";
 import { useSubmit } from "./useSubmit";
@@ -20,6 +21,11 @@ export function Layout({ children }: { readonly children: ReactNode }) {
     <>
       <header className="bar">
         <span className="brand">{screens.appName}</span>
+        <nav aria-label={screens.nav.label} className="nav">
+          <NavLink to="/catalogue">{screens.nav.catalogue}</NavLink>
+          <NavLink to="/alerts">{screens.nav.alerts}</NavLink>
+          <NavLink to="/notifications">{screens.nav.notifications}</NavLink>
+        </nav>
         {state.status === "signedIn" && <span className="who">{state.account.email}</span>}
         <button type="button" onClick={() => void handleSignOut()} disabled={pending}>
           {pending ? screens.signOut.submitting : screens.signOut.submit}

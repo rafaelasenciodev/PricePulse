@@ -17,6 +17,7 @@ export const vocabulary = {
   listing: "producto",
   retailer: "tienda",
   priceAlert: "alerta de precio",
+  notification: "notificación",
   targetPrice: "precio objetivo",
   currentPrice: "precio actual",
   observedAt: "observado el",
@@ -56,11 +57,47 @@ export const screens = {
   catalogue: {
     title: "Catálogo",
     empty: "Todavía no hay productos.",
-    /** Which ones of how many are shown (SC-18). */
-    range: (from: number, to: number, total: number) => `Mostrando ${from}–${to} de ${total}`,
     pagesLabel: "Páginas del catálogo",
+  },
+  /** What every list that is read one page at a time says (SC-18, SC-07, SC-22). */
+  paging: {
+    /** Which ones of how many are shown. */
+    range: (from: number, to: number, total: number) => `Mostrando ${from}–${to} de ${total}`,
     previous: "Anterior",
     next: "Siguiente",
+  },
+  nav: {
+    label: "Navegación principal",
+    catalogue: "Catálogo",
+    alerts: "Mis alertas",
+    notifications: "Mis notificaciones",
+  },
+  /** Feature 10: the Price Alerts of the person. */
+  alerts: {
+    title: "Mis alertas de precio",
+    /** SC-05: the person has none, and the way to get one is the Catalogue. */
+    empty: `No tienes ninguna ${v.priceAlert}.`,
+    emptyFiltered: `No tienes ninguna ${v.priceAlert} con ese estado.`,
+    toCatalogue: "Ir al catálogo",
+    filterLabel: "Filtrar por estado",
+    pagesLabel: "Páginas de alertas",
+    /** SC-06: the filter has the three states of an alert and "all". */
+    filters: { all: "Todas", active: "Activas", triggered: "Disparadas", cancelled: "Canceladas" },
+    status: { active: "Activa", triggered: "Disparada", cancelled: "Cancelada" },
+    targetPrice: (amount: string) => `Precio objetivo: ${amount}`,
+    state: (status: string) => `Estado: ${status}`,
+    createdAt: (when: string) => `Creada el ${when}`,
+  },
+  /** Feature 10: the Notifications of the person. */
+  notifications: {
+    title: "Mis notificaciones",
+    /** BR-10: they are a record, and nothing is sent anywhere else. */
+    note: `Una ${v.notification} es el registro de una ${v.priceAlert} que ha alcanzado su ${v.targetPrice}. Se guardan aquí y no se envían a ningún otro sitio.`,
+    empty: "Todavía no tienes ninguna notificación.",
+    pagesLabel: "Páginas de notificaciones",
+    targetPrice: (amount: string) => `Precio objetivo: ${amount}`,
+    currentPrice: (amount: string) => `Precio actual: ${amount}`,
+    observedAt: (when: string) => `Observado el ${when}`,
   },
   /** What a Listing shows wherever it is shown. */
   listing: {

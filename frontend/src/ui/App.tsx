@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AlertsScreen } from "./AlertsScreen";
 import { CatalogueScreen } from "./CatalogueScreen";
 import { ListingScreen } from "./ListingScreen";
+import { NotificationsScreen } from "./NotificationsScreen";
 import { RegisterScreen } from "./RegisterScreen";
 import { RequireGuest, RequireSession } from "./RequireSession";
 import { SignInScreen } from "./SignInScreen";
@@ -20,6 +22,8 @@ export function App() {
       <Route element={<RequireSession />}>
         <Route path="catalogue" element={<CatalogueScreen />} />
         <Route path="listings/:id" element={<ListingScreen />} />
+        <Route path="alerts" element={<AlertsScreen />} />
+        <Route path="notifications" element={<NotificationsScreen />} />
       </Route>
       <Route path="*" element={<Navigate to="/catalogue" replace />} />
     </Routes>
