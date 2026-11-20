@@ -125,3 +125,4 @@ Features 01 to 03 followed eleven phases. Their documents keep their names and a
 | 10 | [My Alerts and My Notifications](10-my-alerts-and-notifications/01-discovery.md) | Stage 5 — Close (done, pending merge) |
 | 11 | [Persistence](11-persistence/01-discovery.md) | Stage 5 — Close (done, pending merge) |
 | 12 | [Deployment](12-deployment/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 13 | [Interface Redesign](13-interface-redesign/01-discovery.md) | Stage 5 — Close (in review) |

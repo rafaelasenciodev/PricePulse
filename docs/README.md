@@ -205,3 +205,15 @@ The ninth feature of the [method of five stages](features/README.md). It lets th
 | 3 Design | [Design](features/12-deployment/03-design.md) | Approved |
 | 4 Build | [The settings](../backend/src/settings.ts), [the reset](../backend/src/reset-demo.ts) and [the notice](../frontend/src/ui/DemoNotice.tsx) | Implemented |
 | 5 Close | [Completion](features/12-deployment/04-completion.md) | Approved |
+
+### 13 — Interface Redesign
+
+The tenth feature of the [method of five stages](features/README.md). It gives the interface a new look with Tailwind CSS, shows the Catalogue as cards, and draws the Price History of a Listing as a chart. The backend and the API do not change.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/13-interface-redesign/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/13-interface-redesign/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/13-interface-redesign/03-design.md) | Approved |
+| 4 Build | [The screens](../frontend/src/ui/), [the styles](../frontend/src/index.css) and [the points of the chart](../frontend/src/ui/chartPoints.ts) | Implemented |
+| 5 Close | [Completion](features/13-interface-redesign/04-completion.md) | Draft |

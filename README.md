@@ -24,7 +24,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence: with `DATABASE_URL` the server keeps its data in PostgreSQL and applies the schema when it starts, and without it the data is in memory (feature 11) | Implemented, tested against PostgreSQL 17 in Docker, and tried with a real server restarted. Not deployed |
 | Public demo: a demo mode that lets the server run in production with simulated data, a command that resets its data, and a notice in the interface (feature 12) | Implemented and tried in a real browser on the local machine. The platform is decided ([ADR-0007](docs/adr/0007-deployment-platform.md)), and **no service has been created yet** |
-| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
+| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10), restyled with Tailwind CSS, with the Catalogue as cards and the Price History of a Listing as a chart (feature 13) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
 
@@ -381,7 +381,7 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). The server runs with `tsx`, also in production, and the demo is planned on Render with its database in Neon ([ADR-0007](docs/adr/0007-deployment-platform.md)). Not decided yet: background jobs.
+The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). It is styled with Tailwind CSS and draws the price chart with Recharts ([feature 13](docs/features/13-interface-redesign/01-discovery.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). The server runs with `tsx`, also in production, and the demo is planned on Render with its database in Neon ([ADR-0007](docs/adr/0007-deployment-platform.md)). Not decided yet: background jobs.
 
 ## Testing
 
@@ -422,6 +422,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 10, stage by stage | [`docs/features/10-my-alerts-and-notifications/`](docs/features/10-my-alerts-and-notifications/) |
 | Feature 11, stage by stage | [`docs/features/11-persistence/`](docs/features/11-persistence/) |
 | Feature 12, stage by stage | [`docs/features/12-deployment/`](docs/features/12-deployment/) |
+| Feature 13, stage by stage | [`docs/features/13-interface-redesign/`](docs/features/13-interface-redesign/) |
 
 ## Data
 
