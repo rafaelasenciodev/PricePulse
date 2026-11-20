@@ -32,6 +32,7 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | [ADR-0004: Users authenticate with server-side sessions, scrypt and a bearer token](adr/0004-authentication.md) | Approved |
 | [ADR-0005: The web interface is a single-page application served by the backend, with the session in a cookie](adr/0005-web-interface.md) | Approved |
 | [ADR-0006: Data is kept in PostgreSQL, through its driver and SQL written by hand](adr/0006-postgresql.md) | Approved |
+| [ADR-0007: The public demo runs on Render, with its database in Neon](adr/0007-deployment-platform.md) | Approved |
 
 ## Quality
 
@@ -192,3 +193,15 @@ The eighth feature of the [method of five stages](features/README.md). It keeps 
 | 3 Design | [Design](features/11-persistence/03-design.md) | Approved |
 | 4 Build | [The database layer](../backend/src/database/), the adapters of [Accounts](../backend/src/accounts/adapters/postgres.ts), [Price Alerts](../backend/src/price-alerts/adapters/postgres.ts) and [Price Observations](../backend/src/price-observations/adapters/postgres.ts), and [`storage.ts`](../backend/src/storage.ts) | Implemented |
 | 5 Close | [Completion](features/11-persistence/04-completion.md) | Approved |
+
+### 12 — Deployment
+
+The ninth feature of the [method of five stages](features/README.md). It lets the server run as a public demo with simulated data, and decides where it is deployed. Nothing is deployed yet. The code is in the settings of the server, the reset command, the route of the demo and the notice of the interface.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/12-deployment/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/12-deployment/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/12-deployment/03-design.md) | Approved |
+| 4 Build | [The settings](../backend/src/settings.ts), [the reset](../backend/src/reset-demo.ts) and [the notice](../frontend/src/ui/DemoNotice.tsx) | Implemented |
+| 5 Close | [Completion](features/12-deployment/04-completion.md) | Approved |

@@ -2,7 +2,7 @@
 
 A price-tracking platform: monitor product prices, consult price history, and get alerted when a product reaches a target price.
 
-> **Status: in development.** Eleven features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface**, **My Alerts and My Notifications** and **Persistence**. The data is kept in PostgreSQL when the server is given a database, and in memory when it is not. The rest of the platform is planned and not started. See [What works today](#what-works-today).
+> **Status: in development.** Twelve features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface**, **My Alerts and My Notifications**, **Persistence** and **Deployment**. The data is kept in PostgreSQL when the server is given a database, and in memory when it is not. The server can run as a public demo, which is prepared and **not deployed yet**. The rest of the platform is planned and not started. See [What works today](#what-works-today).
 
 PricePulse is a Master's Final Project (TFM), a professional portfolio project, and a vehicle for a repeatable, design-first engineering methodology (see [`docs/features/README.md`](docs/features/README.md)).
 
@@ -12,7 +12,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 |---|---|
 | Create Price Alert | Implemented, with in-memory storage |
 | Record Price Observation (a price provider reports the price of a Listing) | Implemented, with in-memory storage |
-| Interactive API documentation | Implemented, in the development server only |
+| Interactive API documentation | Implemented, in the development server and in the demo |
 | Simulating prices on a schedule | Not started |
 | Alert evaluation: recording a price evaluates the Price Alerts of its Listing, and those it reaches become Triggered with a stored Notification | Implemented, with in-memory storage |
 | Read and manage Price Alerts: list them, read one, change its Target Price, cancel it | Implemented, with in-memory storage |
@@ -23,6 +23,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented, and tried in a real browser with the interface of feature 09 (Chrome, over HTTP on the local machine) |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence: with `DATABASE_URL` the server keeps its data in PostgreSQL and applies the schema when it starts, and without it the data is in memory (feature 11) | Implemented, tested against PostgreSQL 17 in Docker, and tried with a real server restarted. Not deployed |
+| Public demo: a demo mode that lets the server run in production with simulated data, a command that resets its data, and a notice in the interface (feature 12) | Implemented and tried in a real browser on the local machine. The platform is decided ([ADR-0007](docs/adr/0007-deployment-platform.md)), and **no service has been created yet** |
 | Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
@@ -125,7 +126,7 @@ The server starts with demo data, defined in [`backend/src/demo-data.ts`](backen
 
 The Current Price of each Listing is not stored. The server records one observation per Listing when it starts, as the provider would, and the Current Price is the price of the latest observation.
 
-The retailers are fictitious. Without a database everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. With a database ([below](#running-with-a-database)) the demo data is created once and a restart finds it as it was left. The demo passwords are public, as they are in this file, so the server refuses to run in production. The server listens on `127.0.0.1` only, and it refuses to start when `NODE_ENV` is `production`. Use `PORT=3001 npm run dev` to change the port.
+The retailers are fictitious. Without a database everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. With a database ([below](#running-with-a-database)) the demo data is created once and a restart finds it as it was left. The demo passwords are public, as they are in this file, so in production the server starts only if it is declared a demo ([below](#running-as-a-public-demo)). It listens on `127.0.0.1` unless `HOST` says another address. Use `PORT=3001 npm run dev` to change the port.
 
 ### Running with a database
 
@@ -138,6 +139,48 @@ DATABASE_URL=postgres://pricepulse:pricepulse@127.0.0.1:5433/pricepulse npm run 
 ```
 
 The server connects, applies the pending migrations of [`backend/src/database/migrations/`](backend/src/database/migrations/), says at which database it keeps its data (without the user and the password), creates the demo data if it is absent, and starts. Stop it and start it again: the Accounts, the Sessions, the alerts and the prices are where they were left. `npm run migrate`, with the same `DATABASE_URL`, applies the migrations without starting the server. If the database cannot be reached the server does not start, and says only the code of the failure. The user and the password of `compose.yaml` are for development: it listens on the local machine only.
+
+### Running as a public demo
+
+The server can run as a public demo with simulated data, so that a person can try it without installing anything ([feature 12](docs/features/12-deployment/01-discovery.md)). It is not deployed yet: these are the steps to run it, and the ones that will apply at its address once it exists.
+
+| Variable | What it does |
+|---|---|
+| `DEMO_MODE` | Only the text `true` declares the demo mode. Without it the server refuses `NODE_ENV=production`, because its passwords are public. In demo mode the start, `/docs` and a notice of the interface say that it is a demo |
+| `HOST` | The address at which the server listens. `127.0.0.1` by default. A server that other machines must reach needs `0.0.0.0` |
+| `PORT` | The port. 3000 by default |
+| `WEB_ORIGIN` | The exact address at which the browser reaches the application. The cookie of the Session is `Secure` when it starts with `https`, and a change of data from another origin is refused |
+| `DATABASE_URL` | The PostgreSQL database. In production the server does not start without it, and neither without `WEB_ORIGIN` |
+
+To try it on your machine, with the interface built:
+
+```bash
+cd backend
+DEMO_MODE=true npm run dev       # or: DEMO_MODE=true npm start
+```
+
+`npm start` runs the server with `tsx`, without watching the files. **To make the data of the demo as it was at the start**, with a database, run `DEMO_MODE=true DATABASE_URL=... npm run reset-demo`. It empties every table and creates the demo data again, so it refuses without the demo mode and without a database, and it says only the code of a failure. Run it again if it stops half way.
+
+#### Trying the round trip
+
+1. Open `/app/` and sign in with `demo1@example.com` and `demo-password-1`, or create your own Account. The first answer of a free service after a while without visits can take about a minute.
+2. In the Catalogue, open "Wireless headphones" at Shop A (100.00 EUR) and create a Price Alert with a Target Price of 80.00. The Account `demo1` already has one.
+3. Open `/docs`, press **Authorize**, and in `providerAuth` paste `demo-provider-token`. Open `POST /listings/{listingId}/price-observations`, press **Try it out**, and send, for `headphones-shop-a`, `{"observedAt": "<the current moment, in UTC, as 2026-11-20T13:01:55.000Z>", "price": {"amount": "79.00", "currency": "EUR"}}`. The moment cannot be in the future, and a price that is older than the latest one of the Listing does not change its Current Price.
+4. Go back to the interface: your alert is Triggered, and "My notifications" shows that the price reached 79.00 against 80.00.
+
+The data is simulated and public: anyone can change the prices, and the data can be reset at any time.
+
+#### Deploying it
+
+The platform is Render for the application and Neon for the database ([ADR-0007](docs/adr/0007-deployment-platform.md), which cites the conditions of each plan and the date they were read). The service has the root of the repository as its directory, and these commands and variables:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm ci --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend` |
+| Start command | `npm start --prefix backend` |
+| Variables | `NODE_ENV=production`, `DEMO_MODE=true`, `HOST=0.0.0.0`, `WEB_ORIGIN` (the exact address of the service, `https`), and `DATABASE_URL` (the **direct** connection string of the database, with `sslmode=require`, and not the pooled one) |
+
+Before a delivery or a review, the Author reads the conditions of the plans again, opens the address, runs the reset and goes through the round trip once. The commands were written from the documentation of the platform and are checked when the service is created.
 
 ### The web interface
 
@@ -304,7 +347,7 @@ It has no endpoint. When a Price Observation is stored, new or repeated, the Pri
 
 ### Documentation of the API
 
-The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served only by the development server.
+The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served by the development server and by the demo.
 
 Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in the business rules of each feature, [Create Price Alert](docs/features/01-create-price-alert/01-business-rules.md), [Price Observation](docs/features/02-price-observation/01-business-rules.md) and [Read and Manage Price Alerts](docs/features/04-read-and-manage-alerts/01-discovery.md), [Notifications and Price History](docs/features/05-notifications-and-price-history/01-discovery.md), [Accounts and Authentication](docs/features/06-accounts-and-authentication/01-discovery.md) [Listings Catalogue](docs/features/07-listings-catalogue/01-discovery.md) and [Session Cookie](docs/features/08-session-cookie/01-discovery.md), and the full contracts in their use case contracts, [feature 01](docs/features/01-create-price-alert/04-use-case-contract.md), [feature 02](docs/features/02-price-observation/04-use-case-contract.md) and the designs of [feature 04](docs/features/04-read-and-manage-alerts/03-design.md), [feature 05](docs/features/05-notifications-and-price-history/03-design.md), [feature 06](docs/features/06-accounts-and-authentication/03-design.md), [feature 07](docs/features/07-listings-catalogue/03-design.md) and [feature 08](docs/features/08-session-cookie/03-design.md).
 
@@ -338,7 +381,7 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). Not decided yet: background jobs, how the application is built for production, and where it is deployed.
+The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). The server runs with `tsx`, also in production, and the demo is planned on Render with its database in Neon ([ADR-0007](docs/adr/0007-deployment-platform.md)). Not decided yet: background jobs.
 
 ## Testing
 
@@ -378,6 +421,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 09, stage by stage | [`docs/features/09-web-interface/`](docs/features/09-web-interface/) |
 | Feature 10, stage by stage | [`docs/features/10-my-alerts-and-notifications/`](docs/features/10-my-alerts-and-notifications/) |
 | Feature 11, stage by stage | [`docs/features/11-persistence/`](docs/features/11-persistence/) |
+| Feature 12, stage by stage | [`docs/features/12-deployment/`](docs/features/12-deployment/) |
 
 ## Data
 

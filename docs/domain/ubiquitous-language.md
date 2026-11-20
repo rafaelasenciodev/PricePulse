@@ -31,6 +31,9 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **Session** | The period during which a token identifies an Account. It starts when the person signs in, and ends when it expires or when they sign out. | Feature 06 |
 | **Catalogue** | The set of Listings that the system knows. Only a Listing in it can be observed, watched or read. | Feature 07 |
 | **Session cookie** | The cookie that carries the token of a Session, which the browser sends by itself. It is not a second kind of Session: it holds the same token as the header does. | Feature 08 |
+| **Reviewer** | A person who opens the public demo to judge the project: a supervisor or a recruiter. | [Feature 12](../features/12-deployment/01-discovery.md) |
+| **Demo mode** | The state of a server that declares that its data is simulated and that its passwords and the token of its Provider are public. A server in production starts only in it. | Feature 12 |
+| **Demo reset** | The command with which the Author returns the data of the demo to its first state. | Feature 12 |
 
 ## Vocabulary decisions
 
