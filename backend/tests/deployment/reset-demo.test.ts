@@ -31,13 +31,13 @@ describe("the reset of the demo refuses", () => {
 describe("SC-17 / BR-08: the reset that cannot reach the database", () => {
   const environment = { DEMO_MODE: "true", DATABASE_URL: "postgres://someone:s3cr3t-pass@127.0.0.1:1/private_db" };
 
-  it("ends with an error that says only the code of the failure", async () => {
+  it("SC-17 / BR-08: ends with an error that says only the code of the failure", async () => {
     const error = await resetDemo(environment, quiet).catch((e) => e);
     expect(error).toBeInstanceOf(ResetRefused);
     expect(error.message).toMatch(/^Could not connect to the database \(\w+\)\.$/);
   });
 
-  it("shows the password, the user and the address nowhere", async () => {
+  it("SC-17 / BR-08: shows the password, the user and the address nowhere", async () => {
     const lines: string[] = [];
     const error = await resetDemo(environment, { info: (m) => lines.push(m) }).catch((e) => e);
     const everything = [error.message, error.stack ?? "", String(error.cause ?? ""), ...lines].join("\n");

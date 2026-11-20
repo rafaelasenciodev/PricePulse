@@ -24,8 +24,11 @@ const TESTS_DIR = new URL("./", import.meta.url);
 const FRONTEND_TESTS_DIR = new URL("../../frontend/tests/", import.meta.url);
 
 // The scenarios of two features are numbered apart, so a test of the interface is told apart by its file: the tests of
-// feature 10 are in files whose name starts with "alerts" or "notifications", and every other one is feature 09's.
+// feature 10 are in files whose name starts with "alerts" or "notifications", those of feature 12 in files that start with
+// "demo", and every other one is feature 09's.
 const isFeature10FrontendTest = (path: string) => /(^|\/)(alerts|notifications)[^/]*\.test\.tsx?$/.test(path);
+// The tests of feature 12 in the interface (the notice of the demo) are in files whose name starts with "demo".
+const isFeature12FrontendTest = (path: string) => /(^|\/)demo[^/]*\.test\.tsx?$/.test(path);
 
 interface Feature {
   readonly name: string;
@@ -173,7 +176,7 @@ const FEATURES: readonly Feature[] = [
     rulesFile: "01-discovery.md",
     // The interface is tested in its own project, and what it needs of the application is tested here, in a folder of its own.
     owns: (path) => path.startsWith("web-interface/"),
-    ownsFrontend: (path) => !isFeature10FrontendTest(path),
+    ownsFrontend: (path) => !isFeature10FrontendTest(path) && !isFeature12FrontendTest(path),
     scenarios: 36,
     rules: 14,
     exemptRules: {},
@@ -207,6 +210,23 @@ const FEATURES: readonly Feature[] = [
     exemptScenarios: {
       "SC-29":
         "A run with no database must fail and not skip, and that is the set-up of the database tests failing before any test exists to report it: it is checked by hand, by running `npm run test:db` with the database stopped.",
+    },
+  },
+  {
+    name: "feature 12",
+    docs: "12-deployment/",
+    rulesFile: "01-discovery.md",
+    // The settings, the reset and the demo in process are in a folder of their own, and the notice is in the interface.
+    owns: (path) => path.startsWith("deployment/"),
+    ownsFrontend: isFeature12FrontendTest,
+    scenarios: 20,
+    rules: 11,
+    exemptRules: {},
+    exemptScenarios: {
+      "SC-04":
+        "The line that the server writes when it starts is in `main.ts`, the file that starts the process, which no test of the project runs: it is checked by hand, by starting the server with the demo mode and reading what it says.",
+      "SC-05":
+        "The note of the documentation is made in `main.ts`, for the same reason: it is checked by hand, by starting the server as a demo and reading `/docs/json`.",
     },
   },
 ];

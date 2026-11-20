@@ -45,7 +45,7 @@ const interfaceBuilt = existsSync(`${webRoot}index.html`);
 const application = storage.compose({
   logger: true,
   ...(interfaceBuilt ? { webInterface: { root: webRoot } } : {}),
-  sessionCookie: { origin: settings.origin, secure: settings.secureCookie },
+  sessionCookie: { origin: webOrigin, secure: settings.secureCookie },
   demo: settings.demo,
   apiDocs: {
     note: [
