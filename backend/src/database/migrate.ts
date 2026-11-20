@@ -19,6 +19,14 @@ const FILE = /^(\d{4})-([a-z0-9-]+)\.sql$/;
 /** Any number that identifies this lock among the others of the server. */
 const LOCK_KEY = 5_160_011;
 
+/** A step failed. Its message names the step and nothing of the server; the error of the database is the cause. */
+export class MigrationFailed extends Error {
+  constructor(step: string, cause: unknown) {
+    super(`Migration ${step} failed`, { cause });
+    this.name = "MigrationFailed";
+  }
+}
+
 interface Step {
   readonly version: number;
   readonly name: string;
@@ -74,7 +82,7 @@ export async function migrate(pool: Pool, directory: string): Promise<string[]> 
           await client.query("COMMIT");
         } catch (error) {
           await client.query("ROLLBACK");
-          throw new Error(`Migration ${label(step)} failed`, { cause: error });
+          throw new MigrationFailed(label(step), error);
         }
         applied.push(label(step));
       }

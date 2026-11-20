@@ -1,16 +1,21 @@
-/** Starts the server with in-memory adapters and a little demo data. Development only. */
+/** Starts the development server with demo data. In memory, or in PostgreSQL when `DATABASE_URL` is set. */
 
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { composeInMemoryApp } from "./composition-root";
-import { ProviderId } from "./price-observations/domain";
-import { ListingId, UserId } from "./shared/domain";
+import { DEMO_PROVIDER_TOKEN, seedDemoData } from "./demo-data";
+import { chooseStorage, StorageRefused, type Storage } from "./storage";
 import { normalizeOrigin } from "./shared/http";
 
-// The demo passwords below are public: this server must never run in production.
-if (process.env["NODE_ENV"] === "production") {
-  console.error("main.ts starts the development server with demo data and must not run in production.");
-  process.exit(1);
+// Where the data is kept is decided first: it refuses production, because the demo passwords below are public.
+let storage: Storage;
+try {
+  storage = await chooseStorage(process.env, { info: (message) => console.log(message), warn: (message) => console.warn(message) });
+} catch (error) {
+  if (error instanceof StorageRefused) {
+    console.error(error.message);
+    process.exit(1);
+  }
+  throw error;
 }
 
 const requestedPort = Number(process.env["PORT"]);
@@ -34,17 +39,19 @@ try {
 const webRoot = fileURLToPath(new URL("../../frontend/dist/", import.meta.url));
 const interfaceBuilt = existsSync(`${webRoot}index.html`);
 
-const { app, catalogue, registerAccount, providerAuthenticator, recordPriceObservation, createPriceAlert } = composeInMemoryApp({
+const application = storage.compose({
   logger: true,
   ...(interfaceBuilt ? { webInterface: { root: webRoot } } : {}),
   sessionCookie: { origin: webOrigin, secure: false },
   apiDocs: {
     note: [
-      "Development server with demo data held in memory.",
+      storage.description === "memory"
+        ? "Development server with demo data held in memory."
+        : `Development server with demo data kept in the PostgreSQL database ${storage.description}.`,
       "",
       `- Signing in also sets the session cookie, for a browser: \`HttpOnly\`, for ${webOrigin} only. Open this page at that address, so that the browser sends the cookie and the origin matches. The token in the body and the header \`Authorization\` work as always.`,
-      "- Two Accounts to try: `demo1@example.com` with the password `demo-password-1`, and `demo2@example.com` with `demo-password-2`. They are two different Users. Sign in with `POST /sessions` and paste the `token` of the answer in Authorize: it is the token of a User, and it lasts 7 days. Accounts and Sessions are kept in memory, so a restart loses them and the demo Accounts are created again.",
-      "- Token of the price provider, for the price observations: `demo-provider-token` (the provider `simulator`). It is not valid for the price alerts, and the tokens of the Users are not valid for the price observations.",
+      "- Two Accounts to try: `demo1@example.com` with the password `demo-password-1`, and `demo2@example.com` with `demo-password-2`. They are two different Users. Sign in with `POST /sessions` and paste the `token` of the answer in Authorize: it is the token of a User, and it lasts 7 days. With the data in memory a restart loses it and the demo Accounts are created again; in a database they stay as they were left.",
+      `- Token of the price provider, for the price observations: \`${DEMO_PROVIDER_TOKEN}\` (the provider \`simulator\`). It is not valid for the price alerts, and the tokens of the Users are not valid for the price observations.`,
       "- Six Listings with fictitious titles and Retailers, read with `GET /listings` (a page, ordered by title and then by identifier) and `GET /listings/{listingId}`, with the token of a User: `headphones-shop-a` (100.00 EUR), `headphones-shop-b` (104.90 EUR), `keyboard-shop-a` (59.00 EUR), `keyboard-shop-b` (50.00 USD), `webcam-shop-b` (45.00 USD) and `monitor-shop-a` (no Current Price). Choose one, and create a price alert for it.",
       "- The Current Price of a Listing is the price of its latest observation. Record a new one to change it.",
       "- A Price Alert of `demo1@example.com` for `headphones-shop-a` with a Target Price of 80.00 EUR. Record an observation of 80.00 or less for that Listing, as the price provider, and the log of the server shows the alert triggered.",
@@ -53,44 +60,11 @@ const { app, catalogue, registerAccount, providerAuthenticator, recordPriceObser
     ].join("\n"),
   },
 });
+const { app } = application;
 
-// Demo data. The retailers are fictitious: the project uses no real retailer data.
-// The Accounts are registered with the use case, as anyone would: a password is only ever stored as a hash.
-const demoUser = await registerAccount.execute({ email: "demo1@example.com", password: "demo-password-1" });
-await registerAccount.execute({ email: "demo2@example.com", password: "demo-password-2" });
-providerAuthenticator.addProvider("demo-provider-token", ProviderId("simulator"));
-
-// The Catalogue. Two pairs of Listings share a title in different shops, so that the order by title and then
-// by identifier can be seen. The first prices are recorded as the simulator would, with the real use case: a
-// Listing has a Current Price only because an observation says so, and one of them has none (unavailable).
-const demoListings = [
-  { id: "headphones-shop-a", title: "Wireless headphones", retailer: "Shop A", currency: "EUR", price: "100.00" },
-  { id: "headphones-shop-b", title: "Wireless headphones", retailer: "Shop B", currency: "EUR", price: "104.90" },
-  { id: "keyboard-shop-a", title: "Mechanical keyboard", retailer: "Shop A", currency: "EUR", price: "59.00" },
-  { id: "keyboard-shop-b", title: "Mechanical keyboard", retailer: "Shop B", currency: "USD", price: "50.00" },
-  { id: "webcam-shop-b", title: "HD webcam", retailer: "Shop B", currency: "USD", price: "45.00" },
-  { id: "monitor-shop-a", title: "27-inch monitor", retailer: "Shop A", currency: "EUR", price: null },
-] as const;
-
-const demoProvider = ProviderId("simulator");
-const observedAt = new Date().toISOString();
-for (const { id, title, retailer, currency, price } of demoListings) {
-  catalogue.addListing(ListingId(id), currency, { title, retailer });
-  await recordPriceObservation.execute({
-    provider: demoProvider,
-    listingId: ListingId(id),
-    observedAt,
-    price: price === null ? null : { amount: price, currency },
-  });
-}
-
-// A demo Price Alert, so that the round trip can be seen: it is triggered when an observation of
-// the provider brings the price of the headphones to 80.00 or less, and the log says so.
-await createPriceAlert.execute({
-  owner: UserId(demoUser.id),
-  listingId: ListingId("headphones-shop-a"),
-  targetAmount: "80.00",
-});
+// Demo data. In a database it is created once, and a restart finds it as it was left.
+const { created } = await seedDemoData(application);
+console.log(created ? "Demo data created." : "Demo data was already there.");
 
 // Listen on the local machine only: the demo Accounts must not be reachable from outside.
 await app.listen({ port, host: "127.0.0.1" });
@@ -101,6 +75,7 @@ else app.log.warn("The web interface is not built, so /app/ is not served. Run `
 
 const stop = async () => {
   await app.close();
+  await storage.close();
   process.exit(0);
 };
 process.on("SIGINT", stop);

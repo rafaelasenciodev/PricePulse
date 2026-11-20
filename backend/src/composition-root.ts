@@ -22,6 +22,9 @@ import {
   InMemoryAccountRepository,
   InMemoryLoginAttemptStore,
   InMemorySessionStore,
+  PostgresAccountRepository,
+  PostgresLoginAttemptStore,
+  PostgresSessionStore,
   ScryptPasswordHasher,
 } from "./accounts/adapters";
 import {
@@ -30,13 +33,18 @@ import {
   RegisterAccount,
   SignIn,
   SignOut,
+  type AccountRepository,
+  type LoginAttemptStore,
   type PasswordHasher,
+  type SessionStore,
 } from "./accounts/application";
 import { buildApp, type ApiDocsOptions, type SessionCookieOptions, type WebInterfaceOptions } from "./app";
 import {
   ComposedListingReader,
   InMemoryNotificationRepository,
   InMemoryPriceAlertRepository,
+  PostgresNotificationRepository,
+  PostgresPriceAlertRepository,
 } from "./price-alerts/adapters";
 import {
   CancelPriceAlert,
@@ -48,12 +56,18 @@ import {
   ModifyTargetPrice,
   type CurrentPrice,
   type CurrentPriceSource,
+  type NotificationRepository,
+  type PriceAlertRepository,
 } from "./price-alerts/application";
 import { logEvaluation, withEvaluation, type EvaluationReport } from "./evaluation-trigger";
 import type { Authenticator } from "./price-alerts/http";
+import type { ListingId } from "./shared/domain";
+import type { Pool } from "./database/connect";
 import {
   InMemoryListingCatalogue,
   InMemoryPriceObservationRepository,
+  PostgresListingCatalogue,
+  PostgresPriceObservationRepository,
   SystemClock,
 } from "./price-observations/adapters";
 import {
@@ -62,13 +76,41 @@ import {
   ReadPriceHistory,
   RecordPriceObservation,
   type Clock,
+  type ListingCatalogue,
+  type PriceObservationRepository,
 } from "./price-observations/application";
 import { InMemoryProviderAuthenticator, type UserAuthenticator } from "./price-observations/http";
 
-export interface InMemoryApplication {
+/** The Catalogue is filled by the system and not by the use cases, so the stores give a way to add a Listing. */
+export interface ListingWriter {
+  addListing(listingId: ListingId, currency: string, text?: { title: string; retailer: string }): void | Promise<void>;
+}
+
+/** Where the application keeps what it stores: one store for each port that holds state. */
+export interface Stores {
+  readonly catalogue: ListingCatalogue & ListingWriter;
+  readonly observations: PriceObservationRepository;
+  readonly accounts: AccountRepository;
+  readonly sessions: SessionStore;
+  readonly loginAttempts: LoginAttemptStore;
+  readonly alerts: PriceAlertRepository;
+  readonly notifications: NotificationRepository;
+}
+
+export interface InMemoryStores extends Stores {
+  readonly catalogue: InMemoryListingCatalogue;
+  readonly observations: InMemoryPriceObservationRepository;
+  readonly accounts: InMemoryAccountRepository;
+  readonly sessions: InMemorySessionStore;
+  readonly loginAttempts: InMemoryLoginAttemptStore;
+  readonly alerts: InMemoryPriceAlertRepository;
+  readonly notifications: InMemoryNotificationRepository;
+}
+
+export interface Application<S extends Stores = Stores> {
   readonly app: FastifyInstance;
   /** The adapters, so that the caller can fill them with data (development and tests). */
-  readonly catalogue: InMemoryListingCatalogue;
+  readonly catalogue: S["catalogue"];
   /**
    * The use cases that register an Account and sign in, so that the caller can make a User the
    * way a person would (the demo and the tests), and not by writing into the adapters.
@@ -83,32 +125,65 @@ export interface InMemoryApplication {
   readonly recordPriceObservation: RecordPriceObservation;
   /** The use case that creates alerts and the stores of alerts and Notifications, for the demo and the tests. */
   readonly createPriceAlert: CreatePriceAlert;
-  readonly alerts: InMemoryPriceAlertRepository;
-  readonly notifications: InMemoryNotificationRepository;
+  readonly alerts: S["alerts"];
+  readonly notifications: S["notifications"];
+}
+
+export type InMemoryApplication = Application<InMemoryStores>;
+
+export interface ComposeOptions {
+  logger?: boolean;
+  apiDocs?: ApiDocsOptions;
+  /** Serves the built web interface under /app/ (feature 09). */
+  webInterface?: WebInterfaceOptions;
+  clock?: Clock;
+  /** How passwords are hashed. By default `scrypt` with its production cost, which is slow on purpose: tests give a fast one. */
+  passwordHasher?: PasswordHasher;
+  /**
+   * Turns on the cookie of the Session for the browser (feature 08). Without it only the header identifies a User,
+   * and nothing that exists changes. A origin that is not valid makes it throw when it is built.
+   */
+  sessionCookie?: SessionCookieOptions;
+  /** Receives what each Evaluation came to. By default it writes to the log of the application. */
+  onEvaluation?: (report: EvaluationReport) => void;
 }
 
 /** The application wired with in-memory adapters: no database, no external provider. */
-export function composeInMemoryApp(
-  options: {
-    logger?: boolean;
-    apiDocs?: ApiDocsOptions;
-    /** Serves the built web interface under /app/ (feature 09). */
-    webInterface?: WebInterfaceOptions;
-    clock?: Clock;
-    /** How passwords are hashed. By default `scrypt` with its production cost, which is slow on purpose: tests give a fast one. */
-    passwordHasher?: PasswordHasher;
-    /**
-     * Turns on the cookie of the Session for the browser (feature 08). Without it only the header identifies a User,
-     * and nothing that exists changes. A origin that is not valid makes it throw when it is built.
-     */
-    sessionCookie?: SessionCookieOptions;
-    /** Receives what each Evaluation came to. By default it writes to the log of the application. */
-    onEvaluation?: (report: EvaluationReport) => void;
-  } = {},
-): InMemoryApplication {
+export function composeInMemoryApp(options: ComposeOptions = {}): InMemoryApplication {
+  return composeApp(
+    {
+      catalogue: new InMemoryListingCatalogue(),
+      observations: new InMemoryPriceObservationRepository(),
+      accounts: new InMemoryAccountRepository(),
+      sessions: new InMemorySessionStore(),
+      loginAttempts: new InMemoryLoginAttemptStore(),
+      alerts: new InMemoryPriceAlertRepository(),
+      notifications: new InMemoryNotificationRepository(),
+    },
+    options,
+  );
+}
+
+/** The application wired with the adapters of PostgreSQL over a pool (feature 11). The schema must have been applied. */
+export function composePostgresApp(pool: Pool, options: ComposeOptions = {}): Application {
+  return composeApp(
+    {
+      catalogue: new PostgresListingCatalogue(pool),
+      observations: new PostgresPriceObservationRepository(pool),
+      accounts: new PostgresAccountRepository(pool),
+      sessions: new PostgresSessionStore(pool),
+      loginAttempts: new PostgresLoginAttemptStore(pool),
+      alerts: new PostgresPriceAlertRepository(pool),
+      notifications: new PostgresNotificationRepository(pool),
+    },
+    options,
+  );
+}
+
+/** Joins the use cases and the HTTP layer over the stores it is given. The only difference between storages is the stores. */
+export function composeApp<S extends Stores>(stores: S, options: ComposeOptions = {}): Application<S> {
+  const { catalogue, observations, alerts, accounts, sessions, notifications } = stores;
   // Price Observations
-  const catalogue = new InMemoryListingCatalogue();
-  const observations = new InMemoryPriceObservationRepository();
   const providerAuthenticator = new InMemoryProviderAuthenticator();
   const clock = options.clock ?? new SystemClock();
   const recordPriceObservation = new RecordPriceObservation(catalogue, observations, clock);
@@ -127,20 +202,16 @@ export function composeInMemoryApp(
     async (listingId) => (await catalogue.find(listingId))?.currency ?? null,
     async (listingId) => (await currentPriceOf(listingId))?.price ?? null,
   );
-  const alerts = new InMemoryPriceAlertRepository();
 
   // Accounts. One clock for everything, so a test that moves it moves the Sessions too.
-  const accounts = new InMemoryAccountRepository();
-  const sessions = new InMemorySessionStore();
   const hasher = options.passwordHasher ?? new ScryptPasswordHasher();
   const tokens = new CryptoSessionTokens();
   const registerAccount = new RegisterAccount(accounts, hasher);
-  const signIn = new SignIn(accounts, sessions, new InMemoryLoginAttemptStore(), hasher, tokens, clock);
+  const signIn = new SignIn(accounts, sessions, stores.loginAttempts, hasher, tokens, clock);
   const authenticate = new Authenticate(sessions, tokens, clock);
   const authenticator: Authenticator = { authenticate: (token) => authenticate.execute(token) };
   const createPriceAlert = new CreatePriceAlert(listings, alerts, clock);
 
-  const notifications = new InMemoryNotificationRepository();
   // The Price History is read by Users: the module of Price Observations asks only whether a token is a User's.
   const usersOnly: UserAuthenticator = { isUser: async (token) => (await authenticate.execute(token)) !== null };
   const evaluatePriceAlerts = new EvaluatePriceAlerts(alerts, notifications, { currentPriceOf });

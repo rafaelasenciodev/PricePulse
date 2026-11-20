@@ -13,7 +13,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main" | "database";
+type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main" | "database" | "storage" | "demo-data";
 
 /** For each layer: the internal layers it may import, and the packages it may use. */
 const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: readonly string[] }>> = {
@@ -29,9 +29,14 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   app: { imports: ["application", "http", "shared"], packages: ["fastify", "@fastify/static", "@fastify/swagger", "@fastify/swagger-ui", "node:path"] },
   // The policy that joins two features: it knows both through their applications and nothing else.
   "evaluation-trigger": { imports: ["application"], packages: ["fastify"] },
-  "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger"], packages: ["fastify"] },
+  // `database` for the type of the pool that `composePostgresApp` takes, and `shared` for the identifier of a Listing.
+  "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger", "database", "shared"], packages: ["fastify"] },
   // `node:fs` and `node:url`: main is the one place that looks at the machine, to find out whether the interface was built (feature 09).
-  main: { imports: ["domain", "shared", "composition-root"], packages: ["node:fs", "node:url"] },
+  main: { imports: ["domain", "shared", "composition-root", "storage", "demo-data"], packages: ["node:fs", "node:url"] },
+  // Chooses the storage from the environment (feature 11). It names no driver: it asks `database` for the pool.
+  storage: { imports: ["composition-root", "database"], packages: [] },
+  // The demo data is made with the use cases, through the Composition Root, as main did before.
+  "demo-data": { imports: ["domain", "application", "shared", "composition-root"], packages: [] },
   // The connection and the migrations (feature 11, ADR-0006): the only code outside the adapters that knows the driver.
   database: { imports: [], packages: ["pg", "node:fs", "node:path", "node:url"] },
 };
@@ -59,6 +64,8 @@ function layerOf(path: string): Layer | null {
   if (path === "composition-root.ts") return "composition-root";
   if (path === "main.ts") return "main";
   if (path.startsWith("database/")) return "database";
+  if (path === "storage.ts") return "storage";
+  if (path === "demo-data.ts") return "demo-data";
   return null;
 }
 
