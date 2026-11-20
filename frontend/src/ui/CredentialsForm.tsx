@@ -1,5 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { screens } from "../texts";
+import { Button } from "./Button";
+import { Field } from "./Field";
 import { useSubmit } from "./useSubmit";
 
 interface Props {
@@ -43,50 +45,45 @@ export function CredentialsForm({ title, submit, submitting, initialEmail = "", 
   }
 
   return (
-    <main className="access">
-      <h1>{title}</h1>
-      {notice !== undefined && <p role="status">{notice}</p>}
-      <form onSubmit={(event) => void handleSubmit(event)} noValidate>
-        <label htmlFor="email">{screens.email}</label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          aria-invalid={missing.email !== undefined}
-          aria-describedby={missing.email !== undefined ? "email-missing" : undefined}
-        />
-        {missing.email !== undefined && (
-          <p id="email-missing" role="alert" className="error">
-            {missing.email}
+    <main className="mx-auto w-full max-w-sm px-4 py-10">
+      <p className="mb-4 text-center text-lg font-bold text-accent">{screens.appName}</p>
+      <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+        <h1 className="mb-4 text-xl font-semibold">{title}</h1>
+        {notice !== undefined && (
+          <p role="status" className="mb-4 rounded-lg border border-line bg-page p-3 text-sm">
+            {notice}
           </p>
         )}
-        <label htmlFor="password">{screens.password}</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete={newPassword ? "new-password" : "current-password"}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          aria-invalid={missing.password !== undefined}
-          aria-describedby={missing.password !== undefined ? "password-missing" : undefined}
-        />
-        {missing.password !== undefined && (
-          <p id="password-missing" role="alert" className="error">
-            {missing.password}
-          </p>
-        )}
-        {error !== null && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={pending}>
-          {pending ? submitting : submit}
-        </button>
-      </form>
-      <p>{children}</p>
+        <form onSubmit={(event) => void handleSubmit(event)} noValidate className="gap-4">
+          <Field
+            id="email"
+            label={screens.email}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            error={missing.email}
+          />
+          <Field
+            id="password"
+            label={screens.password}
+            type="password"
+            autoComplete={newPassword ? "new-password" : "current-password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            error={missing.password}
+          />
+          {error !== null && (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={pending}>
+            {pending ? submitting : submit}
+          </Button>
+        </form>
+      </div>
+      <p className="mt-4 text-center text-sm [&_a]:text-accent [&_a]:underline">{children}</p>
     </main>
   );
 }

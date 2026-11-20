@@ -20,7 +20,7 @@ export function DemoNotice({ client }: { readonly client: ApiClient }) {
   }, [client]);
 
   return demo ? (
-    <p role="note" className="demo-notice">
+    <p role="note" className="bg-accent px-4 py-1.5 text-center text-sm text-accent-ink">
       {screens.demo.notice}
     </p>
   ) : null;

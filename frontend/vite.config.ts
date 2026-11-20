@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -11,7 +12,7 @@ const apiPaths = ["/accounts", "/sessions", "/listings", "/price-alerts", "/noti
 // The interface is served under /app/ (design of feature 09, section 4).
 export default defineConfig({
   base: "/app/",
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
     strictPort: true,

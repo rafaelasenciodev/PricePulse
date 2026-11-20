@@ -5,7 +5,7 @@ import { createApiClient } from "./api";
 import { SessionProvider } from "./session";
 import { App } from "./ui/App";
 import { DemoNotice } from "./ui/DemoNotice";
-import "./ui/styles.css";
+import "./index.css";
 
 // The page gives its own `fetch` to the client, the only place that makes requests. The addresses are relative,
 // so the browser sends the cookie of the Session by itself.

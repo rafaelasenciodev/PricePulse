@@ -1,0 +1,49 @@
+/*
+ * The styles of the interface (feature 13). Tailwind gives the utilities, and the tokens below give them their values.
+ *
+ * `legacy` is the old file of styles, kept for the screens that have not been moved yet (D4 and section 6 of the design).
+ * It sits below the utilities, so a screen that has moved wins over it, and above the base, which Tailwind's reset would
+ * otherwise change under the screens that have not. The reset is added, and the old file removed, with the last screen.
+ */
+@layer theme, base, legacy, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "./ui/styles.css" layer(legacy);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* One accent colour and neutral greys, for the light mode and the dark one (Q7). The system font is Tailwind's default. */
+:root {
+  --page: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #1c2430;
+  --muted: #5a6575;
+  --accent: #1f5fbf;
+  --accent-ink: #ffffff;
+  --line: #dde2e9;
+  --danger: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0e1217;
+    --surface: #161b22;
+    --ink: #e6eaf0;
+    --muted: #9aa5b5;
+    --accent: #6ea2f5;
+    --accent-ink: #0b1220;
+    --line: #2b3441;
+    --danger: #ff8a80;
+  }
+}
+
+/* The utilities use the variables, so a component does not need to say `dark:` for each colour. */
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+}
