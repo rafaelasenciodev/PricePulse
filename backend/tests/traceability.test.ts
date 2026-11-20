@@ -20,8 +20,12 @@ import { describe, expect, it } from "vitest";
 
 const DOCS_DIR = new URL("../../docs/features/", import.meta.url);
 const TESTS_DIR = new URL("./", import.meta.url);
-// The interface has its own project and its own tests (feature 09).
+// The interface has its own project and its own tests (features 09 and 10).
 const FRONTEND_TESTS_DIR = new URL("../../frontend/tests/", import.meta.url);
+
+// The scenarios of two features are numbered apart, so a test of the interface is told apart by its file: the tests of
+// feature 10 are in files whose name starts with "alerts" or "notifications", and every other one is feature 09's.
+const isFeature10FrontendTest = (path: string) => /(^|\/)(alerts|notifications)[^/]*\.test\.tsx?$/.test(path);
 
 interface Feature {
   readonly name: string;
@@ -31,8 +35,8 @@ interface Feature {
   readonly rulesFile?: string;
   /** The test files that belong to the feature: paths relative to tests/ */
   readonly owns: (path: string) => boolean;
-  /** Whether the tests of `frontend/` are also the feature's: every test file there is. */
-  readonly ownsFrontendTests?: boolean;
+  /** The test files of `frontend/tests/` that belong to the feature: paths relative to it. None if absent. */
+  readonly ownsFrontend?: (path: string) => boolean;
   readonly scenarios: number;
   readonly rules: number;
   /** Rules that have no scenario, and why. An entry must stay justified. */
@@ -55,6 +59,7 @@ const FEATURES: readonly Feature[] = [
       !path.startsWith("accounts/") &&
       !path.startsWith("session-cookie/") &&
       !path.startsWith("web-interface/") &&
+      !path.startsWith("my-alerts/") &&
       !path.startsWith("price-observations/") &&
       !path.startsWith("price-alerts/notifications/") &&
       !path.startsWith("price-alerts/evaluation/") &&
@@ -166,7 +171,7 @@ const FEATURES: readonly Feature[] = [
     rulesFile: "01-discovery.md",
     // The interface is tested in its own project, and what it needs of the application is tested here, in a folder of its own.
     owns: (path) => path.startsWith("web-interface/"),
-    ownsFrontendTests: true,
+    ownsFrontend: (path) => !isFeature10FrontendTest(path),
     scenarios: 36,
     rules: 14,
     exemptRules: {},
@@ -174,6 +179,18 @@ const FEATURES: readonly Feature[] = [
       "SC-36":
         "It needs a real browser, which no test of the project uses (ADR-0005): that a change made by the interface carries an Origin that the application accepts is checked by hand.",
     },
+  },
+  {
+    name: "feature 10",
+    docs: "10-my-alerts-and-notifications/",
+    rulesFile: "01-discovery.md",
+    // The client against the application is in a folder of its own, and the screens are in the tests of the interface.
+    owns: (path) => path.startsWith("my-alerts/"),
+    ownsFrontend: isFeature10FrontendTest,
+    scenarios: 26,
+    rules: 11,
+    exemptRules: {},
+    exemptScenarios: {},
   },
 ];
 
@@ -197,7 +214,7 @@ function businessRules(feature: Feature): string[] {
   return [...file.matchAll(/^\| (BR-\d+) \|/gm)].map((m) => pad(m[1] as string));
 }
 
-/** The test files of the feature: the ones of `tests/` that it owns, and all those of `frontend/tests/` if they are its own. */
+/** The test files of the feature: the ones of `tests/` that it owns, and those of `frontend/tests/` that are its own. */
 function testFiles(feature: Feature): URL[] {
   const walk = (dir: URL, keep: (path: string) => boolean, prefix = ""): URL[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -205,7 +222,7 @@ function testFiles(feature: Feature): URL[] {
       const path = `${prefix}${entry.name}`;
       return /\.test\.tsx?$/.test(entry.name) && entry.name !== "traceability.test.ts" && keep(path) ? [new URL(entry.name, dir)] : [];
     });
-  return [...walk(TESTS_DIR, feature.owns), ...(feature.ownsFrontendTests ? walk(FRONTEND_TESTS_DIR, () => true) : [])];
+  return [...walk(TESTS_DIR, feature.owns), ...(feature.ownsFrontend ? walk(FRONTEND_TESTS_DIR, feature.ownsFrontend) : [])];
 }
 
 /** The titles of the tests: it("title", ...) and it.each(...)("title", ...) */
