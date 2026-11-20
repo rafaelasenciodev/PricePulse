@@ -58,7 +58,20 @@ export const registerAccountSchema: FastifySchema = {
       ["FORBIDDEN_ORIGIN"],
     ),
     409: error("The email already has an Account", ["EMAIL_ALREADY_REGISTERED"]),
-    422: error("The email is not valid, or the password is too short, too long or the email", ["INVALID_REGISTRATION"]),
+    422: {
+      description: "The email is not valid, or the password is too short, too long or the email. `reason` says which",
+      type: "object",
+      required: ["code", "message", "reason"],
+      properties: {
+        code: { type: "string", enum: ["INVALID_REGISTRATION"], description: "A stable identifier of the error" },
+        message: { type: "string", description: "A description for people. Do not rely on its text" },
+        reason: {
+          type: "string",
+          enum: ["EMAIL_NOT_VALID", "PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_IS_EMAIL"],
+          description: "What is wrong, which a program can rely on",
+        },
+      },
+    },
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };

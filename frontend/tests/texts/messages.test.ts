@@ -39,6 +39,36 @@ describe("the message of a failure", () => {
     expect(messageFor("register", answer(409, "EMAIL_ALREADY_REGISTERED"))).toBe(failures.register.emailTaken);
   });
 
+  it.each([
+    ["EMAIL_NOT_VALID", failures.register.emailInvalid],
+    ["PASSWORD_TOO_SHORT", failures.register.passwordTooShort],
+    ["PASSWORD_TOO_LONG", failures.register.passwordTooLong],
+    ["PASSWORD_IS_EMAIL", failures.register.passwordIsEmail],
+  ])("SC-09 / BR-04: a registration that is not valid for the reason %s has its own message", (reason, text) => {
+    expect(messageFor("register", { ...answer(422, "INVALID_REGISTRATION"), reason } as Failure)).toBe(text);
+  });
+
+  it("SC-09 / BR-04: the five problems of registering have five different messages, none of them the API's", () => {
+    const texts = [
+      messageFor("register", answer(409, "EMAIL_ALREADY_REGISTERED")),
+      ...["EMAIL_NOT_VALID", "PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_IS_EMAIL"].map((reason) =>
+        messageFor("register", { ...answer(422, "INVALID_REGISTRATION"), reason } as Failure),
+      ),
+    ];
+    expect(new Set(texts).size).toBe(5);
+    for (const text of texts) expect(text).not.toContain("in English");
+  });
+
+  it.each([[undefined], ["A_REASON_THAT_NOBODY_KNOWS"]])("SC-30 / BR-12: a registration that is not valid for the reason %j says that something failed", (reason) => {
+    const failure = { ...answer(422, "INVALID_REGISTRATION"), ...(reason === undefined ? {} : { reason }) } as Failure;
+    expect(messageFor("register", failure)).toBe(failures.register.other);
+  });
+
+  it("BR-12: a reason means something only for the code that has it: another answer with a reason says that something failed", () => {
+    const failure = { ...answer(400, "BAD_REQUEST"), reason: "EMAIL_NOT_VALID" } as Failure;
+    expect(messageFor("register", failure)).toBe(failures.register.other);
+  });
+
   it("SC-22: a Listing that does not exist says so, when reading it and when creating an alert for it", () => {
     expect(messageFor("readListing", answer(404, "LISTING_NOT_FOUND"))).toBe(failures.readListing.notFound);
     expect(messageFor("createAlert", answer(404, "LISTING_NOT_FOUND"))).toBe(failures.createAlert.notFound);

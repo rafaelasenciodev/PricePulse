@@ -35,6 +35,8 @@ interface HttpError {
   /** A stable identifier, so a client can tell apart errors that share a status. */
   readonly code: string;
   readonly message: string;
+  /** What is wrong, as a stable identifier, for an error that has several causes. It is in the body when there is one. */
+  readonly reason?: string;
   /** Headers that the answer carries, such as how long to wait. */
   readonly headers?: Readonly<Record<string, string>>;
 }
@@ -160,10 +162,10 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
   });
 
   app.setErrorHandler((error, request, reply) => {
-    const { status, code, message, headers } = toHttpError(error);
+    const { status, code, message, reason, headers } = toHttpError(error);
     if (status >= 500) request.log.error(error);
     if (headers) reply.headers(headers);
-    return reply.code(status).send({ code, message });
+    return reply.code(status).send({ code, message, ...(reason === undefined ? {} : { reason }) });
   });
 
   app.setNotFoundHandler((_request, reply) =>

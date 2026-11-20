@@ -8,8 +8,22 @@ export class ApplicationError extends Error {
   }
 }
 
-/** BR-01, BR-03: the email or the password is not acceptable. The message says which. */
-export class InvalidRegistration extends ApplicationError {}
+/**
+ * What is wrong with a registration: a stable identifier, so that a caller does not depend on the text of the message
+ * (feature 09, BR-04). It has no text of its own and says nothing that the rules of BR-01 and BR-03 do not.
+ */
+export type RegistrationProblem = "EMAIL_NOT_VALID" | "PASSWORD_TOO_SHORT" | "PASSWORD_TOO_LONG" | "PASSWORD_IS_EMAIL";
+
+/** BR-01, BR-03: the email or the password is not acceptable. The problem says which, and the message says it in words. */
+export class InvalidRegistration extends ApplicationError {
+  constructor(
+    message: string,
+    readonly problem: RegistrationProblem,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+  }
+}
 
 /** BR-02: the email already has an Account. */
 export class EmailAlreadyRegistered extends ApplicationError {

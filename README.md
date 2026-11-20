@@ -150,7 +150,7 @@ The email has text before and after a single `@` and at most 254 characters, and
 | 401 | `UNAUTHENTICATED` | No valid token |
 | 403 | `FORBIDDEN_ORIGIN` | Only when the session cookie is on: the request does not come from the application, see below |
 | 409 | `EMAIL_ALREADY_REGISTERED` | The email already has an Account |
-| 422 | `INVALID_REGISTRATION` | The email is not valid, or the password is too short, too long or the email |
+| 422 | `INVALID_REGISTRATION` | The email is not valid, or the password is too short, too long or the email. The body also has a `reason` that a program can rely on: `EMAIL_NOT_VALID`, `PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG` or `PASSWORD_IS_EMAIL` |
 | 429 | `TOO_MANY_ATTEMPTS` | Too many failed attempts for this email. `Retry-After` says how many seconds to wait |
 | 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
 

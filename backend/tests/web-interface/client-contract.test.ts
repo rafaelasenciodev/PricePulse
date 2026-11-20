@@ -154,13 +154,17 @@ describe("registering", () => {
   });
 
   it.each([
-    ["an email that is not one", "eve2", PASSWORD],
-    ["a password that is too short", "eve3@example.com", "short"],
-    ["a password that is too long", "eve4@example.com", "x".repeat(129)],
-    ["a password that is the email", "eve5@example.com", "eve5@example.com"],
-  ])("SC-09 / BR-04: %s is an answer 422 INVALID_REGISTRATION", async (_what, email, password) => {
+    ["an email that is not one", "eve2", PASSWORD, "EMAIL_NOT_VALID"],
+    ["a password that is too short", "eve3@example.com", "short", "PASSWORD_TOO_SHORT"],
+    ["a password that is too long", "eve4@example.com", "x".repeat(129), "PASSWORD_TOO_LONG"],
+    ["a password that is the email", "eve5@example.com", "eve5@example.com", "PASSWORD_IS_EMAIL"],
+  ])("SC-09 / BR-04: %s is an answer 422 INVALID_REGISTRATION with the reason %s", async (_what, email, password, reason) => {
     const result = await person().register(email, password);
-    expect(result.ok === false && result.failure.kind === "answer" && [result.failure.status, result.failure.code]).toEqual([422, "INVALID_REGISTRATION"]);
+    expect(result.ok === false && result.failure.kind === "answer" && [result.failure.status, result.failure.code, result.failure.reason]).toEqual([
+      422,
+      "INVALID_REGISTRATION",
+      reason,
+    ]);
   });
 });
 

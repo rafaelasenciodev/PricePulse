@@ -74,6 +74,27 @@ describe("POST /accounts", () => {
   });
 
   it.each([
+    ["SC-06", { email: "ana", password: "first-password-1" }, "EMAIL_NOT_VALID"],
+    ["SC-04", { email: "ana@example.com", password: "x".repeat(9) }, "PASSWORD_TOO_SHORT"],
+    ["SC-04", { email: "ana@example.com", password: "x".repeat(129) }, "PASSWORD_TOO_LONG"],
+    ["SC-05", { email: "ana@example.com", password: "ana@example.com" }, "PASSWORD_IS_EMAIL"],
+  ])("%s / BR-01 / BR-03: a registration that is not valid says why, with the reason %s", async (_sc, body, reason) => {
+    const response = await register(body);
+    expect(response.statusCode).toBe(422);
+    expect(Object.keys(response.json()).sort()).toEqual(["code", "message", "reason"]);
+    expect(response.json().reason).toBe(reason);
+  });
+
+  it("the other errors of registering have no reason", async () => {
+    await register();
+    const taken = await register();
+    expect(taken.statusCode).toBe(409);
+    expect(Object.keys(taken.json()).sort()).toEqual(["code", "message"]);
+    const malformed = await post("/accounts", { email: "ana@example.com" });
+    expect(Object.keys(malformed.json()).sort()).toEqual(["code", "message"]);
+  });
+
+  it.each([
     ["no body", undefined],
     ["a missing password", { email: "ana@example.com" }],
     ["a missing email", { password: "first-password-1" }],
@@ -250,6 +271,18 @@ describe("DELETE /sessions/current", () => {
 });
 
 describe("the documentation of the routes", () => {
+  it("documents the reasons of a registration that is not valid, the same that are answered", async () => {
+    const { app: documented } = buildAccountsApp({ apiDocs: true });
+    try {
+      const spec = (await documented.inject({ method: "GET", url: "/docs/json" })).json();
+      const schema = spec.paths["/accounts"].post.responses["422"].content["application/json"].schema;
+      expect(schema.required).toEqual(["code", "message", "reason"]);
+      expect(schema.properties.reason.enum).toEqual(["EMAIL_NOT_VALID", "PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_IS_EMAIL"]);
+    } finally {
+      await documented.close();
+    }
+  });
+
   it("lists the four routes, tagged, and only the ones that need a token ask for it", async () => {
     const { app: documented } = buildAccountsApp({ apiDocs: true });
     try {

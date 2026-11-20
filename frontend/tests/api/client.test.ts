@@ -72,6 +72,21 @@ describe("registering", () => {
     expect(calls[0]?.init.method).toBe("POST");
   });
 
+  it.each(["EMAIL_NOT_VALID", "PASSWORD_TOO_SHORT", "PASSWORD_TOO_LONG", "PASSWORD_IS_EMAIL"])(
+    "SC-09 / BR-04: carries the reason %s of a registration that is not valid",
+    async (reason) => {
+      const { client } = clientWith(answer(422, "INVALID_REGISTRATION", "x", {}, reason));
+      const result = await client.register("ana", "short");
+      expect(result.ok === false && result.failure.kind === "answer" && result.failure.reason).toBe(reason);
+    },
+  );
+
+  it.each([[undefined], [5], [null], [["EMAIL_NOT_VALID"]]])("SC-09: a reason that is %j, and so is not text, is not read", async (reason) => {
+    const { client } = clientWith(answer(422, "INVALID_REGISTRATION", "x", {}, reason));
+    const result = await client.register("ana", "short");
+    expect(result.ok === false && result.failure.kind === "answer" && "reason" in result.failure).toBe(false);
+  });
+
   it.each([
     [409, "EMAIL_ALREADY_REGISTERED"],
     [422, "INVALID_REGISTRATION"],

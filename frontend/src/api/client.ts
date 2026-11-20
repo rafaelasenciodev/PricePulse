@@ -130,6 +130,7 @@ export function createApiClient({ fetch: send }: ApiClientOptions): ApiClient {
           code: json["code"],
           message: json["message"],
           ...(retry === null ? {} : { retryAfterSeconds: retry }),
+          ...(isText(json["reason"]) ? { reason: json["reason"] } : {}),
         });
       }
       return fail({ kind: "unexpected" });

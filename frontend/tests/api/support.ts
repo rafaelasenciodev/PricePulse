@@ -27,8 +27,13 @@ export const json = (body: unknown, status = 200, headers: Record<string, string
 
 export const noContent = (): Response => new Response(null, { status: 204 });
 
-export const answer = (status: number, code: string, message = "a message for people who read the API", headers: Record<string, string> = {}): Response =>
-  json({ code, message }, status, headers);
+export const answer = (
+  status: number,
+  code: string,
+  message = "a message for people who read the API",
+  headers: Record<string, string> = {},
+  reason?: unknown,
+): Response => json({ code, message, ...(reason === undefined ? {} : { reason }) }, status, headers);
 
 export const ANA = { id: "user-1", email: "ana@example.com" };
 export const HEADPHONES = {

@@ -25,6 +25,13 @@ export function messageFor(action: Action, failure: Failure): string {
         break;
       case "register":
         if (failure.code === "EMAIL_ALREADY_REGISTERED") return failures.register.emailTaken;
+        if (failure.code === "INVALID_REGISTRATION") {
+          // The reason is stable, and the message of the API, in English, is not shown.
+          if (failure.reason === "EMAIL_NOT_VALID") return failures.register.emailInvalid;
+          if (failure.reason === "PASSWORD_TOO_SHORT") return failures.register.passwordTooShort;
+          if (failure.reason === "PASSWORD_TOO_LONG") return failures.register.passwordTooLong;
+          if (failure.reason === "PASSWORD_IS_EMAIL") return failures.register.passwordIsEmail;
+        }
         break;
       case "readListing":
         if (failure.code === "LISTING_NOT_FOUND") return failures.readListing.notFound;

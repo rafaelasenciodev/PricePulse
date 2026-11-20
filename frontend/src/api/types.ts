@@ -63,6 +63,8 @@ export type Failure =
       readonly message: string;
       /** The seconds to wait, when the API says so. */
       readonly retryAfterSeconds?: number;
+      /** What is wrong, as a stable identifier, when the API says so: a registration that is not valid has four possible reasons. */
+      readonly reason?: string;
     }
   | { readonly kind: "network" }
   | { readonly kind: "unexpected" };

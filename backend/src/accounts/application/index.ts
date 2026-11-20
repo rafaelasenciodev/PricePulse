@@ -5,6 +5,7 @@ export {
   EmailAlreadyRegistered,
   InvalidCredentials,
   InvalidRegistration,
+  type RegistrationProblem,
   TooManyAttempts,
   Unauthenticated,
 } from "./errors";

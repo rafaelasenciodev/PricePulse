@@ -117,3 +117,33 @@ describe("RegisterAccount", () => {
     expect(world.hasher.hashes).toBe(before);
   });
 });
+
+describe("RegisterAccount: what is wrong with a registration (feature 09, BR-04)", () => {
+  const problemOf = async (email: string, password: string) => {
+    const error = await buildWorld().register.execute({ email, password }).catch((e: unknown) => e);
+    return error instanceof InvalidRegistration ? error.problem : error;
+  };
+
+  it.each([
+    ["an empty email", "", "valid-password-1", "EMAIL_NOT_VALID"],
+    ["an email that has no domain", "ana@", "valid-password-1", "EMAIL_NOT_VALID"],
+    ["an email with two at signs", "ana@@example.com", "valid-password-1", "EMAIL_NOT_VALID"],
+    ["a password of 9 characters", "ana@example.com", "x".repeat(9), "PASSWORD_TOO_SHORT"],
+    ["a password of 129 characters", "ana@example.com", "x".repeat(129), "PASSWORD_TOO_LONG"],
+    ["a password that is the email", "ana-garcia@example.com", "ana-garcia@example.com", "PASSWORD_IS_EMAIL"],
+  ])("SC-04 / SC-05 / SC-06 / BR-01 / BR-03: %s is the problem %s", async (_what, email, password, problem) => {
+    expect(await problemOf(email, password)).toBe(problem);
+  });
+
+  it("the email is checked before the password, and the length of the password before it being the email", async () => {
+    expect(await problemOf("ana", "short")).toBe("EMAIL_NOT_VALID");
+    expect(await problemOf("a@b.co", "a@b.co")).toBe("PASSWORD_TOO_SHORT");
+  });
+
+  it("keeps the message in words, and the cause", async () => {
+    const error = (await buildWorld().register.execute({ email: "ana@example.com", password: "short" }).catch((e: unknown) => e)) as InvalidRegistration;
+    expect(error.message).toContain("at least 10");
+    expect(error.cause).toBeDefined();
+  });
+});
+

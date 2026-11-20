@@ -41,6 +41,11 @@ export const failures = {
 
   register: {
     emailTaken: `Ese correo ya tiene una ${v.account}.`,
+    /** BR-04: what the API says is wrong with the email or the password, one message for each reason. */
+    emailInvalid: "El correo no es válido.",
+    passwordTooShort: "La contraseña es demasiado corta.",
+    passwordTooLong: "La contraseña es demasiado larga.",
+    passwordIsEmail: "La contraseña no puede ser el correo.",
     other: `No se ha podido crear la ${v.account}. Inténtalo de nuevo.`,
   },
 
