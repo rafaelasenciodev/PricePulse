@@ -13,7 +13,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main";
+type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main" | "database";
 
 /** For each layer: the internal layers it may import, and the packages it may use. */
 const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: readonly string[] }>> = {
@@ -31,6 +31,8 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger"], packages: ["fastify"] },
   // `node:fs` and `node:url`: main is the one place that looks at the machine, to find out whether the interface was built (feature 09).
   main: { imports: ["domain", "shared", "composition-root"], packages: ["node:fs", "node:url"] },
+  // The connection and the migrations (feature 11, ADR-0006): the only code outside the adapters that knows the driver.
+  database: { imports: [], packages: ["pg", "node:fs", "node:path", "node:url"] },
 };
 
 const SRC = new URL("../src/", import.meta.url);
@@ -55,6 +57,7 @@ function layerOf(path: string): Layer | null {
   if (path === "evaluation-trigger.ts") return "evaluation-trigger";
   if (path === "composition-root.ts") return "composition-root";
   if (path === "main.ts") return "main";
+  if (path.startsWith("database/")) return "database";
   return null;
 }
 

@@ -1,0 +1,22 @@
+# The database for development and for the database tests (feature 11, ADR-0006).
+# Start it with `docker compose up -d`. The data lives in the named volume, so it survives a restart of the container.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pricepulse
+      POSTGRES_PASSWORD: pricepulse
+      POSTGRES_DB: pricepulse
+    ports:
+      # Bound to the local machine only. 5433 leaves the usual 5432 free for another server.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pricepulse-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricepulse -d pricepulse"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pricepulse-data:
