@@ -1,5 +1,7 @@
 /** Starts the server with in-memory adapters and a little demo data. Development only. */
 
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { composeInMemoryApp } from "./composition-root";
 import { ProviderId } from "./price-observations/domain";
 import { ListingId, UserId } from "./shared/domain";
@@ -27,8 +29,14 @@ try {
   process.exit(1);
 }
 
+// The web interface is served when it has been built: `npm run build` in `frontend/` writes `frontend/dist`. Without it
+// the server starts as it always did.
+const webRoot = fileURLToPath(new URL("../../frontend/dist/", import.meta.url));
+const interfaceBuilt = existsSync(`${webRoot}index.html`);
+
 const { app, catalogue, registerAccount, providerAuthenticator, recordPriceObservation, createPriceAlert } = composeInMemoryApp({
   logger: true,
+  ...(interfaceBuilt ? { webInterface: { root: webRoot } } : {}),
   sessionCookie: { origin: webOrigin, secure: false },
   apiDocs: {
     note: [
@@ -88,6 +96,8 @@ await createPriceAlert.execute({
 await app.listen({ port, host: "127.0.0.1" });
 app.log.info(`Interactive API documentation: http://127.0.0.1:${port}/docs`);
 app.log.info(`Session cookie on for the origin ${webOrigin}`);
+if (interfaceBuilt) app.log.info(`Web interface: ${webOrigin}/app/`);
+else app.log.warn("The web interface is not built, so /app/ is not served. Run `npm run build` in frontend/ to build it.");
 
 const stop = async () => {
   await app.close();
