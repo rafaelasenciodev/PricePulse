@@ -1,6 +1,6 @@
 # 11 — Persistence: Design (Stage 3)
 
-Status: Draft. The decisions in section 9 are Proposed, and become Accepted when the design is approved. The two dependencies of section 7 need their own approval before they are installed.
+Status: Approved. Every decision in section 9 has status Accepted, and the two dependencies of section 7 were approved at the versions given.
 
 The design of the database adapters. It builds on the [discovery and rules](01-discovery.md), the [scenarios](02-scenarios.feature), the ports of features 01 to 07 and [ADR-0003](../../adr/0003-persistence-deferred.md). The choice of PostgreSQL (Q2) is written as [ADR-0006](../../adr/0006-postgresql.md). No use case, port or rule changes, and nothing in the domain or the application imports the driver.
 
@@ -88,22 +88,22 @@ Both are more than a month old (30 September and 4 October 2026). The `engines` 
 
 | ID | Decision | Status |
 |---|---|---|
-| 1 | One migration with the seven tables and the schema of section 2, with no foreign keys | Proposed |
-| 2 | Money and instants are stored as integers (minor units, milliseconds), converted by a helper that refuses what is not a safe integer | Proposed |
-| 3 | The Catalogue is ordered by a stored `title_key` and the collation `"C"` | Proposed |
-| 4 | `restore` for the three entities with private constructors. `PriceAlert` and `Account` use their public one (refines Q5) | Proposed |
-| 5 | Errors are told apart by SQLSTATE `23505` and the name of the constraint, and no other | Proposed |
-| 6 | `save` is one conditional `UPDATE` and a read to tell an old save from a conflict | Proposed |
-| 7 | The login attempts keep the capacity of the in-memory adapter, by the order of writing | Proposed |
-| 8 | Adding a Session removes the expired ones, in both adapters, with a check in the contract | Proposed |
-| 9 | A page and its total are one statement | Proposed |
-| 10 | The migrations are numbered files, one transaction each, with a lock, applied at start and by a script | Proposed |
-| 11 | One `composeApp` over a set of stores, with a version in memory and one for PostgreSQL | Proposed |
-| 12 | `storage.ts` chooses the storage, and the refusal of production stays | Proposed |
-| 13 | `demo-data.ts` creates the demo data once, marked by the Account `demo1` | Proposed |
-| 14 | Database tests in `*.db.test.ts`, their own configuration and script, the test database created by the set-up, and a failure and no skip without a database | Proposed |
-| 15 | `compose.yaml` has one service on the host port 5433, with a named volume | Proposed |
-| 16 | `pg` and `@types/pg`, at the versions of section 7 | Proposed, pending approval |
+| 1 | One migration with the seven tables and the schema of section 2, with no foreign keys | Accepted |
+| 2 | Money and instants are stored as integers (minor units, milliseconds), converted by a helper that refuses what is not a safe integer | Accepted |
+| 3 | The Catalogue is ordered by a stored `title_key` and the collation `"C"` | Accepted |
+| 4 | `restore` for the three entities with private constructors. `PriceAlert` and `Account` use their public one (refines Q5) | Accepted |
+| 5 | Errors are told apart by SQLSTATE `23505` and the name of the constraint, and no other | Accepted |
+| 6 | `save` is one conditional `UPDATE` and a read to tell an old save from a conflict | Accepted |
+| 7 | The login attempts keep the capacity of the in-memory adapter, by the order of writing | Accepted |
+| 8 | Adding a Session removes the expired ones, in both adapters, with a check in the contract | Accepted |
+| 9 | A page and its total are one statement | Accepted |
+| 10 | The migrations are numbered files, one transaction each, with a lock, applied at start and by a script | Accepted |
+| 11 | One `composeApp` over a set of stores, with a version in memory and one for PostgreSQL | Accepted |
+| 12 | `storage.ts` chooses the storage, and the refusal of production stays | Accepted |
+| 13 | `demo-data.ts` creates the demo data once, marked by the Account `demo1` | Accepted |
+| 14 | Database tests in `*.db.test.ts`, their own configuration and script, the test database created by the set-up, and a failure and no skip without a database | Accepted |
+| 15 | `compose.yaml` has one service on the host port 5433, with a named volume | Accepted |
+| 16 | `pg` and `@types/pg`, at the versions of section 7 | Accepted |
 
 Alternatives that were weighed:
 
