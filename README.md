@@ -2,7 +2,7 @@
 
 A price-tracking platform: monitor product prices, consult price history, and get alerted when a product reaches a target price.
 
-> **Status: in development.** Seven features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication** and **Listings Catalogue**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
+> **Status: in development.** Eight features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue** and **Session Cookie**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
 
 PricePulse is a Master's Final Project (TFM), a professional portfolio project, and a vehicle for a repeatable, design-first engineering methodology (see [`docs/features/README.md`](docs/features/README.md)).
 
@@ -20,6 +20,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Read the Catalogue of Listings, with the Current Price of each, to choose one to watch | Implemented, with in-memory storage |
 | Delivery of Notifications, marking them as read, pausing alerts, and evaluating on a schedule | Not started |
 | Accounts and authentication of Users: register, sign in with a password, sign out, read one's own Account | Implemented, with in-memory storage |
+| The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented. It has not been tried in a real browser |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence | Not started |
 | Frontend | Not started |
@@ -147,10 +148,32 @@ The email has text before and after a single `@` and at most 254 characters, and
 | 400 | `BAD_REQUEST` | Malformed body, a missing or unknown field, or a value that is not text |
 | 401 | `INVALID_CREDENTIALS` | The email or the password is not valid. It never says which |
 | 401 | `UNAUTHENTICATED` | No valid token |
+| 403 | `FORBIDDEN_ORIGIN` | Only when the session cookie is on: the request does not come from the application, see below |
 | 409 | `EMAIL_ALREADY_REGISTERED` | The email already has an Account |
 | 422 | `INVALID_REGISTRATION` | The email is not valid, or the password is too short, too long or the email |
 | 429 | `TOO_MANY_ATTEMPTS` | Too many failed attempts for this email. `Retry-After` says how many seconds to wait |
 | 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### The session cookie
+
+When the server is given its origin, which the development server always is, signing in also sets the cookie `pricepulse_session` for a browser: `HttpOnly`, `SameSite=Strict`, `Path=/`, lasting as long as the Session. The token is in the body all the same, and `Authorization: Bearer` works as always.
+
+- The routes of Users accept the cookie when the request has no `Authorization` header. If it has one, only the header is read, whatever it holds. The route that records a price never reads the cookie: a cookie never makes anyone a price provider.
+- A request that the cookie authenticates and that is not a GET or a HEAD must carry an `Origin` equal to the origin of the application, or it is refused with `403 FORBIDDEN_ORIGIN`. One with no `Origin` is refused too. Signing in and registering are refused if they carry an `Origin` that is not the application's. A request that carries the token in the header is not subject to any of this.
+- Signing out clears the cookie, also when the cookie was no longer valid.
+- The development server takes the origin from where it listens, `http://127.0.0.1:3000` by default. When the interface is served by another server that forwards the API, say where the browser sees the application: `WEB_ORIGIN=http://localhost:5173 npm run dev`. The interactive documentation works with the cookie only when it is opened at that address: `localhost` is not `127.0.0.1`.
+
+To try it with a client that keeps cookies:
+
+```bash
+curl -s -c jar.txt -X POST http://127.0.0.1:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo2@example.com","password":"demo-password-2"}' > /dev/null
+
+curl -s -b jar.txt http://127.0.0.1:3000/accounts/me
+```
+
+A read works with the cookie alone. A change needs the origin, as a page of the application would send it: add `-H "Origin: http://127.0.0.1:3000"`. It has not been tried in a real browser.
 
 ### Read the Catalogue of Listings
 
@@ -248,7 +271,7 @@ It has no endpoint. When a Price Observation is stored, new or repeated, the Pri
 
 The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served only by the development server.
 
-Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in the business rules of each feature, [Create Price Alert](docs/features/01-create-price-alert/01-business-rules.md), [Price Observation](docs/features/02-price-observation/01-business-rules.md) and [Read and Manage Price Alerts](docs/features/04-read-and-manage-alerts/01-discovery.md), [Notifications and Price History](docs/features/05-notifications-and-price-history/01-discovery.md), [Accounts and Authentication](docs/features/06-accounts-and-authentication/01-discovery.md) and [Listings Catalogue](docs/features/07-listings-catalogue/01-discovery.md), and the full contracts in their use case contracts, [feature 01](docs/features/01-create-price-alert/04-use-case-contract.md), [feature 02](docs/features/02-price-observation/04-use-case-contract.md) and the designs of [feature 04](docs/features/04-read-and-manage-alerts/03-design.md), [feature 05](docs/features/05-notifications-and-price-history/03-design.md), [feature 06](docs/features/06-accounts-and-authentication/03-design.md) and [feature 07](docs/features/07-listings-catalogue/03-design.md).
+Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in the business rules of each feature, [Create Price Alert](docs/features/01-create-price-alert/01-business-rules.md), [Price Observation](docs/features/02-price-observation/01-business-rules.md) and [Read and Manage Price Alerts](docs/features/04-read-and-manage-alerts/01-discovery.md), [Notifications and Price History](docs/features/05-notifications-and-price-history/01-discovery.md), [Accounts and Authentication](docs/features/06-accounts-and-authentication/01-discovery.md) [Listings Catalogue](docs/features/07-listings-catalogue/01-discovery.md) and [Session Cookie](docs/features/08-session-cookie/01-discovery.md), and the full contracts in their use case contracts, [feature 01](docs/features/01-create-price-alert/04-use-case-contract.md), [feature 02](docs/features/02-price-observation/04-use-case-contract.md) and the designs of [feature 04](docs/features/04-read-and-manage-alerts/03-design.md), [feature 05](docs/features/05-notifications-and-price-history/03-design.md), [feature 06](docs/features/06-accounts-and-authentication/03-design.md), [feature 07](docs/features/07-listings-catalogue/03-design.md) and [feature 08](docs/features/08-session-cookie/03-design.md).
 
 ## Architecture
 
@@ -266,7 +289,7 @@ Ports and adapters, with one folder per feature. Dependencies point inward, a fe
 | `application` | The use case and the ports it needs | `backend/src/<feature>/application/` |
 | `adapters` | In-memory implementations of the ports | `backend/src/<feature>/adapters/` |
 | `http` | The HTTP interface, authentication and error mapping | `backend/src/<feature>/http/` |
-| `shared` | What several features need, such as `Price`, and the reading of the bearer token. It imports nothing | `backend/src/shared/` |
+| `shared` | What several features need, such as `Price`, and the reading of the bearer token and of the session cookie. It imports nothing | `backend/src/shared/` |
 | Composition Root | The only place that chooses and connects the parts. It is also where the features meet: the Current Price that Price Alerts read comes from the Price Observations | `backend/src/composition-root.ts` |
 | Evaluation trigger | The policy that evaluates the Price Alerts of a Listing after a price is recorded, so that neither feature knows the other | `backend/src/evaluation-trigger.ts` |
 
@@ -289,7 +312,7 @@ npm run typecheck        # type checking
 npm run coverage         # tests with a coverage report, used as a diagnostic
 ```
 
-The tests cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md) for feature 01, and section 4 of the completion of [feature 02](docs/features/02-price-observation/10-completion.md), [feature 03](docs/features/03-alert-evaluation/10-completion.md) [feature 04](docs/features/04-read-and-manage-alerts/04-completion.md), [feature 05](docs/features/05-notifications-and-price-history/04-completion.md), [feature 06](docs/features/06-accounts-and-authentication/04-completion.md) and [feature 07](docs/features/07-listings-catalogue/04-completion.md).
+The tests cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md) for feature 01, and section 4 of the completion of [feature 02](docs/features/02-price-observation/10-completion.md), [feature 03](docs/features/03-alert-evaluation/10-completion.md) [feature 04](docs/features/04-read-and-manage-alerts/04-completion.md), [feature 05](docs/features/05-notifications-and-price-history/04-completion.md), [feature 06](docs/features/06-accounts-and-authentication/04-completion.md), [feature 07](docs/features/07-listings-catalogue/04-completion.md) and [feature 08](docs/features/08-session-cookie/04-completion.md).
 
 ## How the project is built
 
@@ -309,6 +332,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 05, stage by stage | [`docs/features/05-notifications-and-price-history/`](docs/features/05-notifications-and-price-history/) |
 | Feature 06, stage by stage | [`docs/features/06-accounts-and-authentication/`](docs/features/06-accounts-and-authentication/) |
 | Feature 07, stage by stage | [`docs/features/07-listings-catalogue/`](docs/features/07-listings-catalogue/) |
+| Feature 08, stage by stage | [`docs/features/08-session-cookie/`](docs/features/08-session-cookie/) |
 
 ## Data
 
