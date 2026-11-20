@@ -1,15 +1,22 @@
-/*
- * The styles of the interface (feature 13). Tailwind gives the utilities, and the tokens below give them their values.
- *
- * `legacy` is the old file of styles, kept for the screens that have not been moved yet (D4 and section 6 of the design).
- * It sits below the utilities, so a screen that has moved wins over it, and above the base, which Tailwind's reset would
- * otherwise change under the screens that have not. The reset is added, and the old file removed, with the last screen.
- */
-@layer theme, base, legacy, components, utilities;
+/* The styles of the interface (feature 13). Tailwind gives the reset and the utilities, and the tokens below give them their values. */
+@layer theme, base, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
-@import "./ui/styles.css" layer(legacy);
+@import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
+
+@layer base {
+  /* The form controls and the scroll bars follow the colour mode of the system, as the tokens do. */
+  :root {
+    color-scheme: light dark;
+  }
+
+  /* A link is the colour of the accent and underlined, unless a component says otherwise with a utility. */
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
 
 /* One accent colour and neutral greys, for the light mode and the dark one (Q7). The system font is Tailwind's default. */
 :root {

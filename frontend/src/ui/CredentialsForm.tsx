@@ -54,7 +54,7 @@ export function CredentialsForm({ title, submit, submitting, initialEmail = "", 
             {notice}
           </p>
         )}
-        <form onSubmit={(event) => void handleSubmit(event)} noValidate className="gap-4">
+        <form onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-4">
           <Field
             id="email"
             label={screens.email}

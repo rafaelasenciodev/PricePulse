@@ -54,8 +54,9 @@ export function PriceHistory({ listingId }: { readonly listingId: string }) {
             </tr>
           </thead>
           <tbody>
-            {points.map((p) => (
-              <tr key={p.observedAt}>
+            {points.map((p, index) => (
+              // Two Providers may report the same moment, so the moment alone is not a key.
+              <tr key={`${p.observedAt}#${index}`}>
                 <td>{formatInstant(p.observedAt)}</td>
                 <td>{formatPrice(p)}</td>
               </tr>

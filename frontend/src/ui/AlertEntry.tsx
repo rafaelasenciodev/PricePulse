@@ -4,6 +4,8 @@ import type { Failure, Listing, PriceAlert } from "../api";
 import { useSession } from "../session";
 import { messageFor, screens } from "../texts";
 import { AmountForm } from "./AmountForm";
+import { Button } from "./Button";
+import { Card } from "./Card";
 import { formatInstant, formatPrice } from "./format";
 import { useSubmit } from "./useSubmit";
 
@@ -50,29 +52,32 @@ export function AlertEntry({ alert, listing, onOutcome }: Props) {
   }
 
   return (
-    <li>
-      <h2>
-        <Link to={`/listings/${encodeURIComponent(alert.listingId)}`}>{listing?.title ?? alert.listingId}</Link>
+    <Card as="li" className="flex flex-col gap-1">
+      <h2 className="m-0 text-base font-semibold">
+        <Link to={`/listings/${encodeURIComponent(alert.listingId)}`} className="text-ink no-underline hover:underline">
+          {listing?.title ?? alert.listingId}
+        </Link>
       </h2>
-      {listing !== undefined && <p className="retailer">{screens.listing.retailer(listing.retailer)}</p>}
-      <p>
-        <strong>{screens.alerts.targetPrice(targetPrice)}</strong>
+      {listing !== undefined && <p className="m-0 text-sm text-muted">{screens.listing.retailer(listing.retailer)}</p>}
+      <p className="m-0 mt-2 text-lg">
+        <strong className="font-semibold">{screens.alerts.targetPrice(targetPrice)}</strong>
       </p>
-      <p>{screens.alerts.state(screens.alerts.status[alert.status])}</p>
-      <p className="muted">{screens.alerts.createdAt(formatInstant(alert.createdAt))}</p>
+      <p className="m-0 text-sm">{screens.alerts.state(screens.alerts.status[alert.status])}</p>
+      <p className="m-0 text-xs text-muted">{screens.alerts.createdAt(formatInstant(alert.createdAt))}</p>
 
       {alert.status === "active" && mode === "seen" && (
-        <div className="actions">
-          <button type="button" onClick={() => setMode("changing")}>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setMode("changing")}>
             {screens.alerts.change}
-          </button>
-          <button type="button" onClick={() => setMode("confirming")}>
+          </Button>
+          <Button variant="secondary" onClick={() => setMode("confirming")}>
             {screens.alerts.cancel}
-          </button>
+          </Button>
         </div>
       )}
 
       {alert.status === "active" && mode === "changing" && (
+        <div className="mt-3">
         <AmountForm
           id={`target-amount-${alert.id}`}
           label={screens.alerts.changeForm.label(alert.currency)}
@@ -87,24 +92,25 @@ export function AlertEntry({ alert, listing, onOutcome }: Props) {
           }}
           secondary={{ label: screens.alerts.changeForm.giveUp, onClick: () => setMode("seen") }}
         />
+        </div>
       )}
 
       {alert.status === "active" && mode === "confirming" && (
-        <div className="actions">
-          <p>{screens.alerts.confirmCancel.question}</p>
-          <button type="button" onClick={() => void confirmCancel()} disabled={pending}>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <p className="m-0 w-full text-sm font-medium">{screens.alerts.confirmCancel.question}</p>
+          <Button onClick={() => void confirmCancel()} disabled={pending}>
             {pending ? screens.alerts.confirmCancel.submitting : screens.alerts.confirmCancel.yes}
-          </button>
-          <button type="button" onClick={() => setMode("seen")} disabled={pending}>
+          </Button>
+          <Button variant="secondary" onClick={() => setMode("seen")} disabled={pending}>
             {screens.alerts.confirmCancel.no}
-          </button>
+          </Button>
           {error !== null && (
-            <p role="alert" className="error">
+            <p role="alert" className="m-0 w-full text-sm text-danger">
               {error}
             </p>
           )}
         </div>
       )}
-    </li>
+    </Card>
   );
 }

@@ -119,6 +119,18 @@ describe("the Price History is a chart (BR-02, BR-03, BR-07)", () => {
     expect(within(table).getByText("100.00 EUR")).toBeTruthy();
   });
 
+  it("SC-05: two observations of the same moment are two points, and the table has no repeated key", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await open(withHistory(history(at(10, "90.00"), at(10, "95.00"), at(9, "100.00"))));
+      await screen.findByRole("table");
+      expect(rows()).toHaveLength(3);
+      expect(errors.mock.calls.flat().join(" ")).not.toMatch(/same key|unique "key"/);
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
   it("SC-10: asks for the newest 100 observations, which is what the chart draws", async () => {
     const priceHistory = vi.fn(async () => ok(history(at(11, "95.00"), at(10, "100.00"))));
     await open(clientWith(priceHistory));

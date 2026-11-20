@@ -23,6 +23,11 @@ function alertsAddress(status: AlertStatus | undefined, page?: number) {
   return { pathname: "/alerts", search: search === "" ? "" : `?${search}` };
 }
 
+/** A filter by state: a pill, and the one that is chosen is filled. */
+const FILTER =
+  "rounded-full border border-line px-3 py-1 text-sm text-ink no-underline hover:bg-surface " +
+  "aria-[current=true]:border-accent aria-[current=true]:bg-accent aria-[current=true]:text-accent-ink";
+
 /** The Price Alerts of the person, newest first, one page at a time, and filtered by state (BR-02, BR-03). */
 export function AlertsScreen() {
   const { api } = useSession();
@@ -43,20 +48,20 @@ export function AlertsScreen() {
 
   let content;
   if (state.status === "loading") {
-    content = <p role="status">{screens.loading}</p>;
+    content = <p role="status" className="text-muted">{screens.loading}</p>;
   } else if (state.status === "failed") {
     content = <LoadFailed message={failures.readAlerts.other} onRetry={retry} />;
   } else if (state.data.total === 0) {
     content = (
       <>
-        <p>{status === undefined ? screens.alerts.empty : screens.alerts.emptyFiltered}</p>
+        <p className="mt-0 text-muted">{status === undefined ? screens.alerts.empty : screens.alerts.emptyFiltered}</p>
         {status === undefined && <Link to="/catalogue">{screens.alerts.toCatalogue}</Link>}
       </>
     );
   } else {
     content = (
       <Pager page={page} data={state.data} label={screens.alerts.pagesLabel} addressOf={(n) => alertsAddress(status, n)}>
-        <ul className="listings">
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {state.data.items.map((alert) => (
             <AlertEntry
               key={`${generation}:${alert.id}`}
@@ -76,16 +81,16 @@ export function AlertsScreen() {
 
   return (
     <>
-      <h1>{screens.alerts.title}</h1>
-      <nav aria-label={screens.alerts.filterLabel} className="filters">
+      <h1 className="mb-4 text-2xl font-semibold">{screens.alerts.title}</h1>
+      <nav aria-label={screens.alerts.filterLabel} className="mb-4 flex flex-wrap gap-2">
         {[undefined, ...STATUSES].map((option) => (
-          <Link key={option ?? "all"} to={alertsAddress(option)} aria-current={option === status ? "true" : undefined}>
+          <Link key={option ?? "all"} to={alertsAddress(option)} aria-current={option === status ? "true" : undefined} className={FILTER}>
             {screens.alerts.filters[option ?? "all"]}
           </Link>
         ))}
       </nav>
       {notice !== null && (
-        <p role={notice.done ? "status" : "alert"} className={notice.done ? undefined : "error"}>
+        <p role={notice.done ? "status" : "alert"} className={`mb-4 rounded-lg border bg-surface p-3 text-sm ${notice.done ? "border-line" : "border-danger text-danger"}`}>
           {notice.text}
         </p>
       )}

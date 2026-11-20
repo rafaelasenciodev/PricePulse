@@ -46,7 +46,7 @@ export function AmountForm<T>({ id, label, texts, send, failureAction, onDone, o
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} noValidate className="gap-3">
+    <form onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-3">
       <Field
         id={id}
         label={label}

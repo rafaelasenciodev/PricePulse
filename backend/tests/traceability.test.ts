@@ -232,6 +232,25 @@ const FEATURES: readonly Feature[] = [
         "The note of the documentation is made in `main.ts`, for the same reason: it is checked by hand, by starting the server as a demo and reading `/docs/json`.",
     },
   },
+  {
+    name: "feature 13",
+    docs: "13-interface-redesign/",
+    rulesFile: "01-discovery.md",
+    // The client against the application is in a folder of its own, and the screens are in the tests of the interface.
+    owns: (path) => path.startsWith("interface-redesign/"),
+    ownsFrontend: isFeature13FrontendTest,
+    scenarios: 16,
+    rules: 9,
+    exemptRules: {},
+    exemptScenarios: {
+      "SC-14":
+        "It says that the screens of features 09 and 10 keep their behaviour: the tests of those features are that check, and they run without a change.",
+      "SC-15":
+        "The width of the screen is layout, which a simulated page does not have, and a test of the classes would test the implementation (D6 of the design): it is checked by hand in a real browser, and recorded in the completion.",
+      "SC-16":
+        "The colour mode of the system is not something a simulated page has (D6 of the design): it is checked by hand, with the contrast of each pair of colours calculated, and recorded in the completion.",
+    },
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;
