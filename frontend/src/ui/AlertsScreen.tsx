@@ -33,7 +33,9 @@ export function AlertsScreen() {
   const { state, retry } = useRequest(() => api.alerts(query), [status, page]);
   // What a change told is kept here, not in the entry: the list is read again after it and the entries are made anew (BR-08).
   const [notice, setNotice] = useState<Outcome | null>(null);
-  useEffect(() => setNotice(null), [status, page]);
+  // A notice is about the list, not about a page of it: it stays when the list leads to another page, as it does when a
+  // cancelled alert was the only one of the last page, and goes when the person chooses another state.
+  useEffect(() => setNotice(null), [status]);
   // Each outcome starts a new generation of entries, so that the form or the question of the one that was acted on is
   // gone at once, and does not wait for the read to replace the list: a fast answer would not unmount it.
   const [generation, setGeneration] = useState(0);

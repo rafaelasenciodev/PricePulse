@@ -260,6 +260,28 @@ describe("cancelling (SC-17, SC-18, SC-19, BR-06, BR-07, BR-08)", () => {
     expect(screen.queryByText(screens.alerts.confirmCancel.question)).toBeNull();
   });
 
+  it("SC-07 / SC-18: cancelling the only alert of the last page leaves that page empty, and the list leads to the one before", async () => {
+    const all = Array.from({ length: 21 }, (_, i) => ({ ...ACTIVE, id: `alert-${String(i + 1).padStart(2, "0")}` }));
+    const client = clientWith(all, {
+      alerts: vi.fn(async ({ status, limit, offset }: AlertQuery) => {
+        const matching = all.filter((a) => status === undefined || a.status === status);
+        return ok({ items: matching.slice(offset, offset + limit).map((a) => ({ ...a })), total: matching.length, limit, offset });
+      }),
+      cancelAlert: vi.fn(async (id: string) => {
+        const alert = all.find((a) => a.id === id)!;
+        alert.status = "cancelled";
+        return ok({ ...alert });
+      }),
+    });
+    const user = renderApp(client, "/alerts?status=active&page=2");
+    await screen.findByText(screens.paging.range(21, 21, 21));
+    await user.click(cancelButton());
+    await user.click(confirm());
+    await screen.findByText(screens.paging.range(1, 20, 20));
+    expect(screen.getAllByRole("listitem")).toHaveLength(20);
+    expect(screen.getByRole("status").textContent).toBe(screens.alerts.cancelled);
+  });
+
   it("a notice belongs to the list that it was said on: going to another filter clears it", async () => {
     const client = clientWith([ACTIVE]);
     const user = renderApp(client, "/alerts");
