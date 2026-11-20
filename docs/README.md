@@ -155,3 +155,15 @@ The fifth feature of the [method of five stages](features/README.md). It has no 
 | 3 Design | [Design](features/08-session-cookie/03-design.md) | Approved |
 | 4 Build | [Shared HTTP module](../backend/src/shared/http/), [Accounts](../backend/src/accounts/http/) and the [Composition Root](../backend/src/composition-root.ts) | Implemented |
 | 5 Close | [Completion](features/08-session-cookie/04-completion.md) | Approved |
+
+### 09 — Web Interface
+
+The sixth feature of the [method of five stages](features/README.md), and the first with a project of its own, `frontend/`. It builds the interface that [ADR-0005](adr/0005-web-interface.md) decided: sign in, register, the Catalogue and creating a Price Alert, in Spanish.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/09-web-interface/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/09-web-interface/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/09-web-interface/03-design.md) | Approved |
+| 4 Build | [The interface](../frontend/src/), and in the backend [serving it](../backend/src/app.ts) and [`main.ts`](../backend/src/main.ts) | Implemented |
+| 5 Close | [Completion](features/09-web-interface/04-completion.md) | Approved |

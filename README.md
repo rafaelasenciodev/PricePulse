@@ -20,10 +20,10 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Read the Catalogue of Listings, with the Current Price of each, to choose one to watch | Implemented, with in-memory storage |
 | Delivery of Notifications, marking them as read, pausing alerts, and evaluating on a schedule | Not started |
 | Accounts and authentication of Users: register, sign in with a password, sign out, read one's own Account | Implemented, with in-memory storage |
-| The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented. It has not been tried in a real browser |
+| The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented, and tried in a real browser with the interface of feature 09 (Chrome, over HTTP on the local machine) |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
 | Database persistence | Not started |
-| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09) | Built and tested on a simulated page. The check in a real browser is pending |
+| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
 
@@ -196,7 +196,7 @@ curl -s -c jar.txt -X POST http://127.0.0.1:3000/sessions \
 curl -s -b jar.txt http://127.0.0.1:3000/accounts/me
 ```
 
-A read works with the cookie alone. A change needs the origin, as a page of the application would send it: add `-H "Origin: http://127.0.0.1:3000"`. It has not been tried in a real browser.
+A read works with the cookie alone. A change needs the origin, as a page of the application would send it: add `-H "Origin: http://127.0.0.1:3000"`. The web interface does it in a browser, and the check is in the [completion of feature 09](docs/features/09-web-interface/04-completion.md).
 
 ### Read the Catalogue of Listings
 
