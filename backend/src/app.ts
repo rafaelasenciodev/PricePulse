@@ -177,6 +177,8 @@ export interface AppDependencies {
    * the application is what it was before the interface.
    */
   readonly webInterface?: WebInterfaceOptions;
+  /** The server declares that it is a demo with simulated data (feature 12). `GET /demo` says it. False by default. */
+  readonly demo?: boolean;
 }
 
 /** Build the HTTP application from its dependencies. It does not decide which ones to use. */
@@ -299,6 +301,11 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
       uiConfig: { docExpansion: "list", persistAuthorization: true },
     });
   }
+
+  // Whether this server is a demo, for the interface to say so (feature 12). Public, and it holds no secret: it states
+  // what the server declares about itself. A server that is not a demo answers false.
+  // It is for the interface, not for whoever reads the API, so it is hidden from the documentation, as the redirections are.
+  app.get("/demo", { schema: { hide: true } }, async () => ({ demo: dependencies.demo === true }));
 
   if (dependencies.accounts) app.register(accountRoutes, { ...dependencies.accounts, sessionCookie });
 

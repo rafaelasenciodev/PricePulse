@@ -4,9 +4,22 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DEMO_PROVIDER_TOKEN, seedDemoData } from "./demo-data";
 import { chooseStorage, StorageRefused, type Storage } from "./storage";
-import { normalizeOrigin } from "./shared/http";
+import { readSettings, SettingsRefused, type Settings } from "./settings";
 
-// Where the data is kept is decided first: it refuses production, because the demo passwords below are public.
+// How the server runs is decided first, from the environment (feature 12): it refuses production unless it is declared a
+// demo, because the demo passwords below are public, and in production it also needs a database and its origin.
+let settings: Settings;
+try {
+  settings = readSettings(process.env);
+} catch (error) {
+  if (error instanceof SettingsRefused) {
+    console.error(error.message);
+    process.exit(1);
+  }
+  throw error;
+}
+
+// Then where the data is kept.
 let storage: Storage;
 try {
   storage = await chooseStorage(process.env, { info: (message) => console.log(message), warn: (message) => console.warn(message) });
@@ -18,21 +31,11 @@ try {
   throw error;
 }
 
-const requestedPort = Number(process.env["PORT"]);
-const port = Number.isInteger(requestedPort) && requestedPort > 0 ? requestedPort : 3000;
-
 // The cookie of the Session (feature 08) is set for one origin: the address at which the browser reaches the
 // application. By default it is where this server listens. The interface in development is served by another
 // server that forwards the API, and the browser then sees the origin of that one: `WEB_ORIGIN` says it, for
-// example `WEB_ORIGIN=http://localhost:5173`. `secure` is off because this server speaks HTTP only.
-const requestedOrigin = process.env["WEB_ORIGIN"] ?? `http://127.0.0.1:${port}`;
-let webOrigin: string;
-try {
-  webOrigin = normalizeOrigin(requestedOrigin);
-} catch (error) {
-  console.error(`WEB_ORIGIN is not valid: ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
-}
+// example `WEB_ORIGIN=http://localhost:5173`. The cookie is `Secure` when that origin is an `https` address.
+const { port, origin: webOrigin } = settings;
 
 // The web interface is served when it has been built: `npm run build` in `frontend/` writes `frontend/dist`. Without it
 // the server starts as it always did.
@@ -42,12 +45,22 @@ const interfaceBuilt = existsSync(`${webRoot}index.html`);
 const application = storage.compose({
   logger: true,
   ...(interfaceBuilt ? { webInterface: { root: webRoot } } : {}),
-  sessionCookie: { origin: webOrigin, secure: false },
+  sessionCookie: { origin: settings.origin, secure: settings.secureCookie },
+  demo: settings.demo,
   apiDocs: {
     note: [
+      // A demo says what it is. It does not say where its database is: the page is public.
+      ...(settings.demo
+        ? [
+            "**Public demo with simulated data.** The Accounts, the Listings, the Retailers and the prices are fictitious, and the passwords and the token of the price provider below are public, so anyone can change the prices. The data can be reset at any time.",
+            "",
+          ]
+        : []),
       storage.description === "memory"
-        ? "Development server with demo data held in memory."
-        : `Development server with demo data kept in the PostgreSQL database ${storage.description}.`,
+        ? `${settings.demo ? "Demo" : "Development"} server with demo data held in memory.`
+        : settings.demo
+          ? "Demo server with its data kept in a PostgreSQL database."
+          : `Development server with demo data kept in the PostgreSQL database ${storage.description}.`,
       "",
       `- Signing in also sets the session cookie, for a browser: \`HttpOnly\`, for ${webOrigin} only. Open this page at that address, so that the browser sends the cookie and the origin matches. The token in the body and the header \`Authorization\` work as always.`,
       "- Two Accounts to try: `demo1@example.com` with the password `demo-password-1`, and `demo2@example.com` with `demo-password-2`. They are two different Users. Sign in with `POST /sessions` and paste the `token` of the answer in Authorize: it is the token of a User, and it lasts 7 days. With the data in memory a restart loses it and the demo Accounts are created again; in a database they stay as they were left.",
@@ -65,9 +78,10 @@ const { app } = application;
 // Demo data. In a database it is created once, and a restart finds it as it was left.
 const { created } = await seedDemoData(application);
 console.log(created ? "Demo data created." : "Demo data was already there.");
+if (settings.demo) console.log("Demo mode: this server is a demo with simulated data, and its passwords and the token of the Provider are public.");
 
-// Listen on the local machine only: the demo Accounts must not be reachable from outside.
-await app.listen({ port, host: "127.0.0.1" });
+// The local machine only, unless `HOST` says another address: the demo Accounts must not be reachable from outside by chance.
+await app.listen({ port, host: settings.host });
 app.log.info(`Interactive API documentation: http://127.0.0.1:${port}/docs`);
 app.log.info(`Session cookie on for the origin ${webOrigin}`);
 if (interfaceBuilt) app.log.info(`Web interface: ${webOrigin}/app/`);

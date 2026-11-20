@@ -144,6 +144,8 @@ export interface ComposeOptions {
    * and nothing that exists changes. A origin that is not valid makes it throw when it is built.
    */
   sessionCookie?: SessionCookieOptions;
+  /** The server declares that it is a demo with simulated data (feature 12). */
+  demo?: boolean;
   /** Receives what each Evaluation came to. By default it writes to the log of the application. */
   onEvaluation?: (report: EvaluationReport) => void;
 }
@@ -252,6 +254,7 @@ export function composeApp<S extends Stores>(stores: S, options: ComposeOptions 
     apiDocs: options.apiDocs,
     ...(options.webInterface ? { webInterface: options.webInterface } : {}),
     ...(options.sessionCookie ? { sessionCookie: options.sessionCookie } : {}),
+    ...(options.demo === undefined ? {} : { demo: options.demo }),
   });
 
   return {

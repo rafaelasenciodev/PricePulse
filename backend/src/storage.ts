@@ -3,9 +3,9 @@
  *
  * With `DATABASE_URL` it uses PostgreSQL: it connects, applies the migrations and says at which database, without the
  * user and the password. Without it, it keeps the data in memory and says that it is lost when the server stops.
- * Production is refused, as the server always did: the demo Accounts have public passwords, and that stays until the
- * deployment decides otherwise. A database that cannot be reached stops the server, and what it says never carries the
- * address, the user or the password, only the code of the failure.
+ * Whether the server may run in production is decided before, by the settings (feature 12). A database that cannot be
+ * reached stops the server, and what it says never carries the address, the user or the password, only the code of
+ * the failure.
  */
 
 import { composeInMemoryApp, composePostgresApp, type Application, type ComposeOptions } from "./composition-root";
@@ -36,7 +36,7 @@ export interface StorageLog {
 }
 
 /** The code of a failure, such as ECONNREFUSED, and not its text, which may name the address. */
-function codeOf(error: unknown): string {
+export function codeOf(error: unknown): string {
   const read = (value: unknown): string | null =>
     typeof value === "object" && value !== null && typeof (value as { code?: unknown }).code === "string" ? (value as { code: string }).code : null;
   const aggregate = (error as { errors?: unknown } | null)?.errors;
@@ -55,13 +55,6 @@ function describeDatabase(url: string): string | null {
 }
 
 export async function chooseStorage(environment: Readonly<Record<string, string | undefined>>, log: StorageLog): Promise<Storage> {
-  if (environment["NODE_ENV"] === "production") {
-    throw new StorageRefused(
-      "This server starts with demo data whose passwords are public, so it must not run in production. " +
-        "It is not offered as a production server yet.",
-    );
-  }
-
   const url = environment["DATABASE_URL"];
   if (url === undefined || url === "") {
     log.warn("DATABASE_URL is not set: the data is kept in memory, and what is stored is lost when the server stops.");

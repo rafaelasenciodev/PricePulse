@@ -1,7 +1,17 @@
-/** How the server chooses where to keep its data, without a database to reach (feature 11, SC-31 to SC-33). */
+/** How the server chooses where to keep its data, without a database to reach (feature 11, SC-31 to SC-33). Whether production is refused is decided by the settings (feature 12).. */
 
 import { describe, expect, it } from "vitest";
+import { SettingsRefused, readSettings } from "../../src/settings";
 import { StorageRefused, chooseStorage } from "../../src/storage";
+
+const catching = (run: () => unknown): Error => {
+  try {
+    run();
+  } catch (error) {
+    return error as Error;
+  }
+  throw new Error("It did not throw");
+};
 
 const recorder = () => {
   const lines: string[] = [];
@@ -25,16 +35,11 @@ describe("chooseStorage", () => {
     expect(storage.description).toBe("memory");
   });
 
-  it("SC-32 / BR-10: production does not start, and the message says why", async () => {
-    const error = await chooseStorage({ NODE_ENV: "production" }, recorder().log).catch((e) => e);
-    expect(error).toBeInstanceOf(StorageRefused);
+  it("SC-32 / BR-10: production does not start without a database, and the message says why", () => {
+    const error = catching(() => readSettings({ NODE_ENV: "production", DEMO_MODE: "true", WEB_ORIGIN: "https://demo.example" }));
+    expect(error).toBeInstanceOf(SettingsRefused);
     expect(error.message).toMatch(/production/);
-    expect(error.message).toMatch(/passwords are public/);
-  });
-
-  it("SC-32 / BR-10: production is refused with a database too, while the demo passwords are public", async () => {
-    const error = await chooseStorage({ NODE_ENV: "production", DATABASE_URL: "postgres://u:p@127.0.0.1:5433/db" }, recorder().log).catch((e) => e);
-    expect(error).toBeInstanceOf(StorageRefused);
+    expect(error.message).toMatch(/DATABASE_URL/);
   });
 
   describe("SC-33 / BR-10: a database that cannot be reached stops the server, and its password is not shown", () => {
