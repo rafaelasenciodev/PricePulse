@@ -216,4 +216,4 @@ The tenth feature of the [method of five stages](features/README.md). It gives t
 | 2 Scenarios | [Scenarios](features/13-interface-redesign/02-scenarios.feature) | Approved |
 | 3 Design | [Design](features/13-interface-redesign/03-design.md) | Approved |
 | 4 Build | [The screens](../frontend/src/ui/), [the styles](../frontend/src/index.css) and [the points of the chart](../frontend/src/ui/chartPoints.ts) | Implemented |
-| 5 Close | [Completion](features/13-interface-redesign/04-completion.md) | Draft |
+| 5 Close | [Completion](features/13-interface-redesign/04-completion.md) | Approved |

@@ -1,6 +1,6 @@
 # 13 — Interface Redesign: Completion (Stage 5)
 
-Status: Draft
+Status: Approved
 
 The close of the feature: what was built, the decisions and their status, how it was verified, what the review found, what it does not do and what comes next. It links to the documents of each stage and does not repeat them.
 
@@ -138,6 +138,6 @@ The documents of the first three stages have 471 lines (discovery and rules 157,
 
 - [x] Stages 1 to 4 completed
 - [x] Documentation of stage 5 written (this document)
-- [ ] This document is approved by the author
+- [x] This document is approved by the author
 - [x] The README and the documentation indexes describe this feature
 - [ ] The feature is merged into `develop` with `--no-ff`, and `develop` into `main` and tagged (done by the developer, [ADR-0002](../../adr/0002-branching-model.md))
