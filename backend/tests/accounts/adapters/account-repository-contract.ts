@@ -12,11 +12,11 @@ import { UserId } from "../../../src/shared/domain";
 export const accountOf = (email: string, id = `user-${email}`, hash = "hash-1") =>
   new Account(UserId(id), Email.of(email), hash);
 
-export function describeAccountRepositoryContract(name: string, create: () => AccountRepository): void {
+export function describeAccountRepositoryContract(name: string, create: () => AccountRepository | Promise<AccountRepository>): void {
   describe(`AccountRepository: ${name}`, () => {
     let repository: AccountRepository;
-    beforeEach(() => {
-      repository = create();
+    beforeEach(async () => {
+      repository = await create();
     });
 
     it("finds an Account by its email and by its identifier", async () => {

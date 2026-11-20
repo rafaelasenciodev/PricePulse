@@ -41,6 +41,8 @@ export class InMemorySessionStore implements SessionStore {
   private readonly byHash = new Map<string, Session>();
 
   async add(session: Session): Promise<void> {
+    // BR-13: the Sessions that had expired when this one was created are removed.
+    for (const [hash, stored] of this.byHash) if (!stored.isValidAt(session.createdAt)) this.byHash.delete(hash);
     this.byHash.set(session.tokenHash, session);
   }
 

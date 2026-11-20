@@ -21,7 +21,8 @@ const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: reado
   domain: { imports: ["shared"], packages: [] },
   application: { imports: ["domain", "shared"], packages: [] },
   // node:crypto: the hash of the passwords and the random tokens of the Accounts (ADR-0004), which add no dependency.
-  adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto"] },
+  // `pg` for the adapters of PostgreSQL (feature 11, ADR-0006).
+  adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto", "pg"] },
   http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
   // `shared`: the error of a refused origin and the check of the origin of the settings (feature 08).
   // `@fastify/static` serves the built interface (feature 09), and `node:path` tells a file of `assets/` from another.

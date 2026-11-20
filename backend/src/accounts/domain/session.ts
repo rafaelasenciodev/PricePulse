@@ -21,6 +21,17 @@ export class Session {
     return new Session(tokenHash, userId, now, now + SESSION_LIFETIME_MILLISECONDS);
   }
 
+  /**
+   * Rebuilds a Session from what was stored. It checks what stored data can get wrong: instants that are not integers, and
+   * an expiry that is not after the creation. It does not apply the lifetime, which was applied when the Session started.
+   */
+  static restore(tokenHash: string, userId: UserId, createdAt: number, expiresAt: number): Session {
+    if (!Number.isSafeInteger(createdAt) || !Number.isSafeInteger(expiresAt) || expiresAt <= createdAt) {
+      throw new RangeError("A stored Session must have integer instants and expire after its creation");
+    }
+    return new Session(tokenHash, userId, createdAt, expiresAt);
+  }
+
   /** BR-08: valid until the expiry, which is already too late. */
   isValidAt(now: number): boolean {
     return now < this.expiresAt;
