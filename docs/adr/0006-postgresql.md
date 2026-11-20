@@ -14,7 +14,7 @@ The ports ask for guarantees that a database has to give: uniqueness decided by 
 
 | Aspect | Choice |
 |---|---|
-| Database | **PostgreSQL**, run as a server |
+| Database | **PostgreSQL**, run as a server. `compose.yaml` fixes the version at 17, chosen when it was built, after checking that its image exists |
 | Access from the code | The driver **`pg`** and SQL written by hand in the adapters, which sit behind the ports. No query builder and no ORM |
 | Schema changes | Numbered SQL files, applied once each by a small runner of the project, and recorded in a table |
 | In development and in tests | One service in a `compose.yaml`, started with Docker. `npm test` stays in memory, and the contracts run against the database with `npm run test:db` |
@@ -36,7 +36,7 @@ The schema, what each operation does, the migrations and the tests are in the [d
 
 - The backend gains two dependencies, `pg` for production and its types for development, and with the driver a dozen packages. Starting the database needs Docker, and the tests of the database need it running.
 - The adapters are SQL written by hand: the mapping of rows to objects is written once for each store, and a query is checked only by running it, which the contracts do.
-- `bigint` columns come from the driver as text, so the adapters convert them with one helper that refuses what is not a safe integer.
+- `bigint` columns come from the driver as text, so the pool converts them in one place, a type parser that refuses what is not a safe integer.
 - Two guarantees stop being verified only in memory: uniqueness and the conditional save. The concurrency of two requests at once is tested against a real database.
 - The domain and the application still know nothing of the database, and a test checks that they do not import the driver.
 - The server has two modes, with a database and in memory, and says which one it runs in.
@@ -44,5 +44,4 @@ The schema, what each operation does, the migrations and the tests are in the [d
 ## Open
 
 - Where the database runs when the application is deployed, how it is backed up, and how many connections it needs: in the deployment decision.
-- The version of PostgreSQL in `compose.yaml`: chosen when it is built, after checking that its image exists.
 - Whether the server may run in production, which it does not do today because of the public demo passwords: in the deployment decision.

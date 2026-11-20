@@ -2,7 +2,7 @@
 
 A price-tracking platform: monitor product prices, consult price history, and get alerted when a product reaches a target price.
 
-> **Status: in development.** Ten features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface** and **My Alerts and My Notifications**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
+> **Status: in development.** Eleven features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface**, **My Alerts and My Notifications** and **Persistence**. The data is kept in PostgreSQL when the server is given a database, and in memory when it is not. The rest of the platform is planned and not started. See [What works today](#what-works-today).
 
 PricePulse is a Master's Final Project (TFM), a professional portfolio project, and a vehicle for a repeatable, design-first engineering methodology (see [`docs/features/README.md`](docs/features/README.md)).
 
@@ -22,7 +22,7 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Accounts and authentication of Users: register, sign in with a password, sign out, read one's own Account | Implemented, with in-memory storage |
 | The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented, and tried in a real browser with the interface of feature 09 (Chrome, over HTTP on the local machine) |
 | Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
-| Database persistence | Not started |
+| Database persistence: with `DATABASE_URL` the server keeps its data in PostgreSQL and applies the schema when it starts, and without it the data is in memory (feature 11) | Implemented, tested against PostgreSQL 17 in Docker, and tried with a real server restarted. Not deployed |
 | Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
@@ -97,7 +97,7 @@ If you did not cancel it, both alerts are reached by 79.90, so both become Trigg
 {"level":30,...,"owner":"8a65fb57-...","targetPrice":{"amount":"80.00",...},"currentPrice":{"amount":"79.90",...},...,"produced":true,"msg":"Price Alert triggered: a Notification was produced"}
 ```
 
-The Notifications are stored in memory and are not delivered. Their owner reads them, and anyone with a User's token reads the Price History of the Listing:
+The Notifications are stored (in memory unless a database is configured) and are not delivered. Their owner reads them, and anyone with a User's token reads the Price History of the Listing:
 
 ```bash
 curl -s http://127.0.0.1:3000/notifications \
@@ -111,7 +111,7 @@ The first answers with the Notification of that User only, and the second with t
 
 Or try it in the browser: open **<http://127.0.0.1:3000/docs>** and press **Authorize**. There are two padlocks, because there are two credentials that are not interchangeable: `bearerAuth` takes the token of a User, which `POST /sessions` gives when you sign in (try it out there first, with a demo Account), and `providerAuth` takes the one of the price provider (`demo-provider-token`). Then open an endpoint and press **Try it out**.
 
-The server starts with demo data, defined in [`backend/src/main.ts`](backend/src/main.ts):
+The server starts with demo data, defined in [`backend/src/demo-data.ts`](backend/src/demo-data.ts):
 
 | Demo data | Values |
 |---|---|
@@ -125,7 +125,19 @@ The server starts with demo data, defined in [`backend/src/main.ts`](backend/src
 
 The Current Price of each Listing is not stored. The server records one observation per Listing when it starts, as the provider would, and the Current Price is the price of the latest observation.
 
-The retailers are fictitious. Everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. The demo passwords are public, as they are in this file, so the server refuses to run in production. The server listens on `127.0.0.1` only, and it refuses to start when `NODE_ENV` is `production`. Use `PORT=3001 npm run dev` to change the port.
+The retailers are fictitious. Without a database everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. With a database ([below](#running-with-a-database)) the demo data is created once and a restart finds it as it was left. The demo passwords are public, as they are in this file, so the server refuses to run in production. The server listens on `127.0.0.1` only, and it refuses to start when `NODE_ENV` is `production`. Use `PORT=3001 npm run dev` to change the port.
+
+### Running with a database
+
+The data lasts when the server is given a PostgreSQL database. It needs [Docker](https://docs.docker.com/get-docker/):
+
+```bash
+docker compose up -d        # PostgreSQL 17 on 127.0.0.1:5433, with its data in a named volume
+cd backend
+DATABASE_URL=postgres://pricepulse:pricepulse@127.0.0.1:5433/pricepulse npm run dev
+```
+
+The server connects, applies the pending migrations of [`backend/src/database/migrations/`](backend/src/database/migrations/), says at which database it keeps its data (without the user and the password), creates the demo data if it is absent, and starts. Stop it and start it again: the Accounts, the Sessions, the alerts and the prices are where they were left. `npm run migrate`, with the same `DATABASE_URL`, applies the migrations without starting the server. If the database cannot be reached the server does not start, and says only the code of the failure. The user and the password of `compose.yaml` are for development: it listens on the local machine only.
 
 ### The web interface
 
@@ -310,9 +322,11 @@ Ports and adapters, with one folder per feature. Dependencies point inward, a fe
 |---|---|---|
 | `domain` | Business rules and invariants. It imports nothing but `shared` | `backend/src/<feature>/domain/` |
 | `application` | The use case and the ports it needs | `backend/src/<feature>/application/` |
-| `adapters` | In-memory implementations of the ports | `backend/src/<feature>/adapters/` |
+| `adapters` | In-memory and PostgreSQL implementations of the ports | `backend/src/<feature>/adapters/` |
+| `database` | The connection and the migrations. The only code, besides the adapters, that knows the driver | `backend/src/database/` |
 | `http` | The HTTP interface, authentication and error mapping | `backend/src/<feature>/http/` |
 | `shared` | What several features need, such as `Price`, and the reading of the bearer token and of the session cookie. It imports nothing | `backend/src/shared/` |
+| Storage | Chooses where the data is kept from the environment: the database in `DATABASE_URL`, or memory | `backend/src/storage.ts` |
 | Composition Root | The only place that chooses and connects the parts. It is also where the features meet: the Current Price that Price Alerts read comes from the Price Observations | `backend/src/composition-root.ts` |
 | Evaluation trigger | The policy that evaluates the Price Alerts of a Listing after a price is recorded, so that neither feature knows the other | `backend/src/evaluation-trigger.ts` |
 
@@ -324,16 +338,19 @@ The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. Not decided yet: the database, background jobs, how the application is built for production, and where it is deployed.
+The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). Not decided yet: background jobs, how the application is built for production, and where it is deployed.
 
 ## Testing
 
 ```bash
 cd backend
-npm test                 # all the tests
+npm test                 # all the tests, in memory
+npm run test:db          # the contracts and the application against PostgreSQL (needs `docker compose up -d`)
 npm run typecheck        # type checking
 npm run coverage         # tests with a coverage report, used as a diagnostic
 ```
+
+`npm run test:db` fails, and does not skip, when it cannot reach the database. It creates and empties its own database, `pricepulse_test`, on the server of `compose.yaml`.
 
 The interface has its own tests, run with `npm test` and `npm run typecheck` in `frontend/`. They run on a simulated page, and a test of the backend runs the client of the interface against the real application.
 
@@ -360,6 +377,7 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Feature 08, stage by stage | [`docs/features/08-session-cookie/`](docs/features/08-session-cookie/) |
 | Feature 09, stage by stage | [`docs/features/09-web-interface/`](docs/features/09-web-interface/) |
 | Feature 10, stage by stage | [`docs/features/10-my-alerts-and-notifications/`](docs/features/10-my-alerts-and-notifications/) |
+| Feature 11, stage by stage | [`docs/features/11-persistence/`](docs/features/11-persistence/) |
 
 ## Data
 

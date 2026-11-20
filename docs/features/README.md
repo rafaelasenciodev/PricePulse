@@ -123,3 +123,4 @@ Features 01 to 03 followed eleven phases. Their documents keep their names and a
 | 08 | [Session Cookie](08-session-cookie/01-discovery.md) | Stage 5 — Close (done, pending merge) |
 | 09 | [Web Interface](09-web-interface/01-discovery.md) | Stage 5 — Close (done, pending merge) |
 | 10 | [My Alerts and My Notifications](10-my-alerts-and-notifications/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 11 | [Persistence](11-persistence/01-discovery.md) | Stage 5 — Close (done, pending merge) |

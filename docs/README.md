@@ -31,6 +31,7 @@ Status: Draft · In Review · Approved (see [status vocabulary](features/README.
 | [ADR-0003: Persistence is deferred and the in-memory adapters stay](adr/0003-persistence-deferred.md) | Approved |
 | [ADR-0004: Users authenticate with server-side sessions, scrypt and a bearer token](adr/0004-authentication.md) | Approved |
 | [ADR-0005: The web interface is a single-page application served by the backend, with the session in a cookie](adr/0005-web-interface.md) | Approved |
+| [ADR-0006: Data is kept in PostgreSQL, through its driver and SQL written by hand](adr/0006-postgresql.md) | In Review |
 
 ## Quality
 
@@ -179,3 +180,15 @@ The seventh feature of the [method of five stages](features/README.md), and the 
 | 3 Design | [Design](features/10-my-alerts-and-notifications/03-design.md) | Approved |
 | 4 Build | [The interface](../frontend/src/) | Implemented |
 | 5 Close | [Completion](features/10-my-alerts-and-notifications/04-completion.md) | Approved |
+
+### 11 — Persistence
+
+The eighth feature of the [method of five stages](features/README.md). It keeps what the system stores in PostgreSQL, and changes nothing that a person can see. The code is in the adapters of the three modules, in `database/` and in the Composition Root.
+
+| Stage | Document | Status |
+|---|---|---|
+| 1 Understand | [Discovery and rules](features/11-persistence/01-discovery.md) | Approved |
+| 2 Scenarios | [Scenarios](features/11-persistence/02-scenarios.feature) | Approved |
+| 3 Design | [Design](features/11-persistence/03-design.md) | Approved |
+| 4 Build | [The database layer](../backend/src/database/), the adapters of [Accounts](../backend/src/accounts/adapters/postgres.ts), [Price Alerts](../backend/src/price-alerts/adapters/postgres.ts) and [Price Observations](../backend/src/price-observations/adapters/postgres.ts), and [`storage.ts`](../backend/src/storage.ts) | Implemented |
+| 5 Close | [Completion](features/11-persistence/04-completion.md) | Approved |
