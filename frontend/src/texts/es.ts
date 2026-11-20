@@ -134,6 +134,19 @@ export const screens = {
     /** SC-22: the Listing does not exist, so the way out is the Catalogue. */
     toCatalogue: "Ir al catálogo",
   },
+  /** Feature 13: the Price History of a Listing, as a chart with its text alternative. */
+  history: {
+    title: "Historial de precios",
+    loading: "Cargando el historial…",
+    /** BR-04: with fewer than two points there is no line to draw. */
+    notEnough: "Todavía no hay suficiente historial para dibujar un gráfico.",
+    /** BR-07: said to be of the period shown, because the system has no such rule. */
+    lowest: "Mínimo del periodo mostrado",
+    highest: "Máximo del periodo mostrado",
+    tableCaption: "Precios observados",
+    moment: "Momento",
+    price: "Precio",
+  },
   /** The form to create a Price Alert on the screen of a Listing. */
   alertForm: {
     title: `Crear una ${v.priceAlert}`,
@@ -192,6 +205,11 @@ export const failures = {
 
   readCatalogue: {
     other: `No se ha podido leer el ${v.catalogue}. Inténtalo de nuevo.`,
+  },
+
+  /** BR-06: a failure to read the history does not hide the rest of the Listing. */
+  readHistory: {
+    other: `No se ha podido leer el historial de precios. Inténtalo de nuevo.`,
   },
 
   readListing: {

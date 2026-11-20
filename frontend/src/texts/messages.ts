@@ -2,7 +2,7 @@ import type { Failure } from "../api";
 import { failures } from "./es";
 
 /** The actions of the interface that can fail with a message of their own. */
-export type Action = "signIn" | "register" | "signOut" | "session" | "readCatalogue" | "readListing" | "createAlert" | "readAlerts" | "readNotifications" | "changeTarget" | "cancelAlert";
+export type Action = "signIn" | "register" | "signOut" | "session" | "readCatalogue" | "readListing" | "readHistory" | "createAlert" | "readAlerts" | "readNotifications" | "changeTarget" | "cancelAlert";
 
 /** Whether the answer is that the Session is not valid: the session handles it, and it has no message of the action (BR-06). */
 export function isSessionEnded(failure: Failure): boolean {

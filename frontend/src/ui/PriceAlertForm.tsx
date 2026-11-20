@@ -2,6 +2,7 @@ import type { CreatedAlert, Listing } from "../api";
 import { useSession } from "../session";
 import { screens } from "../texts";
 import { AmountForm } from "./AmountForm";
+import { Card } from "./Card";
 import { formatPrice } from "./format";
 
 interface Props {
@@ -14,8 +15,8 @@ interface Props {
 export function PriceAlertForm({ listing, onDone }: Props) {
   const { api } = useSession();
   return (
-    <section>
-      <h2>{screens.alertForm.title}</h2>
+    <Card as="div">
+      <h2 className="m-0 mb-3 text-lg font-semibold">{screens.alertForm.title}</h2>
       <AmountForm
         id="target-amount"
         label={screens.alertForm.amount(listing.currency)}
@@ -24,7 +25,7 @@ export function PriceAlertForm({ listing, onDone }: Props) {
         failureAction="createAlert"
         onDone={(created) => onDone(describe(created))}
       />
-    </section>
+    </Card>
   );
 }
 

@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import type { Failure, Result } from "../api";
 import { messageFor, type Action } from "../texts";
+import { Button } from "./Button";
+import { Field } from "./Field";
 import { useSubmit } from "./useSubmit";
 
 interface Props<T> {
@@ -44,36 +46,32 @@ export function AmountForm<T>({ id, label, texts, send, failureAction, onDone, o
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} noValidate>
-      <label htmlFor={id}>{label}</label>
-      <input
+    <form onSubmit={(event) => void handleSubmit(event)} noValidate className="gap-3">
+      <Field
         id={id}
+        label={label}
         type="text"
         inputMode="decimal"
         autoComplete="off"
         value={amount}
         onChange={(event) => setAmount(event.target.value)}
-        aria-invalid={missing}
-        aria-describedby={missing ? `${id}-missing` : undefined}
+        error={missing ? texts.missing : undefined}
       />
-      {missing && (
-        <p id={`${id}-missing`} role="alert" className="error">
-          {texts.missing}
-        </p>
-      )}
       {error !== null && (
-        <p role="alert" className="error">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
-      <button type="submit" disabled={pending}>
-        {pending ? texts.submitting : texts.submit}
-      </button>
-      {secondary !== undefined && (
-        <button type="button" onClick={secondary.onClick} disabled={pending}>
-          {secondary.label}
-        </button>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? texts.submitting : texts.submit}
+        </Button>
+        {secondary !== undefined && (
+          <Button variant="secondary" onClick={secondary.onClick} disabled={pending}>
+            {secondary.label}
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

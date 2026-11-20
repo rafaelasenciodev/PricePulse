@@ -26,7 +26,7 @@ It builds on the [discovery and rules](01-discovery.md), the [scenarios](02-scen
 
 ## 3. The Listing screen (BR-02, BR-06)
 
-`ListingScreen` keeps its read of the Listing and creates the alert as before. Below the facts it renders `PriceHistory`, which has **its own** `useRequest` with `limit` 100 and `offset` 0 (BR-02 and Q5: the newest 100, one request). The two reads are independent, so a failure of the history shows its message and a retry in its own place and nothing else of the screen changes (SC-11, SC-12). The history is not read again when an alert is created, because creating an alert does not change prices.
+`ListingScreen` keeps its read of the Listing and creates the alert as before. Below the facts it renders `PriceHistory`, which has **its own** `useRequest` with `limit` 100 and `offset` 0 (BR-02 and Q5: the newest 100, one request). The two reads are independent, so a failure of the history shows its message and a retry in its own place and nothing else of the screen changes (SC-11, SC-12). The history is read again whenever the Listing is read again, which happens after an alert is created (BR-11 of feature 09): the screen shows the Listing as it was read, and the history is part of it. It is one more request and it changes nothing that the person sees.
 
 `PriceHistory` turns the answer into points with `chartPoints` and chooses what to show:
 
@@ -44,7 +44,7 @@ It builds on the [discovery and rules](01-discovery.md), the [scenarios](02-scen
 3. For each one it gives `{ observedAt, amount (text), value (number) }`.
 4. It also gives the lowest and the highest point, by `value`, with their text.
 
-`value` exists **only to place the point on the axis.** Everything that is written, in the axis, in the tooltip, in the lowest and highest price and in the text alternative, is the `amount` text with the currency, formatted by `formatPrice` (BR-05). This keeps the rule of feature 09 that the interface does not turn money into numbers to show it. The currency is that of the Listing, because the API rejects an observation in another one (BR-05 of feature 02), so the points of a Listing share a currency.
+`value` exists **only to place the point on the axis.** Everything that is written about an observation, in the tooltip, in the lowest and highest price and in the text alternative, is the `amount` text with the currency, formatted by `formatPrice` (BR-05). The marks of the vertical axis are not observations: they are the scale that the chart computes, and they are written as it gives them. This keeps the rule of feature 09 that the interface does not turn money into numbers to show it. The currency is that of the Listing, because the API rejects an observation in another one (BR-05 of feature 02), so the points of a Listing share a currency.
 
 ## 5. The chart and its text alternative (BR-07)
 
