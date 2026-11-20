@@ -9,15 +9,31 @@ The agreed vocabulary of the project. Each term has one meaning, used in documen
 | **User** | A registered person who has signed in. A User creates and owns Price Alerts. | [Feature 01](../features/01-create-price-alert/00-discovery.md) |
 | **Product** | An article, independent of who sells it. | Feature 01 |
 | **Retailer** | A seller that offers Products. | Feature 01 |
-| **Listing** | A Retailer's offer of a Product. A Price Alert watches a Listing. | Feature 01 |
+| **Listing** | A Retailer's offer of a Product. A Price Alert watches a Listing. It has a title and the name of its Retailer, text for a person to read that take part in no rule. | Feature 01, extended in Feature 07 |
 | **Price** | An amount of money in a currency. | Feature 01 |
-| **Current Price** | The most recent Price known for a Listing. A Listing may have none: an unavailable Listing has no Current Price, and neither does a Listing whose price is not known. | Feature 01 |
+| **Current Price** | The Price of the Price Observation of a Listing with the greatest Observed At. A Listing may have none: a Listing whose latest Price Observation has no Price has no Current Price, and neither does a Listing with no Price Observation. | Feature 01, refined in [Feature 02](../features/02-price-observation/00-discovery.md) |
 | **Target Price** | The Price at which a User wants to be notified. It is expressed in the Listing's currency. | Feature 01 |
 | **Price Alert** | A User's request to be notified when the Current Price of a Listing reaches a Target Price. | Feature 01 |
 | **Target reached** | The condition that a Current Price is less than or equal to a Target Price. A Price equal to the Target Price reaches it. | Feature 01 |
-| **Active** | The state of a Price Alert that has been created and has not ended. It is the only state that Feature 01 produces. | Feature 01 |
-| **Triggered** | The state of a Price Alert whose Target Price was reached and whose User was notified. A Triggered Price Alert is no longer Active. Only a later feature makes a Price Alert Triggered; Feature 01 needs the state to tell such alerts apart from Active ones. | Feature 01 |
+| **Active** | The state of a Price Alert that has been created and is still waiting: it has not been Triggered or Cancelled. | Feature 01, refined in [Feature 04](../features/04-read-and-manage-alerts/01-discovery.md) |
+| **Triggered** | The state of a Price Alert whose Target Price was reached and for which a Notification was produced. A Triggered Price Alert is no longer Active. Feature 01 needs the state to tell such alerts apart from Active ones; [Feature 03](../features/03-alert-evaluation/00-discovery.md) is the one that makes a Price Alert Triggered. | Feature 01, refined in Feature 03 |
 | **Duplicate** | An attempt to create a Price Alert when the User already has an Active one for the same Listing. | Feature 01 |
+| **Price Observation** | A record of the Price of a Listing at a point in time, or of its absence: a Price Observation without a Price means that the Listing is unavailable at that moment. Unavailable does not mean out of stock, because stock quantities are not modelled. | Feature 02 |
+| **Observed At** | The moment at which a Provider saw the state of a Listing. It is the time that orders Price Observations, not the moment they are received. | Feature 02 |
+| **Provider** | A source that supplies Price Observations, identified by an identifier. Today it is the simulator. A Provider is not a User, and it is not a Retailer. | Feature 02 |
+| **Conflict** | An attempt to record a Price Observation with the same Provider, Listing and Observed At as a stored one, but with different content. | Feature 02 |
+| **Evaluation** | Comparing the Current Price of a Listing with the Target Price of each of its Active Price Alerts. | Feature 03 |
+| **Notification** | A record that the owner of a Price Alert must be told that its Target Price was reached. It states the Price Alert, the Listing, the Target Price and the Current Price with its Observed At. It is produced and stored; delivering it is not part of the record. | Feature 03 |
+| **Cancelled** | The state of a Price Alert that its owner stopped before it was Triggered. A Cancelled Price Alert is no longer Active: it is not evaluated, and the User may create another Active one for the same Listing. | Feature 04 |
+| **Creation moment** | When a Price Alert was created. It never changes. | Feature 04 |
+| **Price History** | The Price Observations of a Listing, in the order of their Observed At. | Feature 05 |
+| **Account** | The registration of a User: an email that identifies it, and a password. | Feature 06 |
+| **Session** | The period during which a token identifies an Account. It starts when the person signs in, and ends when it expires or when they sign out. | Feature 06 |
+| **Catalogue** | The set of Listings that the system knows. Only a Listing in it can be observed, watched or read. | Feature 07 |
+| **Session cookie** | The cookie that carries the token of a Session, which the browser sends by itself. It is not a second kind of Session: it holds the same token as the header does. | Feature 08 |
+| **Reviewer** | A person who opens the public demo to judge the project: a supervisor or a recruiter. | [Feature 12](../features/12-deployment/01-discovery.md) |
+| **Demo mode** | The state of a server that declares that its data is simulated and that its passwords and the token of its Provider are public. A server in production starts only in it. | Feature 12 |
+| **Demo reset** | The command with which the Author returns the data of the demo to its first state. | Feature 12 |
 
 ## Vocabulary decisions
 

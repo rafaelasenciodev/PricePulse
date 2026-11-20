@@ -4,7 +4,7 @@ import {
   Price,
   TooManyDecimals,
   UnsupportedCurrency,
-} from "../../../src/price-alerts/domain";
+} from "../../../src/shared/domain";
 
 describe("Price", () => {
   it.each([

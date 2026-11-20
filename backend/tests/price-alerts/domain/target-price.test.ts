@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  CurrencyMismatch,
-  NonPositiveTargetPrice,
-  Price,
-  TargetPrice,
-} from "../../../src/price-alerts/domain";
+import { CurrencyMismatch, NonPositiveTargetPrice, TargetPrice } from "../../../src/price-alerts/domain";
+import { Price } from "../../../src/shared/domain";
 
 const eur = (amount: string) => Price.fromDecimalString(amount, "EUR");
 

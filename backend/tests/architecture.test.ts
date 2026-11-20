@@ -3,25 +3,46 @@
  *
  * The design says dependencies point inward: the domain knows nothing of the rest, the
  * application knows only the domain, and the adapters and the HTTP layer know the
- * application. This test fails when a change breaks that, so the review of Phase 9 does not
- * have to be repeated by hand.
+ * application. Two more rules keep the features apart: `shared` holds only what several
+ * features need and imports nothing, and a feature never imports another feature. This test
+ * fails when a change breaks any of that, so the review of Phase 9 does not have to be
+ * repeated by hand.
  */
 
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-type Layer = "domain" | "application" | "http" | "adapters" | "app" | "composition-root" | "main";
+type Layer = "shared" | "domain" | "application" | "http" | "adapters" | "app" | "evaluation-trigger" | "composition-root" | "main" | "database" | "storage" | "demo-data" | "settings" | "reset-demo";
 
 /** For each layer: the internal layers it may import, and the packages it may use. */
 const RULES: Readonly<Record<Layer, { imports: readonly Layer[]; packages: readonly string[] }>> = {
-  domain: { imports: [], packages: [] },
-  application: { imports: ["domain"], packages: [] },
-  adapters: { imports: ["application", "domain"], packages: [] },
-  http: { imports: ["application", "domain"], packages: ["fastify"] },
-  app: { imports: ["application", "http"], packages: ["fastify", "@fastify/swagger", "@fastify/swagger-ui"] },
-  "composition-root": { imports: ["adapters", "application", "http", "app"], packages: ["fastify"] },
-  main: { imports: ["domain", "composition-root"], packages: [] },
+  shared: { imports: [], packages: [] },
+  domain: { imports: ["shared"], packages: [] },
+  application: { imports: ["domain", "shared"], packages: [] },
+  // node:crypto: the hash of the passwords and the random tokens of the Accounts (ADR-0004), which add no dependency.
+  // `pg` for the adapters of PostgreSQL (feature 11, ADR-0006).
+  adapters: { imports: ["application", "domain", "shared"], packages: ["node:crypto", "pg"] },
+  http: { imports: ["application", "domain", "shared"], packages: ["fastify"] },
+  // `shared`: the error of a refused origin and the check of the origin of the settings (feature 08).
+  // `@fastify/static` serves the built interface (feature 09), and `node:path` tells a file of `assets/` from another.
+  app: { imports: ["application", "http", "shared"], packages: ["fastify", "@fastify/static", "@fastify/swagger", "@fastify/swagger-ui", "node:path"] },
+  // The policy that joins two features: it knows both through their applications and nothing else.
+  "evaluation-trigger": { imports: ["application"], packages: ["fastify"] },
+  // `database` for the type of the pool that `composePostgresApp` takes, and `shared` for the identifier of a Listing.
+  "composition-root": { imports: ["adapters", "application", "http", "app", "evaluation-trigger", "database", "shared"], packages: ["fastify"] },
+  // `node:fs` and `node:url`: main is the one place that looks at the machine, to find out whether the interface was built (feature 09).
+  main: { imports: ["domain", "shared", "composition-root", "storage", "demo-data", "settings"], packages: ["node:fs", "node:url"] },
+  // Chooses the storage from the environment (feature 11). It names no driver: it asks `database` for the pool.
+  storage: { imports: ["composition-root", "database"], packages: [] },
+  // What the environment says about how the server runs, and what it refuses (feature 12). It reads nothing but its argument.
+  settings: { imports: ["shared"], packages: [] },
+  // The command that returns the demo to its first state (feature 12). It names no driver: it asks `database` for the pool.
+  "reset-demo": { imports: ["composition-root", "database", "demo-data", "settings", "storage"], packages: [] },
+  // The demo data is made with the use cases, through the Composition Root, as main did before.
+  "demo-data": { imports: ["domain", "application", "shared", "composition-root"], packages: [] },
+  // The connection and the migrations (feature 11, ADR-0006): the only code outside the adapters that knows the driver.
+  database: { imports: [], packages: ["pg", "node:fs", "node:path", "node:url"] },
 };
 
 const SRC = new URL("../src/", import.meta.url);
@@ -32,12 +53,25 @@ interface Source {
   readonly imports: readonly string[]; // as written
 }
 
+/** The feature a file belongs to (the folder under src/ that holds the layers), or null. */
+function featureOf(path: string): string | null {
+  const feature = /^([a-z-]+)\/(?:domain|application|http|adapters)\//.exec(path)?.[1];
+  return feature && feature !== "shared" ? feature : null;
+}
+
 function layerOf(path: string): Layer | null {
-  const folder = /^price-alerts\/(domain|application|http|adapters)\//.exec(path)?.[1];
-  if (folder) return folder as Layer;
+  if (path.startsWith("shared/")) return "shared";
+  const folder = /^[a-z-]+\/(domain|application|http|adapters)\//.exec(path)?.[1];
+  if (folder && featureOf(path)) return folder as Layer;
   if (path === "app.ts") return "app";
+  if (path === "evaluation-trigger.ts") return "evaluation-trigger";
   if (path === "composition-root.ts") return "composition-root";
   if (path === "main.ts") return "main";
+  if (path.startsWith("database/")) return "database";
+  if (path === "storage.ts") return "storage";
+  if (path === "demo-data.ts") return "demo-data";
+  if (path === "settings.ts") return "settings";
+  if (path === "reset-demo.ts" || path === "run-reset-demo.ts") return "reset-demo";
   return null;
 }
 
@@ -106,6 +140,22 @@ describe("architecture of the backend", () => {
       expect(violations).toEqual([]);
     },
   );
+
+  it("a feature does not import another feature", () => {
+    const violations: string[] = [];
+    for (const file of all) {
+      const feature = featureOf(file.path);
+      if (feature === null) continue;
+      for (const specifier of file.imports.filter((i) => i.startsWith("."))) {
+        const target = resolve(file.path, specifier, all);
+        const targetFeature = target ? featureOf(target) : null;
+        if (targetFeature !== null && targetFeature !== feature) {
+          violations.push(`${file.path} (${feature}) imports ${specifier} (${targetFeature})`);
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+  });
 
   it("no source file imports from the tests", () => {
     expect(all.filter((s) => s.imports.some((i) => i.includes("tests"))).map((s) => s.path)).toEqual([]);

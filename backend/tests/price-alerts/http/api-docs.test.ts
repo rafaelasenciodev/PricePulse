@@ -12,8 +12,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { API_VERSION, buildApp } from "../../../src/app";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { CreatePriceAlert, type ListingReader } from "../../../src/price-alerts/application";
-import { ListingId, Price, UserId } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const TOKEN = "token-1";
 const OTHER_TOKEN = "token-2";
@@ -32,7 +33,7 @@ function start(options: { docs?: boolean; listings?: ListingReader } = {}) {
   authenticator.addUser(TOKEN, UserId("user-1"));
   authenticator.addUser(OTHER_TOKEN, UserId("user-2"));
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(options.listings ?? listings, new InMemoryPriceAlertRepository()),
+    createPriceAlert: new CreatePriceAlert(options.listings ?? listings, new InMemoryPriceAlertRepository(), FIXED_CLOCK),
     authenticator,
     apiDocs: options.docs === false ? undefined : { note: "Demo note for the tests" },
   });
@@ -95,7 +96,7 @@ describe("the OpenAPI document", () => {
   it("documents every status the endpoint answers", async () => {
     start();
     const responses = (await spec()).paths[PATH].post.responses;
-    expect(Object.keys(responses).sort()).toEqual(["200", "201", "400", "401", "404", "409", "422", "500"]);
+    expect(Object.keys(responses).sort()).toEqual(["200", "201", "400", "401", "403", "404", "409", "422", "500"]);
   });
 });
 

@@ -1,40 +1,51 @@
 # Feature methodology
 
-Status: Approved
+Status: In Review
 
-Every feature is developed through the same sequence of phases. Each phase ends with an explicit approval before the next one begins. Documents are created when their phase begins; none are created in advance.
+Every feature goes through five stages. A stage ends with an explicit approval, and the build stage has several stops, so that each layer of the feature can be reviewed. Documents are created when their stage begins; none are created in advance.
 
-## Phases
+Features 01 to 03 were developed with an earlier method of eleven phases. Their documents are kept as they are (see [The earlier method](#the-earlier-method)).
 
-| Phase | Name | What it produces |
-|---|---|---|
-| 0 | Feature Discovery | The business problem, actors, user goal, feature scope, ambiguities and the questions that must be answered |
-| 1 | Domain Language and Business Rules | Agreed terminology (added to the project glossary) and the business rules, including invariants |
-| 2 | Behavioural Scenarios using Gherkin | Scenarios describing observable behaviour: happy paths, sad paths, edge cases and relevant failures; acceptance criteria |
-| 3 | Domain Modelling | The domain model (entities, Value Objects, aggregates, domain events where justified) with the reasoning behind each choice |
-| 4 | Application Use Case Contract | For each use case: inputs and outputs, expected application errors, required ports, transaction boundaries and dependencies |
-| 5 | Use Case Implementation | Application logic, independent of HTTP, persistence and external providers |
-| 6 | In-memory Adapters | In-memory implementations of the required ports, so the application can be tested without external infrastructure |
-| 7 | HTTP and Application Composition | The HTTP interface: request and response schemas, mapping of application errors to HTTP responses, dependency wiring and the Composition Root |
-| 8 | Testing | Verification that the scenarios and business rules are covered at the appropriate levels: unit, domain, application, integration, contract, API and, when a frontend exists, end-to-end |
-| 9 | Architecture Review | A review of dependency direction, separation of responsibilities, domain purity, coupling, cohesion, error handling, transaction boundaries, idempotency where relevant, and maintainability |
-| 10 | Documentation and Completion | What was implemented, important decisions, tests executed, known limitations, architectural trade-offs and relevant ADRs |
+## Stages
 
-Architecture Review (9) and Documentation and Completion (10) are separate activities. If the review finds problems that require changes, the work returns to the relevant earlier phase before the feature is documented as complete.
+| Stage | Name | What it produces | Approval |
+|---|---|---|---|
+| 1 | Understand | `01-discovery.md`: the business problem, actors, scope (what is in and what is not), the questions with their options and decision, the business rules, and the new terms for the glossary | Yes |
+| 2 | Scenarios | `02-scenarios.feature`: Gherkin scenarios of observable behaviour: happy paths, sad paths and edge cases that follow from the rules | Yes |
+| 3 | Design | `03-design.md`: what is modelled and why, each use case (input, output, errors, order of checks, ports, transaction boundary), the decisions that were really discussed with their alternatives, and one table of where each scenario is handled | Yes |
+| 4 | Build | Code and tests, in small commits, with the four stops below. No documents | Yes, after each stop |
+| 5 | Close | `04-completion.md`: what was built, the decisions and their status, how it was verified, what the review found, limitations and next steps. The README and the documentation indexes are updated | Yes |
 
-## How the phases relate
+### The stops of the build stage
 
-**Phase 0 may iterate.** Answers to discovery questions can raise new questions. Phase 0 ends only when the blocking questions are resolved and the feature scope is approved.
+| Stop | What is built |
+|---|---|
+| a | The domain and the use cases, with their tests. They know nothing about HTTP or persistence |
+| b | The ports, and their adapters and repositories: in memory first, a database adapter when persistence exists. Each port has contract tests that any adapter must pass |
+| c | The way in: endpoints (GET, POST, PUT, PATCH or DELETE, as the feature needs), request and response schemas, the mapping of application errors to HTTP responses, and the wiring in the Composition Root. When a frontend exists, the screens of the feature |
+| d | Verification and review: that the scenarios and rules are covered at the right levels, and a review of dependency direction, domain purity, error handling, transaction boundaries, idempotency where relevant, and maintainability. What needs changing is changed before the feature is closed |
 
-**Scenarios come before the model.** Gherkin scenarios (Phase 2) are written before domain modelling (Phase 3), so that the model is shaped by the required behaviour rather than the reverse.
+A new decision that appears while building stops the work until it is decided. Introducing deliberate errors to check the tests is optional, and it is worth doing where a mistake is costly: money, dates and concurrency.
 
-**The model is validated against the scenarios.** At the end of Phase 3, every scenario must be expressible with the model. If it is not, the work goes back to the phase that owns the gap:
+## How the stages relate
 
-- a missing question or an unclear scope: back to Phase 0 (Discovery);
-- a missing term or business rule: back to Phase 1 (Domain Language and Business Rules);
-- a scenario that is wrong or incomplete: back to Phase 2 (Behavioural Scenarios).
+**Stage 1 may iterate.** Answers to the questions can raise new ones. The stage ends when the blocking questions are resolved and the scope is approved.
 
-**Tests are written progressively.** Executable tests are added while the feature is implemented (Phases 5 to 7), not left until the end. The project's regular test runner is sufficient; no dedicated BDD framework is introduced unless a concrete reason justifies it. Phase 8 is the point where the coverage of scenarios and rules is checked and the remaining test levels are completed.
+**Scenarios come before the design.** They are written first, so that the design is shaped by the required behaviour and not the reverse.
+
+**The design is validated against the scenarios.** Every scenario must be expressible with it. If one is not, the work goes back to the stage that owns the gap:
+
+- a missing question, an unclear scope or a missing rule: back to stage 1;
+- a scenario that is wrong or incomplete: back to stage 2.
+
+**Tests are written while building,** at each stop, not left until the end. The project's regular test runner is enough. No dedicated BDD framework is introduced unless a concrete reason justifies it.
+
+## What is written once
+
+- A fact is written in one place and linked from the others. The table that says where each scenario is handled is in the design, and the status of each decision is in the completion.
+- The alternatives are told only for decisions that were really discussed.
+- A decision that affects the whole project (language, database, authentication, frontend stack, deployment) is an ADR in [`docs/adr/`](../adr/), not a decision of a feature.
+- A document of a stage fits in about 150 lines. If it needs far more, the feature is probably too big, and it is split.
 
 ## Scenarios
 
@@ -65,7 +76,7 @@ Two kinds of status are kept separate.
 | In Review | Submitted for review; changes follow the review |
 | Approved | Explicitly approved; later changes reopen the review |
 
-**Decision status** describes the state of an individual decision recorded in a document.
+**Decision status** describes the state of an individual decision.
 
 | Status | Meaning |
 |---|---|
@@ -75,17 +86,42 @@ Two kinds of status are kept separate.
 | Implemented | Realised in code |
 | Verified | Confirmed by tests or review |
 
-A decision is not described as Accepted until it has been explicitly approved.
+A decision is not described as Accepted until it has been explicitly approved. In the design, the decisions are Accepted when the design is approved. Their later status is recorded once, in the completion.
 
 ## Principles
 
 - Business rules are not assumed. Ambiguities are recorded as questions and resolved explicitly.
 - Aggregates, Value Objects and patterns are introduced only with a stated justification.
 - Tests verify behaviour and business rules, not coverage figures.
+- A document exists to settle something or to explain it to a reader. If it repeats another one, it links to it instead.
 - Every completed feature must be understandable by another developer.
+
+## The earlier method
+
+Features 01 to 03 followed eleven phases. Their documents keep their names and are not migrated. This is how the phases map to the stages:
+
+| Phases | Stage |
+|---|---|
+| 0 Discovery, 1 Domain Language and Business Rules | 1 Understand |
+| 2 Behavioural Scenarios | 2 Scenarios |
+| 3 Domain Modelling, 4 Application Use Case Contract | 3 Design |
+| 5 Use Case Implementation, 6 In-memory Adapters, 7 HTTP and Application Composition | 4 Build, stops a to c |
+| 8 Testing, 9 Architecture Review | 4 Build, stop d |
+| 10 Documentation and Completion | 5 Close |
 
 ## Features
 
-| # | Feature | Current phase |
+| # | Feature | State |
 |---|---|---|
 | 01 | [Create Price Alert](01-create-price-alert/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
+| 02 | [Price Observation](02-price-observation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
+| 03 | [Alert Evaluation](03-alert-evaluation/00-discovery.md) | Phase 10 — Documentation and Completion (done, pending merge) |
+| 04 | [Read and Manage Price Alerts](04-read-and-manage-alerts/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 05 | [Notifications and Price History](05-notifications-and-price-history/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 06 | [Accounts and Authentication](06-accounts-and-authentication/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 07 | [Listings Catalogue](07-listings-catalogue/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 08 | [Session Cookie](08-session-cookie/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 09 | [Web Interface](09-web-interface/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 10 | [My Alerts and My Notifications](10-my-alerts-and-notifications/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 11 | [Persistence](11-persistence/01-discovery.md) | Stage 5 — Close (done, pending merge) |
+| 12 | [Deployment](12-deployment/01-discovery.md) | Stage 5 — Close (done, pending merge) |

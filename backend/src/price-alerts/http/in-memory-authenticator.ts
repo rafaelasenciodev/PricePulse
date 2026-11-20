@@ -1,5 +1,5 @@
-import type { UserId } from "../domain";
 import type { Authenticator } from "./authenticator";
+import type { UserId } from "../../shared/domain";
 
 /**
  * Implements Authenticator over a table of tokens that the caller fills.

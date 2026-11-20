@@ -1,4 +1,7 @@
 import {
+  AlertConflict,
+  AlertNotActive,
+  AlertNotFound,
   DuplicateAlert,
   InvalidTargetPrice,
   ListingNotFound,
@@ -20,8 +23,12 @@ export interface HttpError {
   readonly message: string;
 }
 
-/** Map an error to the HTTP response that reports it. Unexpected errors reveal nothing. */
-export function toHttpError(error: unknown): HttpError {
+/**
+ * The HTTP response that reports an error of this feature, or null if the error is not one
+ * of its own. What no feature recognises (a malformed request, an unexpected failure) is
+ * handled once, by the application that connects the features.
+ */
+export function priceAlertHttpError(error: unknown): HttpError | null {
   if (error instanceof Unauthenticated) {
     return { status: 401, code: "UNAUTHENTICATED", message: error.message };
   }
@@ -37,22 +44,14 @@ export function toHttpError(error: unknown): HttpError {
   if (error instanceof TargetAlreadyReached) {
     return { status: 409, code: "TARGET_ALREADY_REACHED", message: error.message };
   }
-  const status = clientErrorStatus(error);
-  if (status !== null) {
-    // The request itself is wrong: bad JSON, a body that does not match the schema, ...
-    return {
-      status,
-      code: status === 400 ? "BAD_REQUEST" : "CLIENT_ERROR",
-      message: error instanceof Error ? error.message : "Invalid request",
-    };
+  if (error instanceof AlertNotFound) {
+    return { status: 404, code: "ALERT_NOT_FOUND", message: error.message };
   }
-  return { status: 500, code: "INTERNAL_ERROR", message: "Internal server error" };
-}
-
-function clientErrorStatus(error: unknown): number | null {
-  if (typeof error === "object" && error !== null && "statusCode" in error) {
-    const status = (error as { statusCode: unknown }).statusCode;
-    if (typeof status === "number" && status >= 400 && status < 500) return status;
+  if (error instanceof AlertNotActive) {
+    return { status: 409, code: "ALERT_NOT_ACTIVE", message: error.message };
+  }
+  if (error instanceof AlertConflict) {
+    return { status: 409, code: "ALERT_CONFLICT", message: error.message };
   }
   return null;
 }

@@ -1,5 +1,5 @@
+import { Price } from "../../shared/domain";
 import { CurrencyMismatch, NonPositiveTargetPrice } from "./errors";
-import { Price } from "./price";
 
 /** The Price at which a User wants to be notified. */
 export class TargetPrice {

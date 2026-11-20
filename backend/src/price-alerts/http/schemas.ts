@@ -9,7 +9,7 @@ import type { FastifySchema } from "fastify";
 
 const priceAlert = {
   type: "object",
-  required: ["id", "listingId", "targetAmount", "currency", "status"],
+  required: ["id", "listingId", "targetAmount", "currency", "status", "createdAt"],
   properties: {
     id: { type: "string", description: "Identifier of the Price Alert" },
     listingId: { type: "string", description: "The Listing the Price Alert watches" },
@@ -19,7 +19,35 @@ const priceAlert = {
       examples: ["80.00"],
     },
     currency: { type: "string", description: "The currency of the Listing", examples: ["EUR"] },
-    status: { type: "string", enum: ["active", "triggered"], description: "A new Price Alert is active" },
+    status: {
+      type: "string",
+      enum: ["active", "triggered", "cancelled"],
+      description: "Active while it waits, triggered when its target was reached, cancelled if its owner stopped it. A new one is active",
+    },
+    createdAt: { type: "string", description: "When the Price Alert was created, in UTC", examples: ["2026-11-19T10:00:00.000Z"] },
+  },
+};
+
+const money = (description: string) => ({
+  type: "object",
+  required: ["amount", "currency"],
+  description,
+  properties: {
+    amount: { type: "string", description: "The amount as text", examples: ["79.90"] },
+    currency: { type: "string", description: "The currency", examples: ["EUR"] },
+  },
+});
+
+const notification = {
+  type: "object",
+  required: ["alertId", "owner", "listingId", "targetPrice", "currentPrice", "observedAt"],
+  properties: {
+    alertId: { type: "string", description: "The Price Alert whose Target Price was reached" },
+    owner: { type: "string", description: "The User who owns the Price Alert: the one who asks" },
+    listingId: { type: "string", description: "The Listing the Price Alert watches" },
+    targetPrice: money("The Target Price of the Price Alert"),
+    currentPrice: money("The Current Price that reached it"),
+    observedAt: { type: "string", description: "When that price was observed, in UTC", examples: ["2026-11-19T10:00:00.000Z"] },
   },
 };
 
@@ -67,12 +95,167 @@ export const createPriceAlertSchema: FastifySchema = {
     200: { description: "The same request was repeated: the existing Price Alert is returned", ...priceAlert },
     400: error("The request is malformed: a missing or unknown field, an amount that is not text, or a body that is not JSON", ["BAD_REQUEST"]),
     401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
     404: error("The Listing does not exist", ["LISTING_NOT_FOUND"]),
     409: error(
       "The request conflicts with the state of the system: the User already has an Active Price Alert for the Listing with another target, or the Current Price already reaches the target",
       ["DUPLICATE_ALERT", "TARGET_ALREADY_REACHED"],
     ),
     422: error("The amount is not a number, is not greater than zero, or has more decimals than the currency allows", ["INVALID_TARGET_PRICE"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+/** The most Price Alerts that one page of the list can hold, and how many it holds when nothing is said. */
+export const MAX_LIMIT = 100;
+export const DEFAULT_LIMIT = 20;
+
+const alertId = {
+  type: "object",
+  required: ["alertId"],
+  properties: { alertId: { type: "string", minLength: 1, description: "Identifier of the Price Alert" } },
+};
+
+export const listPriceAlertsSchema: FastifySchema = {
+  tags: ["Price alerts"],
+  summary: "List my Price Alerts",
+  description: [
+    "The Price Alerts of the User, newest first.",
+    "",
+    "- Only the Price Alerts of the User who makes the request are listed.",
+    `- A page holds \`limit\` Price Alerts (${DEFAULT_LIMIT} by default, ${MAX_LIMIT} at most) after skipping \`offset\`, and \`total\` says how many match in all.`,
+    "- `status` keeps only the Price Alerts in that state.",
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  querystring: {
+    type: "object",
+    // An unknown parameter is rejected, as an unknown field of a body is.
+    additionalProperties: false,
+    properties: {
+      status: { type: "string", enum: ["active", "triggered", "cancelled"], description: "Only the Price Alerts in this state" },
+      limit: { type: "integer", minimum: 1, maximum: MAX_LIMIT, default: DEFAULT_LIMIT, description: "How many Price Alerts at most" },
+      offset: { type: "integer", minimum: 0, default: 0, description: "How many Price Alerts to skip, from the newest" },
+    },
+  },
+  response: {
+    200: {
+      description: "A page of Price Alerts",
+      type: "object",
+      required: ["items", "total", "limit", "offset"],
+      properties: {
+        items: { type: "array", items: priceAlert },
+        total: { type: "integer", description: "How many Price Alerts of the User match, in all pages" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+      },
+    },
+    400: error("A query parameter is not valid: an unknown one, a state that does not exist, or a limit or an offset that is not a whole number in range", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const getPriceAlertSchema: FastifySchema = {
+  tags: ["Price alerts"],
+  summary: "Read a Price Alert",
+  description: "One of the Price Alerts of the User. One of another User is answered as one that does not exist.",
+  security: [{ bearerAuth: [] }],
+  params: alertId,
+  response: {
+    200: { description: "The Price Alert", ...priceAlert },
+    401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    404: error("The Price Alert does not exist, or it belongs to another User", ["ALERT_NOT_FOUND"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const patchPriceAlertSchema: FastifySchema = {
+  tags: ["Price alerts"],
+  summary: "Change a Price Alert: its Target Price, or cancel it",
+  description: [
+    "Changes a Price Alert of the User. The body carries exactly one of two things:",
+    "",
+    "- `targetAmount`: a new Target Price, as text, in the currency of the Listing. Only an Active Price Alert can be changed. The Current Price must not already reach it, as when it is created. The same Target Price changes nothing.",
+    "- `status` with the value `cancelled`: the User stops the Price Alert. Cancelling a Cancelled one changes nothing, and a Triggered one cannot be cancelled.",
+    "",
+    "The answer is the Price Alert, also when nothing was changed. If the Price Alert changes state while the request is applied, for example because it is Triggered, the answer is a conflict and nothing is changed.",
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  params: alertId,
+  body: {
+    type: "object",
+    // Exactly one of the two changes, and nothing else.
+    oneOf: [
+      {
+        type: "object",
+        required: ["targetAmount"],
+        additionalProperties: false,
+        properties: {
+          targetAmount: { type: "string", description: "The new Target Price as text, such as \"70.00\". A number is not accepted", examples: ["70.00"] },
+        },
+      },
+      {
+        type: "object",
+        required: ["status"],
+        additionalProperties: false,
+        properties: { status: { type: "string", enum: ["cancelled"], description: "The only state that a User can give a Price Alert" } },
+      },
+    ],
+  },
+  response: {
+    200: { description: "The Price Alert, changed or not", ...priceAlert },
+    400: error("The body is not one of the two changes: a missing or unknown field, both fields, a state other than cancelled, a value of the wrong type, or a body that is not JSON", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token", ["UNAUTHENTICATED"]),
+    403: error(
+      "The request does not come from the application: its `Origin` is not the one that the application accepts. Only when the application is set to use the session cookie",
+      ["FORBIDDEN_ORIGIN"],
+    ),
+    404: error("The Price Alert does not exist, or it belongs to another User", ["ALERT_NOT_FOUND"]),
+    409: error(
+      "The request conflicts with the state of the Price Alert: it is not Active, it changed while the request was applied, or the Current Price already reaches the new Target Price",
+      ["ALERT_NOT_ACTIVE", "ALERT_CONFLICT", "TARGET_ALREADY_REACHED"],
+    ),
+    422: error("The amount is not a number, is not greater than zero, or has more decimals than the currency allows", ["INVALID_TARGET_PRICE"]),
+    500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
+  },
+};
+
+export const listNotificationsSchema: FastifySchema = {
+  tags: ["Notifications"],
+  summary: "List my Notifications",
+  description: [
+    "The Notifications of the User: one for each of their Price Alerts whose Target Price was reached, newest first by the moment its price was observed.",
+    "",
+    "- Only the Notifications of the User who makes the request are listed.",
+    "- A Notification is a stored record. It is not delivered, and it has no read state.",
+    `- A page holds \`limit\` Notifications (${DEFAULT_LIMIT} by default, ${MAX_LIMIT} at most) after skipping \`offset\`, and \`total\` says how many the User has in all.`,
+  ].join("\n"),
+  security: [{ bearerAuth: [] }],
+  querystring: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      limit: { type: "integer", minimum: 1, maximum: MAX_LIMIT, default: DEFAULT_LIMIT, description: "How many Notifications at most" },
+      offset: { type: "integer", minimum: 0, default: 0, description: "How many Notifications to skip, from the newest" },
+    },
+  },
+  response: {
+    200: {
+      description: "A page of Notifications",
+      type: "object",
+      required: ["items", "total", "limit", "offset"],
+      properties: {
+        items: { type: "array", items: notification },
+        total: { type: "integer", description: "How many Notifications the User has, in all pages" },
+        limit: { type: "integer" },
+        offset: { type: "integer" },
+      },
+    },
+    400: error("A query parameter is not valid: an unknown one, or a limit or an offset that is not a whole number in range", ["BAD_REQUEST"]),
+    401: error("There is no valid bearer token of a User", ["UNAUTHENTICATED"]),
     500: error("An unexpected failure. The response reveals no detail", ["INTERNAL_ERROR"]),
   },
 };

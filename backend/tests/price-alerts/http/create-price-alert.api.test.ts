@@ -11,8 +11,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../../src/app";
 import { InMemoryListingReader, InMemoryPriceAlertRepository } from "../../../src/price-alerts/adapters";
 import { CreatePriceAlert, type ListingReader } from "../../../src/price-alerts/application";
-import { ListingId, Price, UserId } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UserId } from "../../../src/shared/domain";
 import { InMemoryAuthenticator } from "../../../src/price-alerts/http";
+import { FIXED_CLOCK } from "../../support/created-at";
 
 const USER_1 = UserId("user-1");
 const USER_2 = UserId("user-2");
@@ -31,7 +32,7 @@ function startApp(listingReader: ListingReader = listings) {
   authenticator.addUser(TOKEN_1, USER_1);
   authenticator.addUser(TOKEN_2, USER_2);
   app = buildApp({
-    createPriceAlert: new CreatePriceAlert(listingReader, alerts),
+    createPriceAlert: new CreatePriceAlert(listingReader, alerts, FIXED_CLOCK),
     authenticator,
   });
 }
@@ -69,6 +70,7 @@ describe("creating a Price Alert", () => {
       targetAmount: "80.00",
       currency: "EUR",
       status: "active",
+      createdAt: "2026-11-19T10:00:00.000Z",
     });
     expect((await alerts.findActive(USER_1, HEADPHONES))?.id).toBe(response.json().id);
   });
@@ -235,5 +237,29 @@ describe("other responses", () => {
     expect(response.statusCode).toBe(500);
     expect(response.json()).toEqual({ code: "INTERNAL_ERROR", message: "Internal server error" });
     expect(response.body).not.toContain("hunter2");
+  });
+
+  // An error that carries a status of its own is a mistake of the client only if the status
+  // is a 4xx. Anything else is an unexpected failure and reveals nothing, whatever it says.
+  it.each([
+    [302, 500, "INTERNAL_ERROR"],
+    [399, 500, "INTERNAL_ERROR"],
+    [503, 500, "INTERNAL_ERROR"],
+    [599, 500, "INTERNAL_ERROR"],
+    [400, 400, "BAD_REQUEST"],
+    [418, 418, "CLIENT_ERROR"],
+    [499, 499, "CLIENT_ERROR"],
+  ])("an error with the status %i is answered %i %s", async (carried, expected, code) => {
+    await app.close();
+    const failing: ListingReader = {
+      get: async () => {
+        throw Object.assign(new Error("db-prod-01 refused"), { statusCode: carried });
+      },
+    };
+    startApp(failing);
+    const response = await post();
+    expect(response.statusCode).toBe(expected);
+    expect(response.json().code).toBe(code);
+    if (expected === 500) expect(response.json().message).toBe("Internal server error");
   });
 });

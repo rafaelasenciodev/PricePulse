@@ -2,7 +2,7 @@
 
 A price-tracking platform: monitor product prices, consult price history, and get alerted when a product reaches a target price.
 
-> **Status: in development.** One feature is implemented, **Create Price Alert**, running on in-memory adapters. The rest of the platform is planned and not started. See [What works today](#what-works-today).
+> **Status: in development.** Twelve features are implemented, **Create Price Alert**, **Record Price Observation**, **Alert Evaluation**, **Read and Manage Price Alerts**, **Notifications and Price History**, **Accounts and Authentication**, **Listings Catalogue**, **Session Cookie**, **Web Interface**, **My Alerts and My Notifications**, **Persistence** and **Deployment**. The data is kept in PostgreSQL when the server is given a database, and in memory when it is not. The server can run as a public demo, which is prepared and **not deployed yet**. The rest of the platform is planned and not started. See [What works today](#what-works-today).
 
 PricePulse is a Master's Final Project (TFM), a professional portfolio project, and a vehicle for a repeatable, design-first engineering methodology (see [`docs/features/README.md`](docs/features/README.md)).
 
@@ -11,12 +11,20 @@ PricePulse is a Master's Final Project (TFM), a professional portfolio project, 
 | Capability | State |
 |---|---|
 | Create Price Alert | Implemented, with in-memory storage |
-| Interactive API documentation | Implemented, in the development server only |
-| Price observations and price history | Not started |
-| Alert evaluation and notifications | Not started |
-| User accounts and login | Not started (a development stand-in with fixed tokens is used) |
-| Database persistence | Not started |
-| Frontend | Not started |
+| Record Price Observation (a price provider reports the price of a Listing) | Implemented, with in-memory storage |
+| Interactive API documentation | Implemented, in the development server and in the demo |
+| Simulating prices on a schedule | Not started |
+| Alert evaluation: recording a price evaluates the Price Alerts of its Listing, and those it reaches become Triggered with a stored Notification | Implemented, with in-memory storage |
+| Read and manage Price Alerts: list them, read one, change its Target Price, cancel it | Implemented, with in-memory storage |
+| Read the Notifications of a User, and the Price History of a Listing | Implemented, with in-memory storage |
+| Read the Catalogue of Listings, with the Current Price of each, to choose one to watch | Implemented, with in-memory storage |
+| Delivery of Notifications, marking them as read, pausing alerts, and evaluating on a schedule | Not started |
+| Accounts and authentication of Users: register, sign in with a password, sign out, read one's own Account | Implemented, with in-memory storage |
+| The session cookie, for a browser: signing in also sets an `HttpOnly` cookie that the routes of Users accept, with a check of the origin of every request that changes something | Implemented, and tried in a real browser with the interface of feature 09 (Chrome, over HTTP on the local machine) |
+| Authentication of price providers | Not started (a development stand-in with a fixed token is used) |
+| Database persistence: with `DATABASE_URL` the server keeps its data in PostgreSQL and applies the schema when it starts, and without it the data is in memory (feature 11) | Implemented, tested against PostgreSQL 17 in Docker, and tried with a real server restarted. Not deployed |
+| Public demo: a demo mode that lets the server run in production with simulated data, a command that resets its data, and a notice in the interface (feature 12) | Implemented and tried in a real browser on the local machine. The platform is decided ([ADR-0007](docs/adr/0007-deployment-platform.md)), and **no service has been created yet** |
+| Web interface, in Spanish: sign in, register and sign out, the Catalogue, one Listing and creating a Price Alert (feature 09), and my alerts, with changing the Target Price and cancelling, and my Notifications (feature 10) | Implemented, tested on a simulated page and tried in a real browser (Chrome, over HTTP on the local machine) |
 
 The planned scope is in [`docs/product/product-scope.md`](docs/product/product-scope.md).
 
@@ -31,31 +39,240 @@ npm test        # run the tests
 npm run dev     # start the server on http://127.0.0.1:3000
 ```
 
-Create a Price Alert for a demo Listing, from another terminal:
+The server starts with two demo Accounts and a demo Price Alert of the first one for `headphones-shop-a`, with a Target Price of 80.00 EUR, while the Current Price of that Listing is 100.00 EUR. The Accounts are `demo1@example.com` with the password `demo-password-1` and `demo2@example.com` with `demo-password-2`.
+
+From another terminal, sign in as the second one. The answer has the `token` of your Session, which lasts 7 days and is shown only now:
+
+```bash
+curl -s -X POST http://127.0.0.1:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo2@example.com","password":"demo-password-2"}'
+```
+
+Keep the token in a variable, here `TOKEN2`, and see what you can watch. The Catalogue lists the Listings ordered by title and then by identifier, each with its Current Price:
+
+```bash
+TOKEN2=<the token of the answer>
+
+curl -s http://127.0.0.1:3000/listings \
+  -H "Authorization: Bearer $TOKEN2"
+```
+
+Choose `headphones-shop-a` and create another Price Alert for it. The answer has the `id` of the new one:
 
 ```bash
 curl -i -X POST http://127.0.0.1:3000/listings/headphones-shop-a/price-alerts \
-  -H "Authorization: Bearer demo-token-1" \
+  -H "Authorization: Bearer $TOKEN2" \
   -H "Content-Type: application/json" \
-  -d '{"targetAmount":"80.00"}'
+  -d '{"targetAmount":"90.00"}'
 ```
 
-Or try it in the browser: open **<http://127.0.0.1:3000/docs>**, press **Authorize**, paste `demo-token-1`, then open the endpoint and press **Try it out**.
+Signed in as `demo1@example.com`, with `80.00`, the answer would be 200 and the demo alert, because repeating a creation returns the existing one.
 
-The server starts with demo data, defined in [`backend/src/main.ts`](backend/src/main.ts):
+Read your Price Alerts, and change the Target Price of the new one, using its `id` in place of `{alertId}`:
+
+```bash
+curl -s http://127.0.0.1:3000/price-alerts \
+  -H "Authorization: Bearer $TOKEN2"
+
+curl -s -X PATCH http://127.0.0.1:3000/price-alerts/{alertId} \
+  -H "Authorization: Bearer $TOKEN2" \
+  -H "Content-Type: application/json" \
+  -d '{"targetAmount":"85.00"}'
+```
+
+To stop it instead of changing it, send `{"status":"cancelled"}`. A Cancelled Price Alert is not evaluated, so below only the demo alert would be triggered.
+
+Then report a new price for that Listing as the price provider. The Current Price of a Listing is the price of its latest observation, and recording one evaluates the Price Alerts of that Listing:
+
+```bash
+curl -i -X POST http://127.0.0.1:3000/listings/headphones-shop-a/price-observations \
+  -H "Authorization: Bearer demo-provider-token" \
+  -H "Content-Type: application/json" \
+  -d "{\"observedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"price\":{\"amount\":\"79.90\",\"currency\":\"EUR\"}}"
+```
+
+If you did not cancel it, both alerts are reached by 79.90, so both become Triggered, and the terminal where the server runs shows one line for each (abbreviated here):
+
+```
+{"level":30,...,"owner":"8a65fb57-...","targetPrice":{"amount":"80.00",...},"currentPrice":{"amount":"79.90",...},...,"produced":true,"msg":"Price Alert triggered: a Notification was produced"}
+```
+
+The Notifications are stored (in memory unless a database is configured) and are not delivered. Their owner reads them, and anyone with a User's token reads the Price History of the Listing:
+
+```bash
+curl -s http://127.0.0.1:3000/notifications \
+  -H "Authorization: Bearer $TOKEN2"
+
+curl -s "http://127.0.0.1:3000/listings/headphones-shop-a/price-observations?limit=5" \
+  -H "Authorization: Bearer $TOKEN2"
+```
+
+The first answers with the Notification of that User only, and the second with the observations of the Listing, newest first. The token of the price provider is not valid for either. A Triggered Price Alert has ended: trying to cancel it answers 409. When you are done, `DELETE /sessions/current` with your token ends the Session.
+
+Or try it in the browser: open **<http://127.0.0.1:3000/docs>** and press **Authorize**. There are two padlocks, because there are two credentials that are not interchangeable: `bearerAuth` takes the token of a User, which `POST /sessions` gives when you sign in (try it out there first, with a demo Account), and `providerAuth` takes the one of the price provider (`demo-provider-token`). Then open an endpoint and press **Try it out**.
+
+The server starts with demo data, defined in [`backend/src/demo-data.ts`](backend/src/demo-data.ts):
 
 | Demo data | Values |
 |---|---|
-| Tokens | `demo-token-1` and `demo-token-2` (two different Users) |
-| `headphones-shop-a` | Current Price 100.00 EUR |
-| `keyboard-shop-b` | Current Price 50.00 USD |
-| `monitor-shop-a` | No Current Price (unavailable) |
+| Accounts of Users | `demo1@example.com` with `demo-password-1`, and `demo2@example.com` with `demo-password-2` (two different Users). They sign in with `POST /sessions`, and their token is not fixed |
+| Token of the price provider, for the price observations | `demo-provider-token` (the provider `simulator`). It is not valid for the price alerts, and the tokens of Users are not valid for the price observations |
+| `headphones-shop-a`, `headphones-shop-b` | "Wireless headphones" at Shop A (Current Price 100.00 EUR) and at Shop B (104.90 EUR) |
+| `keyboard-shop-a`, `keyboard-shop-b` | "Mechanical keyboard" at Shop A (59.00 EUR) and at Shop B (50.00 USD) |
+| `webcam-shop-b` | "HD webcam" at Shop B (45.00 USD) |
+| `monitor-shop-a` | "27-inch monitor" at Shop A, with no Current Price (unavailable) |
+| Demo Price Alert | `demo1@example.com`, for `headphones-shop-a`, with a Target Price of 80.00 EUR |
 
-The retailers are fictitious. Everything is held in memory and is lost when the server stops. The server listens on `127.0.0.1` only, and it refuses to start when `NODE_ENV` is `production`. Use `PORT=3001 npm run dev` to change the port.
+The Current Price of each Listing is not stored. The server records one observation per Listing when it starts, as the provider would, and the Current Price is the price of the latest observation.
+
+The retailers are fictitious. Without a database everything is held in memory and is lost when the server stops, the Accounts and the Sessions too: the demo Accounts are created again at the next start. With a database ([below](#running-with-a-database)) the demo data is created once and a restart finds it as it was left. The demo passwords are public, as they are in this file, so in production the server starts only if it is declared a demo ([below](#running-as-a-public-demo)). It listens on `127.0.0.1` unless `HOST` says another address. Use `PORT=3001 npm run dev` to change the port.
+
+### Running with a database
+
+The data lasts when the server is given a PostgreSQL database. It needs [Docker](https://docs.docker.com/get-docker/):
+
+```bash
+docker compose up -d        # PostgreSQL 17 on 127.0.0.1:5433, with its data in a named volume
+cd backend
+DATABASE_URL=postgres://pricepulse:pricepulse@127.0.0.1:5433/pricepulse npm run dev
+```
+
+The server connects, applies the pending migrations of [`backend/src/database/migrations/`](backend/src/database/migrations/), says at which database it keeps its data (without the user and the password), creates the demo data if it is absent, and starts. Stop it and start it again: the Accounts, the Sessions, the alerts and the prices are where they were left. `npm run migrate`, with the same `DATABASE_URL`, applies the migrations without starting the server. If the database cannot be reached the server does not start, and says only the code of the failure. The user and the password of `compose.yaml` are for development: it listens on the local machine only.
+
+### Running as a public demo
+
+The server can run as a public demo with simulated data, so that a person can try it without installing anything ([feature 12](docs/features/12-deployment/01-discovery.md)). It is not deployed yet: these are the steps to run it, and the ones that will apply at its address once it exists.
+
+| Variable | What it does |
+|---|---|
+| `DEMO_MODE` | Only the text `true` declares the demo mode. Without it the server refuses `NODE_ENV=production`, because its passwords are public. In demo mode the start, `/docs` and a notice of the interface say that it is a demo |
+| `HOST` | The address at which the server listens. `127.0.0.1` by default. A server that other machines must reach needs `0.0.0.0` |
+| `PORT` | The port. 3000 by default |
+| `WEB_ORIGIN` | The exact address at which the browser reaches the application. The cookie of the Session is `Secure` when it starts with `https`, and a change of data from another origin is refused |
+| `DATABASE_URL` | The PostgreSQL database. In production the server does not start without it, and neither without `WEB_ORIGIN` |
+
+To try it on your machine, with the interface built:
+
+```bash
+cd backend
+DEMO_MODE=true npm run dev       # or: DEMO_MODE=true npm start
+```
+
+`npm start` runs the server with `tsx`, without watching the files. **To make the data of the demo as it was at the start**, with a database, run `DEMO_MODE=true DATABASE_URL=... npm run reset-demo`. It empties every table and creates the demo data again, so it refuses without the demo mode and without a database, and it says only the code of a failure. Run it again if it stops half way.
+
+#### Trying the round trip
+
+1. Open `/app/` and sign in with `demo1@example.com` and `demo-password-1`, or create your own Account. The first answer of a free service after a while without visits can take about a minute.
+2. In the Catalogue, open "Wireless headphones" at Shop A (100.00 EUR) and create a Price Alert with a Target Price of 80.00. The Account `demo1` already has one.
+3. Open `/docs`, press **Authorize**, and in `providerAuth` paste `demo-provider-token`. Open `POST /listings/{listingId}/price-observations`, press **Try it out**, and send, for `headphones-shop-a`, `{"observedAt": "<the current moment, in UTC, as 2026-11-20T13:01:55.000Z>", "price": {"amount": "79.00", "currency": "EUR"}}`. The moment cannot be in the future, and a price that is older than the latest one of the Listing does not change its Current Price.
+4. Go back to the interface: your alert is Triggered, and "My notifications" shows that the price reached 79.00 against 80.00.
+
+The data is simulated and public: anyone can change the prices, and the data can be reset at any time.
+
+#### Deploying it
+
+The platform is Render for the application and Neon for the database ([ADR-0007](docs/adr/0007-deployment-platform.md), which cites the conditions of each plan and the date they were read). The service has the root of the repository as its directory, and these commands and variables:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm ci --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend` |
+| Start command | `npm start --prefix backend` |
+| Variables | `NODE_ENV=production`, `DEMO_MODE=true`, `HOST=0.0.0.0`, `WEB_ORIGIN` (the exact address of the service, `https`), and `DATABASE_URL` (the **direct** connection string of the database, with `sslmode=require`, and not the pooled one) |
+
+Before a delivery or a review, the Author reads the conditions of the plans again, opens the address, runs the reset and goes through the round trip once. The commands were written from the documentation of the platform and are checked when the service is created.
+
+### The web interface
+
+The interface is a single-page application in [`frontend/`](frontend/), with its own packages (it needs Node 22.12 or later). Its screens are in Spanish. The backend serves it under `/app/` when it has been built, and `/` leads there:
+
+```bash
+cd frontend
+npm ci
+npm run build           # writes frontend/dist
+cd ../backend
+npm run dev             # then open http://127.0.0.1:3000/app/
+```
+
+Without the build the server says so when it starts, and goes on without the interface. Sign in with a demo Account. The cookie belongs to one origin, so open the interface at the address that the server prints.
+
+To work on the interface, run it with its own development server, which forwards the paths of the API to the backend. The backend is told the origin at which the browser sees the application:
+
+```bash
+cd backend && WEB_ORIGIN=http://localhost:5173 npm run dev
+cd frontend && npm run dev      # then open http://localhost:5173/app/
+```
+
+`API_URL` tells the development server where the backend listens, `http://127.0.0.1:3000` by default. The tests of the interface are run with `npm test` in `frontend/`.
 
 ## The API
 
-`POST /listings/{listingId}/price-alerts` with the body `{ "targetAmount": "80.00" }`. The User is identified by the `Authorization: Bearer <token>` header, never by the body. The amount is text, and its currency is the one of the Listing.
+### Accounts and Sessions
+
+| Request | What it does |
+|---|---|
+| `POST /accounts` with `{ "email": "ana@example.com", "password": "..." }` | Registers an Account. It does not sign in. The answer has the `id` and the `email` |
+| `POST /sessions` with the same body | Signs in: creates a Session and gives its `token`, when it ends (`expiresAt`) and the Account. The token is shown only once |
+| `DELETE /sessions/current` | Signs out: ends the Session of the token that is sent, and no other |
+| `GET /accounts/me` | The Account of the User who makes the request |
+
+The email has text before and after a single `@` and at most 254 characters, and upper and lower case make no difference. The password has from 10 to 128 characters and is not the email. It is never stored: only a hash made with `scrypt`. The token goes in `Authorization: Bearer <token>`, and a Session lasts 7 days. The first two requests need no token. After 5 failed sign-ins in a row for an email, it is refused for 15 minutes, with the right password too, and a successful sign-in resets the count. A wrong password and an email that has no Account get the same answer.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 201 | | The Account or the Session was created |
+| 204 | | The Session ended |
+| 200 | | Your Account |
+| 400 | `BAD_REQUEST` | Malformed body, a missing or unknown field, or a value that is not text |
+| 401 | `INVALID_CREDENTIALS` | The email or the password is not valid. It never says which |
+| 401 | `UNAUTHENTICATED` | No valid token |
+| 403 | `FORBIDDEN_ORIGIN` | Only when the session cookie is on: the request does not come from the application, see below |
+| 409 | `EMAIL_ALREADY_REGISTERED` | The email already has an Account |
+| 422 | `INVALID_REGISTRATION` | The email is not valid, or the password is too short, too long or the email. The body also has a `reason` that a program can rely on: `EMAIL_NOT_VALID`, `PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG` or `PASSWORD_IS_EMAIL` |
+| 429 | `TOO_MANY_ATTEMPTS` | Too many failed attempts for this email. `Retry-After` says how many seconds to wait |
+| 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### The session cookie
+
+When the server is given its origin, which the development server always is, signing in also sets the cookie `pricepulse_session` for a browser: `HttpOnly`, `SameSite=Strict`, `Path=/`, lasting as long as the Session. The token is in the body all the same, and `Authorization: Bearer` works as always.
+
+- The routes of Users accept the cookie when the request has no `Authorization` header. If it has one, only the header is read, whatever it holds. The route that records a price never reads the cookie: a cookie never makes anyone a price provider.
+- A request that the cookie authenticates and that is not a GET or a HEAD must carry an `Origin` equal to the origin of the application, or it is refused with `403 FORBIDDEN_ORIGIN`. One with no `Origin` is refused too. Signing in and registering are refused if they carry an `Origin` that is not the application's. A request that carries the token in the header is not subject to any of this.
+- Signing out clears the cookie, also when the cookie was no longer valid.
+- The development server takes the origin from where it listens, `http://127.0.0.1:3000` by default. When the interface is served by another server that forwards the API, say where the browser sees the application: `WEB_ORIGIN=http://localhost:5173 npm run dev`. The interactive documentation works with the cookie only when it is opened at that address: `localhost` is not `127.0.0.1`.
+
+To try it with a client that keeps cookies:
+
+```bash
+curl -s -c jar.txt -X POST http://127.0.0.1:3000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo2@example.com","password":"demo-password-2"}' > /dev/null
+
+curl -s -b jar.txt http://127.0.0.1:3000/accounts/me
+```
+
+A read works with the cookie alone. A change needs the origin, as a page of the application would send it: add `-H "Origin: http://127.0.0.1:3000"`. The web interface does it in a browser, and the check is in the [completion of feature 09](docs/features/09-web-interface/04-completion.md).
+
+### Read the Catalogue of Listings
+
+| Request | What it does |
+|---|---|
+| `GET /listings?limit=&offset=` | The Listings that the system knows, in a page ordered by title and then by identifier. Each shows its `id`, `title`, `retailer`, `currency` and `currentPrice`, which is `{ amount, currency, observedAt }` or `null` when it has none |
+| `GET /listings/{listingId}` | One of them, with the same view |
+
+Both need the token of a **User**, and the token of the price provider is not valid for them. A page holds `limit` Listings (20 by default, 100 at most) after skipping `offset`, and the answer has the `total`. The title and the Retailer are text for a person to read, and characters are compared by their codes, so digits come before letters and a letter with an accent after `z`. The Current Price is the price of the latest observation of the Listing. Reading changes nothing, and no request adds, changes or removes a Listing: a POST, PUT, PATCH or DELETE finds no route.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 200 | | The page, also when it is empty, or the Listing. A Listing with no Current Price is found, with `currentPrice: null` |
+| 400 | `BAD_REQUEST` | A query parameter is not valid: an unknown one, or a limit or an offset out of range |
+| 401 | `UNAUTHENTICATED` | No valid token of a User |
+| 404 | `LISTING_NOT_FOUND` | The Listing is not in the Catalogue |
+| 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### Create a Price Alert
+
+`POST /listings/{listingId}/price-alerts` with the body `{ "targetAmount": "80.00" }`. The User is identified by the `Authorization: Bearer <token>` header, the token of a Session, never by the body. The amount is text, and its currency is the one of the Listing.
 
 | Status | Code | Meaning |
 |---|---|---|
@@ -69,13 +286,74 @@ The retailers are fictitious. Everything is held in memory and is lost when the 
 | 422 | `INVALID_TARGET_PRICE` | The amount is not a number, is not greater than zero, or has too many decimals |
 | 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
 
-The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served only by the development server.
+### Read and manage Price Alerts
 
-Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in [`01-business-rules.md`](docs/features/01-create-price-alert/01-business-rules.md) and the full contract in [`04-use-case-contract.md`](docs/features/01-create-price-alert/04-use-case-contract.md).
+| Request | What it does |
+|---|---|
+| `GET /price-alerts?status=&limit=&offset=` | The Price Alerts of the User, newest first. `status` is `active`, `triggered` or `cancelled`. A page holds `limit` alerts (20 by default, 100 at most) after skipping `offset`, and `total` says how many match |
+| `GET /price-alerts/{alertId}` | One of them |
+| `PATCH /price-alerts/{alertId}` with `{ "targetAmount": "70.00" }` or `{ "status": "cancelled" }` | Changes the Target Price of an Active Price Alert, or cancels it. The body carries exactly one of the two |
+
+The User is identified by the `Authorization: Bearer <token>` header, as when creating. An alert of another User is answered as one that does not exist. Each Price Alert shows its `id`, `listingId`, `targetAmount`, `currency`, `status` and `createdAt`, also in the answer to creating one.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 200 | | The list, the Price Alert, or the Price Alert after the change. A change that was already made also answers 200 |
+| 400 | `BAD_REQUEST` | A query parameter or the body is not valid: an unknown one, both changes at once, a state other than `cancelled` |
+| 401 | `UNAUTHENTICATED` | No valid token |
+| 404 | `ALERT_NOT_FOUND` | The Price Alert does not exist, or it belongs to another User |
+| 409 | `ALERT_NOT_ACTIVE` | The Price Alert has ended (Triggered) or was Cancelled, and the change needs it Active. Cancelling one that is already Cancelled is not an error |
+| 409 | `ALERT_CONFLICT` | It changed state while the request was applied, for example because it was Triggered. Nothing was changed |
+| 409 | `TARGET_ALREADY_REACHED` | The Current Price already reaches the new Target Price |
+| 422 | `INVALID_TARGET_PRICE` | The amount is not a number, is not greater than zero, or has too many decimals |
+| 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### Record a Price Observation
+
+`POST /listings/{listingId}/price-observations` with the body `{ "observedAt": "2026-11-19T10:00:00Z", "price": { "amount": "79.90", "currency": "EUR" } }`. The price provider is identified by the `Authorization: Bearer <token>` header, never by the body. `price` is required: send `null` when the Listing was unavailable. `observedAt` is ISO 8601 with a time zone, and it may be later than the moment of recording by 5 minutes at most.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 201 | | The Price Observation was recorded |
+| 200 | | The same observation was repeated: the stored one is returned |
+| 400 | `BAD_REQUEST` | Malformed body, a missing or unknown field, or an amount that is not text |
+| 401 | `UNAUTHENTICATED` | No valid token of a price provider |
+| 404 | `LISTING_NOT_FOUND` | The Listing does not exist |
+| 409 | `OBSERVATION_CONFLICT` | An observation of the same provider, Listing and `observedAt` is stored with another content |
+| 422 | `INVALID_OBSERVATION` | `observedAt` is not valid or is too far in the future, the amount is not a number, is negative or has too many decimals, or the currency is not the one of the Listing |
+| 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### Read the Notifications and the Price History
+
+| Request | What it does |
+|---|---|
+| `GET /notifications?limit=&offset=` | The Notifications of the User, one for each of their Price Alerts that was reached, newest first by the moment its price was observed. Each shows the Price Alert, the Listing, the Target Price, and the Current Price with its Observed At |
+| `GET /listings/{listingId}/price-observations?from=&to=&limit=&offset=` | The Price History of a Listing: its Price Observations, newest first, each with its Provider, Observed At and Price, or no price when the Listing was unavailable. `from` is included and `to` is excluded, both ISO 8601 with a time zone |
+
+Both need the token of a **User**, and the token of the price provider is not valid for them. A page holds `limit` items (20 by default, 100 at most) after skipping `offset`, and the answer has the `total`, as the list of Price Alerts. The history path is the same as the one that records a price, with another method and another credential.
+
+| Status | Code | Meaning |
+|---|---|---|
+| 200 | | The page, also when it is empty |
+| 400 | `BAD_REQUEST` | A query parameter is not valid: an unknown one, or a limit or an offset out of range |
+| 401 | `UNAUTHENTICATED` | No valid token of a User |
+| 404 | `LISTING_NOT_FOUND` | The Listing of the history does not exist |
+| 422 | `INVALID_RANGE` | `from` or `to` is not an instant, or `from` is not before `to` |
+| 500 | `INTERNAL_ERROR` | An unexpected failure. The response reveals no detail |
+
+### Alert evaluation
+
+It has no endpoint. When a Price Observation is stored, new or repeated, the Price Alerts of its Listing are evaluated. Each one that the Current Price reaches becomes Triggered and gets one Notification, once, even if the evaluation is repeated or runs twice at the same time. The response of the recording is the same whatever happens to the evaluation, and a failure of it goes to the log. A Cancelled Price Alert is not evaluated. A Notification is a stored record: it is not delivered, and it has no read state.
+
+### Documentation of the API
+
+The same description is available as an OpenAPI document at `/docs/json` and as an interactive page at `/docs`. Both are generated from the schemas that validate the request, and a test checks that they do not drift from what the API answers. They are served by the development server and by the demo.
+
+Errors have the form `{ "code": "...", "message": "..." }`. The rules behind them are in the business rules of each feature, [Create Price Alert](docs/features/01-create-price-alert/01-business-rules.md), [Price Observation](docs/features/02-price-observation/01-business-rules.md) and [Read and Manage Price Alerts](docs/features/04-read-and-manage-alerts/01-discovery.md), [Notifications and Price History](docs/features/05-notifications-and-price-history/01-discovery.md), [Accounts and Authentication](docs/features/06-accounts-and-authentication/01-discovery.md) [Listings Catalogue](docs/features/07-listings-catalogue/01-discovery.md) and [Session Cookie](docs/features/08-session-cookie/01-discovery.md), and the full contracts in their use case contracts, [feature 01](docs/features/01-create-price-alert/04-use-case-contract.md), [feature 02](docs/features/02-price-observation/04-use-case-contract.md) and the designs of [feature 04](docs/features/04-read-and-manage-alerts/03-design.md), [feature 05](docs/features/05-notifications-and-price-history/03-design.md), [feature 06](docs/features/06-accounts-and-authentication/03-design.md), [feature 07](docs/features/07-listings-catalogue/03-design.md) and [feature 08](docs/features/08-session-cookie/03-design.md).
 
 ## Architecture
 
-Ports and adapters. Dependencies point inward, and a test fails if a change breaks that.
+Ports and adapters, with one folder per feature. Dependencies point inward, a feature never imports another, and a test fails if a change breaks that.
 
 ```
         http ───────▶ application ───────▶ domain
@@ -85,34 +363,45 @@ Ports and adapters. Dependencies point inward, and a test fails if a change brea
 
 | Layer | Responsibility | Location |
 |---|---|---|
-| `domain` | Business rules and invariants. It imports nothing | `backend/src/price-alerts/domain/` |
-| `application` | The use case and the ports it needs | `backend/src/price-alerts/application/` |
-| `adapters` | In-memory implementations of the ports | `backend/src/price-alerts/adapters/` |
-| `http` | The HTTP interface, authentication and error mapping | `backend/src/price-alerts/http/` |
-| Composition Root | The only place that chooses and connects the parts | `backend/src/composition-root.ts` |
+| `domain` | Business rules and invariants. It imports nothing but `shared` | `backend/src/<feature>/domain/` |
+| `application` | The use case and the ports it needs | `backend/src/<feature>/application/` |
+| `adapters` | In-memory and PostgreSQL implementations of the ports | `backend/src/<feature>/adapters/` |
+| `database` | The connection and the migrations. The only code, besides the adapters, that knows the driver | `backend/src/database/` |
+| `http` | The HTTP interface, authentication and error mapping | `backend/src/<feature>/http/` |
+| `shared` | What several features need, such as `Price`, and the reading of the bearer token and of the session cookie. It imports nothing | `backend/src/shared/` |
+| Storage | Chooses where the data is kept from the environment: the database in `DATABASE_URL`, or memory | `backend/src/storage.ts` |
+| Composition Root | The only place that chooses and connects the parts. It is also where the features meet: the Current Price that Price Alerts read comes from the Price Observations | `backend/src/composition-root.ts` |
+| Evaluation trigger | The policy that evaluates the Price Alerts of a Listing after a price is recorded, so that neither feature knows the other | `backend/src/evaluation-trigger.ts` |
+
+The features are `price-alerts`, which creates, evaluates, reads and manages alerts and reads their Notifications, `price-observations`, which records prices and reads the Price History and the Catalogue of Listings, and `accounts`, which registers Accounts and gives Sessions. The other two do not know `accounts`: they ask, through a port, who a token belongs to, and the Composition Root answers with the Sessions.
 
 The design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 ## Technology
 
-TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice.
+TypeScript in strict mode on Node, Fastify for HTTP (with two plugins that generate and serve the OpenAPI documentation), Vitest for tests. [ADR-0001](docs/adr/0001-typescript-backend.md) explains the choice. Passwords are hashed with `scrypt` from the standard library of Node, so no dependency was added for authentication ([ADR-0004](docs/adr/0004-authentication.md)).
 
-Not decided yet: the database, background jobs, the frontend, how the application is built for production, and where it is deployed.
+The web interface is a single-page application in React, built with Vite and served by the backend ([ADR-0005](docs/adr/0005-web-interface.md)). The backend has one dependency for it, `@fastify/static`. The data is kept in PostgreSQL through the driver `pg` and SQL written by hand, with no ORM ([ADR-0006](docs/adr/0006-postgresql.md)). The server runs with `tsx`, also in production, and the demo is planned on Render with its database in Neon ([ADR-0007](docs/adr/0007-deployment-platform.md)). Not decided yet: background jobs.
 
 ## Testing
 
 ```bash
 cd backend
-npm test                 # all the tests
+npm test                 # all the tests, in memory
+npm run test:db          # the contracts and the application against PostgreSQL (needs `docker compose up -d`)
 npm run typecheck        # type checking
 npm run coverage         # tests with a coverage report, used as a diagnostic
 ```
 
-The tests cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md).
+`npm run test:db` fails, and does not skip, when it cannot reach the database. It creates and empties its own database, `pricepulse_test`, on the server of `compose.yaml`.
+
+The interface has its own tests, run with `npm test` and `npm run typecheck` in `frontend/`. They run on a simulated page, and a test of the backend runs the client of the interface against the real application.
+
+The tests of the backend cover the domain, the use case, the adapters, the HTTP interface and the wiring. Two further tests guard the project itself: one keeps the chain business rule → scenario → test from breaking, and one enforces the dependency rules. See [`08-test-plan.md`](docs/features/01-create-price-alert/08-test-plan.md) for feature 01, and section 4 of the completion of [feature 02](docs/features/02-price-observation/10-completion.md), [feature 03](docs/features/03-alert-evaluation/10-completion.md) [feature 04](docs/features/04-read-and-manage-alerts/04-completion.md), [feature 05](docs/features/05-notifications-and-price-history/04-completion.md), [feature 06](docs/features/06-accounts-and-authentication/04-completion.md), [feature 07](docs/features/07-listings-catalogue/04-completion.md) and [feature 08](docs/features/08-session-cookie/04-completion.md).
 
 ## How the project is built
 
-Each feature goes through eleven phases, from discovery to documentation, and each phase ends with an approval. The behaviour is described first as business rules and Gherkin scenarios, then modelled, then implemented, and the tests trace back to the scenarios. [`docs/features/README.md`](docs/features/README.md) describes the method.
+Each feature goes through five stages: understand, scenarios, design, build and close. Each stage ends with an approval, and the build has a stop for each layer. The behaviour is described first as business rules and Gherkin scenarios, then designed, then built, and the tests trace back to the scenarios. [`docs/features/README.md`](docs/features/README.md) describes the method. The first three features followed an earlier method of eleven phases, and their documents are kept as they were.
 
 A simplified Git Flow organises the branches, with one `feature/NN-name` branch per feature ([ADR-0002](docs/adr/0002-branching-model.md)).
 
@@ -122,6 +411,17 @@ A simplified Git Flow organises the branches, with one `feature/NN-name` branch 
 | Product vision and scope | [`docs/product/`](docs/product/) |
 | Vocabulary of the domain | [`docs/domain/ubiquitous-language.md`](docs/domain/ubiquitous-language.md) |
 | Feature 01, phase by phase | [`docs/features/01-create-price-alert/`](docs/features/01-create-price-alert/) |
+| Feature 02, phase by phase | [`docs/features/02-price-observation/`](docs/features/02-price-observation/) |
+| Feature 03, phase by phase | [`docs/features/03-alert-evaluation/`](docs/features/03-alert-evaluation/) |
+| Feature 04, stage by stage | [`docs/features/04-read-and-manage-alerts/`](docs/features/04-read-and-manage-alerts/) |
+| Feature 05, stage by stage | [`docs/features/05-notifications-and-price-history/`](docs/features/05-notifications-and-price-history/) |
+| Feature 06, stage by stage | [`docs/features/06-accounts-and-authentication/`](docs/features/06-accounts-and-authentication/) |
+| Feature 07, stage by stage | [`docs/features/07-listings-catalogue/`](docs/features/07-listings-catalogue/) |
+| Feature 08, stage by stage | [`docs/features/08-session-cookie/`](docs/features/08-session-cookie/) |
+| Feature 09, stage by stage | [`docs/features/09-web-interface/`](docs/features/09-web-interface/) |
+| Feature 10, stage by stage | [`docs/features/10-my-alerts-and-notifications/`](docs/features/10-my-alerts-and-notifications/) |
+| Feature 11, stage by stage | [`docs/features/11-persistence/`](docs/features/11-persistence/) |
+| Feature 12, stage by stage | [`docs/features/12-deployment/`](docs/features/12-deployment/) |
 
 ## Data
 

@@ -1,16 +1,16 @@
 /** UC-01 Create Price Alert (see the use case contract). */
 
+import { InvalidValue, type ListingId, type UserId } from "../../shared/domain";
 import {
-  InvalidValue,
+  CreatedAt,
   PriceAlert,
   TargetAlreadyReached as DomainTargetAlreadyReached,
   TargetPrice,
   newAlertId,
-  type ListingId,
-  type UserId,
 } from "../domain";
 import { DuplicateAlert, InvalidTargetPrice, ListingNotFound, TargetAlreadyReached } from "./errors";
-import { ActiveAlertAlreadyExists, type ListingReader, type PriceAlertRepository } from "./ports";
+import { toView, type PriceAlertView } from "./price-alert-view";
+import { ActiveAlertAlreadyExists, type Clock, type ListingReader, type PriceAlertRepository } from "./ports";
 
 export interface CreatePriceAlertCommand {
   /** Comes from the authentication of the request, never from the client. */
@@ -18,14 +18,6 @@ export interface CreatePriceAlertCommand {
   readonly listingId: ListingId;
   /** Only the amount, as text such as "80.00". The currency is the one of the Listing. */
   readonly targetAmount: string;
-}
-
-export interface PriceAlertView {
-  readonly id: string;
-  readonly listingId: string;
-  readonly targetAmount: string;
-  readonly currency: string;
-  readonly status: string;
 }
 
 export interface CreatePriceAlertResult {
@@ -38,6 +30,7 @@ export class CreatePriceAlert {
   constructor(
     private readonly listings: ListingReader,
     private readonly alerts: PriceAlertRepository,
+    private readonly clock: Clock,
   ) {}
 
   async execute(command: CreatePriceAlertCommand): Promise<CreatePriceAlertResult> {
@@ -77,6 +70,7 @@ export class CreatePriceAlert {
           listingId: command.listingId,
           targetPrice: target,
           currentPrice: listing.currentPrice,
+          createdAt: CreatedAt.fromDate(this.clock.now()),
         });
       } catch (error) {
         if (error instanceof DomainTargetAlreadyReached) {
@@ -97,14 +91,4 @@ export class CreatePriceAlert {
 
     throw new Error("Could not create the Price Alert: repeated concurrent conflicts");
   }
-}
-
-function toView(alert: PriceAlert): PriceAlertView {
-  return {
-    id: alert.id,
-    listingId: alert.listingId,
-    targetAmount: alert.targetPrice.toDecimalString(),
-    currency: alert.targetPrice.currency,
-    status: alert.status,
-  };
 }

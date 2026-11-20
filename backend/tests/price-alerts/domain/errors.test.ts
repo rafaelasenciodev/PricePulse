@@ -1,32 +1,31 @@
 import { describe, expect, it } from "vitest";
+import { InvalidValue } from "../../../src/shared/domain";
 import {
+  AlertNotActive,
   CurrencyMismatch,
-  InvalidAmount,
-  InvalidValue,
+  InvalidCreatedAt,
   NonPositiveTargetPrice,
   TargetAlreadyReached,
-  TooManyDecimals,
-  UnsupportedCurrency,
+  TargetNotReached,
 } from "../../../src/price-alerts/domain";
 
 /**
  * The application reports every InvalidValue as an invalid Target Price (a mistake of the
  * User, 422) and lets any other domain error through as an internal one (500).
- * This pins that classification, so a new error cannot end up in the wrong group unnoticed.
+ * This pins that classification for the errors of Price Alerts, so a new error cannot end
+ * up in the wrong group unnoticed. The shared errors are pinned in the tests of `shared`.
  */
-describe("classification of domain errors", () => {
-  it.each([
-    ["InvalidAmount", new InvalidAmount("abc")],
-    ["TooManyDecimals", new TooManyDecimals("79.999", "EUR", 2)],
-    ["NonPositiveTargetPrice", new NonPositiveTargetPrice("0.00")],
-  ])("%s is a mistake of the User", (_name, error) => {
-    expect(error).toBeInstanceOf(InvalidValue);
+describe("classification of the domain errors of Price Alerts", () => {
+  it("NonPositiveTargetPrice is a mistake of the User", () => {
+    expect(new NonPositiveTargetPrice("0.00")).toBeInstanceOf(InvalidValue);
   });
 
   it.each([
-    ["UnsupportedCurrency", new UnsupportedCurrency("XYZ")],
     ["CurrencyMismatch", new CurrencyMismatch("EUR", "USD")],
     ["TargetAlreadyReached", new TargetAlreadyReached()],
+    ["AlertNotActive", new AlertNotActive("alert-1")],
+    ["InvalidCreatedAt", new InvalidCreatedAt("NaN")],
+    ["TargetNotReached", new TargetNotReached("alert-1")],
   ])("%s is not an InvalidValue", (_name, error) => {
     expect(error).not.toBeInstanceOf(InvalidValue);
   });

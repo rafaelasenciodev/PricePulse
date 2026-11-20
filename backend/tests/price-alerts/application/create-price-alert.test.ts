@@ -17,17 +17,9 @@ import {
   ListingNotFound,
   TargetAlreadyReached,
 } from "../../../src/price-alerts/application";
-import {
-  AlertStatus,
-  CurrencyMismatch,
-  ListingId,
-  Price,
-  PriceAlert,
-  TargetPrice,
-  UnsupportedCurrency,
-  UserId,
-  newAlertId,
-} from "../../../src/price-alerts/domain";
+import { AlertStatus, CurrencyMismatch, PriceAlert, TargetPrice, newAlertId } from "../../../src/price-alerts/domain";
+import { ListingId, Price, UnsupportedCurrency, UserId } from "../../../src/shared/domain";
+import { CREATED_AT, FIXED_CLOCK } from "../../support/created-at";
 
 const USER = UserId("user-1");
 const OTHER_USER = UserId("user-2");
@@ -45,7 +37,7 @@ class World {
   }
 
   create(targetAmount: string, owner: UserId = USER, listingId: ListingId = HEADPHONES) {
-    return new CreatePriceAlert(this.listings, this.alerts).execute({ owner, listingId, targetAmount });
+    return new CreatePriceAlert(this.listings, this.alerts, FIXED_CLOCK).execute({ owner, listingId, targetAmount });
   }
 
   async storeActiveAlert(target: string, owner: UserId = USER, listingId: ListingId = HEADPHONES) {
@@ -55,6 +47,7 @@ class World {
       listingId,
       TargetPrice.fromDecimalString(target, "EUR"),
       AlertStatus.Active,
+      CREATED_AT,
     );
     await this.alerts.add(stored);
     return stored;
@@ -179,6 +172,7 @@ describe("duplicates", () => {
       HEADPHONES,
       TargetPrice.fromDecimalString("80.00", "EUR"),
       AlertStatus.Triggered,
+      CREATED_AT,
     );
     await world.alerts.add(previous);
     const result = await world.create("80.00");
@@ -233,6 +227,7 @@ describe("concurrency (contract, decision 4)", () => {
             listingId,
             TargetPrice.fromDecimalString(this.concurrentTarget, "EUR"),
             AlertStatus.Active,
+            CREATED_AT,
           ),
         );
         return null;
