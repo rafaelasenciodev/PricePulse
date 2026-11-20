@@ -254,13 +254,17 @@ describe("what is never done (BR-01, BR-12)", () => {
     () => client.listings({ limit: 20, offset: 0 }),
     () => client.listing("x"),
     () => client.createAlert("x", "1.00"),
+    () => client.alerts({ limit: 20, offset: 0 }),
+    () => client.changeTarget("x", "1.00"),
+    () => client.cancelAlert("x"),
+    () => client.notifications({ limit: 20, offset: 0 }),
   ];
 
   it("SC-07 / BR-01: no request carries a header that names a credential, and every address is relative", async () => {
     const fake = fakeFetch(json({ token: "t", account: ANA }, 201));
     const client = createApiClient({ fetch: fake.fetch });
     for (const operation of everyOperation(client)) await operation();
-    expect(fake.calls).toHaveLength(7);
+    expect(fake.calls).toHaveLength(11);
     for (const { input, init } of fake.calls) {
       expect(input.startsWith("/") && !input.startsWith("//")).toBe(true);
       expect(Object.keys(headersOf(init)).map((h) => h.toLowerCase())).not.toContain("authorization");
@@ -273,7 +277,7 @@ describe("what is never done (BR-01, BR-12)", () => {
     const client = createApiClient({ fetch: fake.fetch });
     for (const operation of everyOperation(client)) await operation();
     const withBody = fake.calls.filter((c) => c.init.body !== undefined).map((c) => c.input);
-    expect(withBody).toEqual(["/sessions", "/accounts", "/listings/x/price-alerts"]);
+    expect(withBody).toEqual(["/sessions", "/accounts", "/listings/x/price-alerts", "/price-alerts/x", "/price-alerts/x"]);
     for (const { init } of fake.calls) {
       expect("content-type" in headersOf(init)).toBe(init.body !== undefined);
       expect(headersOf(init)["accept"]).toBe("application/json");
@@ -311,6 +315,8 @@ describe("what is never done (BR-01, BR-12)", () => {
     ["a Catalogue answered 201", () => clientWith(json({ items: [], total: 0, limit: 20, offset: 0 }, 201)).client.listings({ limit: 20, offset: 0 })],
     ["a Listing answered 201", () => clientWith(json(HEADPHONES, 201)).client.listing("x")],
     ["a Price Alert answered 202", () => clientWith(json(ALERT, 202)).client.createAlert("x", "1.00")],
+    ["a change of a Target Price answered 202", () => clientWith(json(ALERT, 202)).client.changeTarget("x", "1.00")],
+    ["a Notifications page answered 201", () => clientWith(json({ items: [], total: 0, limit: 20, offset: 0 }, 201)).client.notifications({ limit: 20, offset: 0 })],
   ])("BR-05 / BR-12: %s", async (_what, run) => {
     expect(await run()).toEqual({ ok: false, failure: { kind: "unexpected" } });
   });

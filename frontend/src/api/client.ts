@@ -1,4 +1,4 @@
-import type { Account, CreatedAlert, Failure, Listing, Page, PriceAlert, Result, AlertStatus, CurrentPrice } from "./types";
+import type { Account, AlertStatus, CreatedAlert, CurrentPrice, Failure, Listing, Money, Notification, Page, PriceAlert, Result } from "./types";
 
 /**
  * The part of `fetch` that the client uses. The page gives its own, and a test gives a fake one.
@@ -14,8 +14,13 @@ export interface PageQuery {
   readonly offset: number;
 }
 
+/** A page of Price Alerts, of one state or of every state when `status` is absent. */
+export interface AlertQuery extends PageQuery {
+  readonly status?: AlertStatus;
+}
+
 /**
- * The seven operations of the API that the interface uses. None of them throws: each gives a `Result`.
+ * The eleven operations of the API that the interface uses. None of them throws: each gives a `Result`.
  *
  * The page never holds the token of a Session (BR-01 of feature 09): what the API returns when signing in is
  * read for the Account only, and the token is not copied anywhere. No request carries a header that names a
@@ -30,6 +35,14 @@ export interface ApiClient {
   listing(id: string): Promise<Result<Listing>>;
   /** The amount is sent as the text that was given: it is the API that decides whether it is valid (BR-09). */
   createAlert(listingId: string, targetAmount: string): Promise<Result<CreatedAlert>>;
+  /** The Price Alerts of the person, newest first (feature 10). */
+  alerts(query: AlertQuery): Promise<Result<Page<PriceAlert>>>;
+  /** Gives the alert after the change. The amount is sent as the text that was given, as when creating one. */
+  changeTarget(alertId: string, targetAmount: string): Promise<Result<PriceAlert>>;
+  /** Gives the alert after the change: Cancelled. */
+  cancelAlert(alertId: string): Promise<Result<PriceAlert>>;
+  /** The Notifications of the person, newest first. */
+  notifications(query: PageQuery): Promise<Result<Page<Notification>>>;
 }
 
 /** What a reader makes of an answer that went well. `null` means that the body is not what the API gives. */
@@ -69,6 +82,19 @@ function toPriceAlert(value: unknown): PriceAlert | null {
   if (!isText(id) || !isText(listingId) || !isText(targetAmount) || !isText(currency) || !isText(createdAt)) return null;
   if (!isText(status) || !STATUSES.includes(status)) return null;
   return { id, listingId, targetAmount, currency, status: status as AlertStatus, createdAt };
+}
+
+function toMoney(value: unknown): Money | null {
+  return isRecord(value) && isText(value["amount"]) && isText(value["currency"]) ? { amount: value["amount"], currency: value["currency"] } : null;
+}
+
+function toNotification(value: unknown): Notification | null {
+  if (!isRecord(value)) return null;
+  const { alertId, listingId, observedAt } = value;
+  const targetPrice = toMoney(value["targetPrice"]);
+  const currentPrice = toMoney(value["currentPrice"]);
+  if (!isText(alertId) || !isText(listingId) || !isText(observedAt) || targetPrice === null || currentPrice === null) return null;
+  return { alertId, listingId, targetPrice, currentPrice, observedAt };
 }
 
 function toPage<T>(value: unknown, toItem: (item: unknown) => T | null): Page<T> | null {
@@ -148,6 +174,11 @@ export function createApiClient({ fetch: send }: ApiClientOptions): ApiClient {
     return account === null ? null : { value: account };
   };
 
+  const alertAfterChange: Reader<PriceAlert> = (status, json) => {
+    const alert = status === 200 ? toPriceAlert(json) : null;
+    return alert === null ? null : { value: alert };
+  };
+
   return {
     signIn: (email, password) =>
       call("POST", "/sessions", credentials(email, password), (status, json) => {
@@ -178,6 +209,22 @@ export function createApiClient({ fetch: send }: ApiClientOptions): ApiClient {
       call("POST", `/listings/${encodeURIComponent(listingId)}/price-alerts`, { targetAmount }, (status, json) => {
         const alert = status === 201 || status === 200 ? toPriceAlert(json) : null;
         return alert === null ? null : { value: { alert, created: status === 201 } };
+      }),
+
+    alerts: ({ status, limit, offset }) =>
+      call("GET", `/price-alerts?${status === undefined ? "" : `status=${status}&`}limit=${limit}&offset=${offset}`, undefined, (code, json) => {
+        const page = code === 200 ? toPage(json, toPriceAlert) : null;
+        return page === null ? null : { value: page };
+      }),
+
+    changeTarget: (alertId, targetAmount) => call("PATCH", `/price-alerts/${encodeURIComponent(alertId)}`, { targetAmount }, alertAfterChange),
+
+    cancelAlert: (alertId) => call("PATCH", `/price-alerts/${encodeURIComponent(alertId)}`, { status: "cancelled" }, alertAfterChange),
+
+    notifications: ({ limit, offset }) =>
+      call("GET", `/notifications?limit=${limit}&offset=${offset}`, undefined, (status, json) => {
+        const page = status === 200 ? toPage(json, toNotification) : null;
+        return page === null ? null : { value: page };
       }),
   };
 }

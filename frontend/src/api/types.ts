@@ -44,6 +44,24 @@ export interface PriceAlert {
   readonly createdAt: string;
 }
 
+/** An amount as text, such as "80.00", with its currency. */
+export interface Money {
+  readonly amount: string;
+  readonly currency: string;
+}
+
+/**
+ * The record of a Price Alert that reached its Target Price. It is stored, not delivered, and it has no read state.
+ * The `owner` that the API also sends is not copied: it is always the person who asks.
+ */
+export interface Notification {
+  readonly alertId: string;
+  readonly listingId: string;
+  readonly targetPrice: Money;
+  readonly currentPrice: Money;
+  readonly observedAt: string;
+}
+
 /** The result of asking for a Price Alert: `created` is false when the one that already existed was returned. */
 export interface CreatedAlert {
   readonly alert: PriceAlert;

@@ -51,6 +51,10 @@ export function SessionProvider({ client, children }: { readonly client: ApiClie
       listings: watch(client.listings.bind(client)),
       listing: watch(client.listing.bind(client)),
       createAlert: watch(client.createAlert.bind(client)),
+      alerts: watch(client.alerts.bind(client)),
+      changeTarget: watch(client.changeTarget.bind(client)),
+      cancelAlert: watch(client.cancelAlert.bind(client)),
+      notifications: watch(client.notifications.bind(client)),
     };
   }, [client]);
 

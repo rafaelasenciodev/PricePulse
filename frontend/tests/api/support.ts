@@ -43,6 +43,13 @@ export const HEADPHONES = {
   currency: "EUR",
   currentPrice: { amount: "100.00", currency: "EUR", observedAt: "2026-11-19T10:00:00.000Z" },
 };
+export const NOTIFICATION = {
+  alertId: "alert-1",
+  listingId: "headphones-shop-a",
+  targetPrice: { amount: "80.00", currency: "EUR" },
+  currentPrice: { amount: "79.50", currency: "EUR" },
+  observedAt: "2026-11-19T11:00:00.000Z",
+};
 export const ALERT = {
   id: "alert-1",
   listingId: "headphones-shop-a",

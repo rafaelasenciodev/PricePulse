@@ -13,7 +13,7 @@ const answer = (status: number, code: string, extra: { retryAfterSeconds?: numbe
 });
 const network: Failure = { kind: "network" };
 const unexpected: Failure = { kind: "unexpected" };
-const ACTIONS: Action[] = ["signIn", "register", "signOut", "session", "readCatalogue", "readListing", "createAlert"];
+const ACTIONS: Action[] = ["signIn", "register", "signOut", "session", "readCatalogue", "readListing", "createAlert", "readAlerts", "readNotifications", "changeTarget", "cancelAlert"];
 
 describe("the message of a failure", () => {
   it("SC-04 / BR-03: a wrong password and an email with no Account have the same message", () => {

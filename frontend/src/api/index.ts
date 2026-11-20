@@ -1,4 +1,4 @@
-export { createApiClient, type ApiClient, type ApiClientOptions, type FetchLike, type PageQuery } from "./client";
+export { createApiClient, type AlertQuery, type ApiClient, type ApiClientOptions, type FetchLike, type PageQuery } from "./client";
 export type {
   Account,
   AlertStatus,
@@ -6,6 +6,8 @@ export type {
   CurrentPrice,
   Failure,
   Listing,
+  Money,
+  Notification,
   Page,
   PriceAlert,
   Result,

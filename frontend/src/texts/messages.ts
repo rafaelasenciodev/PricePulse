@@ -2,7 +2,7 @@ import type { Failure } from "../api";
 import { failures } from "./es";
 
 /** The actions of the interface that can fail with a message of their own. */
-export type Action = "signIn" | "register" | "signOut" | "session" | "readCatalogue" | "readListing" | "createAlert";
+export type Action = "signIn" | "register" | "signOut" | "session" | "readCatalogue" | "readListing" | "createAlert" | "readAlerts" | "readNotifications" | "changeTarget" | "cancelAlert";
 
 /** Whether the answer is that the Session is not valid: the session handles it, and it has no message of the action (BR-06). */
 export function isSessionEnded(failure: Failure): boolean {
@@ -41,6 +41,18 @@ export function messageFor(action: Action, failure: Failure): string {
         if (failure.code === "TARGET_ALREADY_REACHED") return failures.createAlert.reached;
         if (failure.code === "INVALID_TARGET_PRICE") return failures.createAlert.invalidAmount;
         if (failure.code === "LISTING_NOT_FOUND") return failures.createAlert.notFound;
+        break;
+      case "changeTarget":
+        if (failure.code === "INVALID_TARGET_PRICE") return failures.changeTarget.invalidAmount;
+        if (failure.code === "TARGET_ALREADY_REACHED") return failures.changeTarget.reached;
+        if (failure.code === "ALERT_NOT_ACTIVE") return failures.changeTarget.notActive;
+        if (failure.code === "ALERT_CONFLICT") return failures.changeTarget.changed;
+        if (failure.code === "ALERT_NOT_FOUND") return failures.changeTarget.notFound;
+        break;
+      case "cancelAlert":
+        if (failure.code === "ALERT_NOT_ACTIVE") return failures.cancelAlert.notActive;
+        if (failure.code === "ALERT_CONFLICT") return failures.cancelAlert.changed;
+        if (failure.code === "ALERT_NOT_FOUND") return failures.cancelAlert.notFound;
         break;
       default:
         break;

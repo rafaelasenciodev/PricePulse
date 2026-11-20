@@ -8,47 +8,21 @@
  * That a real browser does the same is not tested here: it is SC-36, checked by hand.
  */
 
-import { createServer } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApiClient, type ApiClient, type FetchLike } from "../../../frontend/src/api";
 import { FAST_SCRYPT_PARAMETERS, ScryptPasswordHasher } from "../../src/accounts/adapters";
 import { composeInMemoryApp } from "../../src/composition-root";
 import { ProviderId } from "../../src/price-observations/domain";
 import { ListingId } from "../../src/shared/domain";
+import { browserFor, freePort } from "./client-support";
 
 const PASSWORD = "first-password-1";
 
 let application: ReturnType<typeof composeInMemoryApp>;
 let base: string;
 
-function freePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const probe = createServer();
-    probe.once("error", reject);
-    probe.listen(0, "127.0.0.1", () => {
-      const { port } = probe.address() as { port: number };
-      probe.close(() => resolve(port));
-    });
-  });
-}
-
 /** A browser for one person: it holds the cookie, and says where the page it is on comes from. */
-function browser(options: { sendsOrigin?: boolean } = {}): FetchLike {
-  let cookie: string | null = null;
-  return async (input, init) => {
-    const headers = new Headers(init.headers as HeadersInit);
-    if (cookie !== null) headers.set("cookie", cookie);
-    const method = (init.method ?? "GET").toUpperCase();
-    if (method !== "GET" && method !== "HEAD" && options.sendsOrigin !== false) headers.set("origin", base);
-    const response = await fetch(base + input, { ...init, headers, redirect: "manual" });
-    for (const setCookie of response.headers.getSetCookie()) {
-      const [pair = ""] = setCookie.split(";");
-      const [name, value = ""] = pair.split("=");
-      if (name === "pricepulse_session") cookie = value === "" ? null : `${name}=${value}`;
-    }
-    return response;
-  };
-}
+const browser = (options: { sendsOrigin?: boolean } = {}): FetchLike => browserFor(base, options);
 
 const person = (options?: { sendsOrigin?: boolean }): ApiClient => createApiClient({ fetch: browser(options) });
 

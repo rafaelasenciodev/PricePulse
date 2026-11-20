@@ -87,6 +87,13 @@ export const screens = {
   },
 } as const;
 
+// The messages that two actions of this feature give for the same answer are written once.
+const alertNoLongerActive = `Esa ${v.priceAlert} ya no está activa.`;
+const alertChanged = `La ${v.priceAlert} ha cambiado mientras tanto. Mírala de nuevo.`;
+const alertNotFound = `Esa ${v.priceAlert} no existe.`;
+const targetReached = `El ${v.currentPrice} ya alcanza ese ${v.targetPrice}.`;
+const amountNotValid = "El importe no es válido. Los decimales se escriben con punto, como en 80.00.";
+
 /** What the person is told when each action fails. Nothing of the cause is in any of them (BR-12). */
 export const failures = {
   /** BR-06: the answer was that the Session is not valid. */
@@ -133,9 +140,35 @@ export const failures = {
   /** BR-10: each answer of creating a Price Alert has its own message. */
   createAlert: {
     duplicate: `Ya tienes una ${v.priceAlert} activa para este ${v.listing} con otro ${v.targetPrice}.`,
-    reached: `El ${v.currentPrice} ya alcanza ese ${v.targetPrice}.`,
-    invalidAmount: "El importe no es válido. Los decimales se escriben con punto, como en 80.00.",
+    reached: targetReached,
+    invalidAmount: amountNotValid,
     notFound: `Ese ${v.listing} no existe.`,
     other: `No se ha podido crear la ${v.priceAlert}. Inténtalo de nuevo.`,
+  },
+
+  readAlerts: {
+    other: `No se han podido leer tus alertas de precio. Inténtalo de nuevo.`,
+  },
+
+  readNotifications: {
+    other: "No se han podido leer tus notificaciones. Inténtalo de nuevo.",
+  },
+
+  /** BR-07: each answer of changing a Target Price has its own message. */
+  changeTarget: {
+    invalidAmount: amountNotValid,
+    reached: targetReached,
+    notActive: alertNoLongerActive,
+    changed: alertChanged,
+    notFound: alertNotFound,
+    other: `No se ha podido cambiar el ${v.targetPrice}. Inténtalo de nuevo.`,
+  },
+
+  /** BR-07: and each answer of cancelling. */
+  cancelAlert: {
+    notActive: alertNoLongerActive,
+    changed: alertChanged,
+    notFound: alertNotFound,
+    other: `No se ha podido cancelar la ${v.priceAlert}. Inténtalo de nuevo.`,
   },
 } as const;
