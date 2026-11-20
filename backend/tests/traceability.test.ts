@@ -144,6 +144,17 @@ const FEATURES: readonly Feature[] = [
     exemptRules: {},
     exemptScenarios: {},
   },
+  {
+    name: "feature 08",
+    docs: "08-session-cookie/",
+    rulesFile: "01-discovery.md",
+    // It crosses four modules of Users, so its tests live in a folder of their own and are told apart by it.
+    owns: (path) => path.startsWith("session-cookie/"),
+    scenarios: 24,
+    rules: 11,
+    exemptRules: {},
+    exemptScenarios: {},
+  },
 ];
 
 const pad = (id: string) => `${id.slice(0, id.indexOf("-") + 1)}${id.slice(id.indexOf("-") + 1).padStart(2, "0")}`;

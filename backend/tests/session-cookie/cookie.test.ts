@@ -177,3 +177,59 @@ describe("isRead", () => {
     expect(isRead(method)).toBe(false);
   });
 });
+
+describe("hostile input, with a fixed seed so that it always runs the same", () => {
+  // A small generator with a seed: the same inputs every time, so a failure can be reproduced.
+  const generator = (seed: number) => () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const PIECES = [
+    "pricepulse_session", "pricepulse_session=", "=", ";", "; ", " ", "\t", "\r", "\n", "\r\n", '"', "'", ",", "\\", "%", "%0d%0a",
+    "abc", "ABC123", "-._~+/", "==", "\u0000", "é", "😀", "Bearer ", "Set-Cookie: x=1", "; Path=/", "; Domain=evil.example", "a".repeat(600),
+  ];
+  const randomHeader = (next: () => number) =>
+    Array.from({ length: 1 + Math.floor(next() * 12) }, () => PIECES[Math.floor(next() * PIECES.length)]).join("");
+
+  it("never throws, and a token that it reads is made only of the characters of a bearer token, and short", () => {
+    const next = generator(20261119);
+    let read = 0;
+    for (let i = 0; i < 20000; i++) {
+      const header = randomHeader(next);
+      const token = readSessionCookie(header);
+      if (token === null) continue;
+      read++;
+      expect(token).toMatch(/^[A-Za-z0-9\-._~+/]+=*$/);
+      expect(token.length).toBeLessThanOrEqual(512);
+      expect(`Bearer ${token}`).not.toMatch(/[\r\n\u0000;,"]/);
+    }
+    // It is not a test that passes because nothing is ever read.
+    expect(read).toBeGreaterThan(50);
+  });
+
+  it("a token that was written is read back as it was, for any token that can be written", () => {
+    const next = generator(7);
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~+/";
+    for (let i = 0; i < 2000; i++) {
+      const length = 1 + Math.floor(next() * 80);
+      const body = Array.from({ length }, () => alphabet[Math.floor(next() * alphabet.length)]).join("");
+      const token = body + "=".repeat(Math.floor(next() * 3));
+      const written = serializeSessionCookie(token, { maxAgeSeconds: 100, secure: next() < 0.5 });
+      expect(readSessionCookie(written.split(";")[0])).toBe(token);
+      // The name and the token, Max-Age, Path, HttpOnly and SameSite, and Secure when it is asked for.
+      expect(written.split(";")).toHaveLength(written.includes("Secure") ? 6 : 5);
+    }
+  });
+
+  it("whatever the header, the cookie that is written has the attributes of the design and no more", () => {
+    const next = generator(99);
+    for (let i = 0; i < 500; i++) {
+      const token = Array.from({ length: 1 + Math.floor(next() * 40) }, () => "abcXYZ019-_"[Math.floor(next() * 11)]).join("");
+      const secure = next() < 0.5;
+      const attributes = serializeSessionCookie(token, { maxAgeSeconds: Math.floor(next() * 1e6), secure }).split("; ").slice(2);
+      expect(attributes).toEqual(["Path=/", "HttpOnly", "SameSite=Strict", ...(secure ? ["Secure"] : [])]);
+    }
+  });
+});
