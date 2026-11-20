@@ -36,7 +36,7 @@ describeNotificationRepositoryContract("PostgresNotificationRepository", notific
 describeNotificationRepositoryReadsContract("PostgresNotificationRepository", notifications);
 
 describe("PostgresPriceAlertRepository: what is specific to this adapter", () => {
-  it.each(["0.01", "80.00", "90071992547409.91"])("SC-24: the Target Price %s comes back with the text it was given", async (amount) => {
+  it.each(["0.01", "80.00", "90071992547409.91"])("the Target Price %s comes back with the text it was given", async (amount) => {
     const repository = await alerts();
     const alert = anAlert({ target: amount });
     await repository.add(alert);
@@ -83,7 +83,7 @@ describe("PostgresPriceAlertRepository: what is specific to this adapter", () =>
 });
 
 describe("PostgresNotificationRepository: what is specific to this adapter", () => {
-  it.each(["0.01", "75.00", "90071992547409.91"])("SC-24: the prices %s of a Notification come back with the text they were given", async (amount) => {
+  it.each(["0.01", "75.00", "90071992547409.91"])("the prices %s of a Notification come back with the text they were given", async (amount) => {
     const repository = await notifications();
     const notification = aNotification({ target: amount, price: amount });
     await repository.add(notification);
@@ -92,7 +92,7 @@ describe("PostgresNotificationRepository: what is specific to this adapter", () 
     expect(found?.currentPrice.toDecimalString()).toBe(amount);
   });
 
-  it("SC-25: the moment comes back to the millisecond", async () => {
+  it("the moment comes back to the millisecond", async () => {
     const repository = await notifications();
     const notification = aNotification({ observedAt: "2026-11-19T10:00:00.123Z" });
     await repository.add(notification);

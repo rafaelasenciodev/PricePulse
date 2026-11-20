@@ -57,7 +57,7 @@ async function journey(application: Application): Promise<unknown[]> {
 }
 
 describe("SC-06 / BR-01: a whole journey gives the same answers as in memory", () => {
-  it("every status and every body is the same", async () => {
+  it("SC-06 / BR-01: every status and every body is the same", async () => {
     const memory = startMemory(steppingClock());
     const postgres = startPostgres(pool, steppingClock());
     try {

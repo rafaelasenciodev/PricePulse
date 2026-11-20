@@ -69,7 +69,9 @@ const FEATURES: readonly Feature[] = [
       path !== "composition-root-management.test.ts" &&
       path !== "composition-root-history.test.ts" &&
       path !== "composition-root-accounts.test.ts" &&
-      path !== "composition-root-catalogue.test.ts",
+      path !== "composition-root-catalogue.test.ts" &&
+      !path.startsWith("persistence/") &&
+      !path.startsWith("database/"),
     scenarios: 18,
     rules: 11,
     exemptRules: {},
@@ -191,6 +193,21 @@ const FEATURES: readonly Feature[] = [
     rules: 11,
     exemptRules: {},
     exemptScenarios: {},
+  },
+  {
+    name: "feature 11",
+    docs: "11-persistence/",
+    rulesFile: "01-discovery.md",
+    // The tests of the application over a database are in a folder of their own, and those of the migrations in another.
+    // The adapters are held to the contracts of the ports, whose tests belong to the features that wrote them.
+    owns: (path) => path.startsWith("persistence/") || path.startsWith("database/"),
+    scenarios: 40,
+    rules: 13,
+    exemptRules: {},
+    exemptScenarios: {
+      "SC-29":
+        "A run with no database must fail and not skip, and that is the set-up of the database tests failing before any test exists to report it: it is checked by hand, by running `npm run test:db` with the database stopped.",
+    },
   },
 ];
 

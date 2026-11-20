@@ -123,14 +123,14 @@ describe("what is stored survives a restart", () => {
       return { keys: Object.keys(read(after)), answersBefore, answersAfter };
     };
 
-    it.each(["notifications", "history", "listing", "alert"])("the answer about %s is as it was before", async (what) => {
+    it.each(["notifications", "history", "listing", "alert"])("SC-05 / BR-02: the answer about %s is as it was before", async (what) => {
       const { keys, answersBefore, answersAfter } = await journey();
       const index = keys.indexOf(what);
       expect(answersAfter[index]).toEqual(answersBefore[index]);
       expect(answersAfter[index]).toBeTruthy();
     });
 
-    it("the Notification is there, the Current Price is 79.00, the title and the Retailer are kept, and the alert is Triggered", async () => {
+    it("SC-05 / BR-02: the Notification is there, the Current Price is 79.00, the title and the Retailer are kept, and the alert is Triggered", async () => {
       const { answersAfter } = await journey();
       const [notifications, history, listing, alert] = answersAfter;
       expect(notifications.items).toHaveLength(1);

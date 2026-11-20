@@ -28,14 +28,14 @@ describe("PostgresPriceObservationRepository: what is specific to this adapter",
   const SIMULATOR = ProviderId("simulator");
   const LISTING = ListingId("headphones-shop-a");
 
-  it("SC-25: the moment comes back to the millisecond", async () => {
+  it("the moment comes back to the millisecond", async () => {
     const repository = await repositoryOver();
     const at = ObservedAt.fromIsoString("2026-11-19T10:00:00.123Z");
     await repository.add(anObservation({ observedAt: "2026-11-19T10:00:00.123Z" }));
     expect((await repository.find(SIMULATOR, LISTING, at))?.observedAt.toIsoString()).toBe("2026-11-19T10:00:00.123Z");
   });
 
-  it.each(["0.01", "59.99", "90071992547409.91"])("SC-24: the price %s comes back with the text it was given", async (price) => {
+  it.each(["0.01", "59.99", "90071992547409.91"])("the price %s comes back with the text it was given", async (price) => {
     const repository = await repositoryOver();
     await repository.add(anObservation({ price }));
     expect((await repository.findLatest(LISTING))?.price?.toDecimalString()).toBe(price);
